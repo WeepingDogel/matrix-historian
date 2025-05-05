@@ -1,6 +1,6 @@
 # Matrix Historian
 
-一个Matrix消息存档和搜索服务，基于Luoxu实现。
+一个Matrix消息存档和搜索服务。
 
 ## 功能特性
 

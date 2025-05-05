@@ -82,3 +82,7 @@ def read_users(skip: int = Query(0, description="Skip N records"), limit: int = 
 def read_rooms(skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
     return rooms
+
+@router.get("/health")
+def health_check():
+    return {"status": "healthy"}

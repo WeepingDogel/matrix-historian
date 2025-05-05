@@ -71,7 +71,16 @@ def highlight_text(text: str, query: str) -> str:
     highlighted = text.replace(query, f'<span style="color: #ff6b6b; font-weight: bold;">{query}</span>')
     return highlighted
 
+def health_check():
+    st.write({"status": "healthy"})
+    return {"status": "healthy"}
+
 def main():
+    # 检查是否是健康检查请求
+    if st.query_params.get("health") == "check":
+        health_check()
+        return
+
     st.title("Matrix Historian")
     
     # 初始化会话状态
