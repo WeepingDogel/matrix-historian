@@ -46,18 +46,18 @@ class MatrixBot:
                 # 只检查消息是否有body属性
                 if hasattr(event, 'body') and event.body:
                     with SessionLocal() as db:
-                        # 创建或更新用户
+                        # 创建或更新用户 - 简单使用用户 ID
                         crud.create_user(
                             db, 
                             event.sender,
-                            None
+                            event.sender.split(':')[0][1:]  # 从 @user:domain.org 提取用户名
                         )
                         
                         # 创建或更新房间
                         crud.create_room(
                             db, 
                             room.room_id,
-                            None
+                            getattr(room, 'name', room.room_id)  # 如果没有名称，使用房间ID
                         )
                         
                         # 保存文本消息

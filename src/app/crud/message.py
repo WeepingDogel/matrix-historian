@@ -2,8 +2,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.models.message import Message, User, Room
 
-def get_messages(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Message).order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
+def get_messages(db: Session, room_id: str = None, user_id: str = None, skip: int = 0, limit: int = 100):
+    query = db.query(Message)
+    
+    if room_id:
+        query = query.filter(Message.room_id == room_id)
+    if user_id:
+        query = query.filter(Message.sender_id == user_id)
+        
+    return query.order_by(Message.timestamp.desc())\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
 
 def get_message(db: Session, event_id: str):
     return db.query(Message).filter(Message.event_id == event_id).first()
@@ -16,10 +26,16 @@ def get_user_messages(db: Session, user_id: str, skip: int = 0, limit: int = 100
     return db.query(Message).filter(Message.sender_id == user_id)\
         .order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
 
-def search_messages(db: Session, query: str, skip: int = 0, limit: int = 100):
-    return db.query(Message)\
-        .filter(Message.content.like(f"%{query}%"))\
-        .order_by(Message.timestamp.desc())\
+def search_messages(db: Session, query: str, room_id: str = None, user_id: str = None, skip: int = 0, limit: int = 100):
+    search_query = db.query(Message)\
+        .filter(Message.content.like(f"%{query}%"))
+    
+    if room_id:
+        search_query = search_query.filter(Message.room_id == room_id)
+    if user_id:
+        search_query = search_query.filter(Message.sender_id == user_id)
+        
+    return search_query.order_by(Message.timestamp.desc())\
         .offset(skip)\
         .limit(limit)\
         .all()
@@ -57,3 +73,9 @@ def get_user(db: Session, user_id: str):
 
 def get_room(db: Session, room_id: str):
     return db.query(Room).filter(Room.room_id == room_id).first()
+
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(User).offset(skip).limit(limit).all()
+
+def get_rooms(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Room).offset(skip).limit(limit).all()

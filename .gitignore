@@ -13,3 +13,4 @@ build/
 *.pyc
 *.pyo
 *.pyd
+bot_session.txt 
