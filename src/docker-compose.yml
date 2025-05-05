@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8001:8000"
+    volumes:
+      - sqlite_data:/app/app/db
+    restart: always
+    environment:
+      - MATRIX_HOMESERVER=https://matrix.org
+      - MATRIX_USER=${MATRIX_USER:-goz-historian}
+      - MATRIX_PASSWORD=${MATRIX_PASSWORD:-historian:nanonanoda}
+      - DATABASE_URL=sqlite:///app/db/database.db
+
+  webui:
+    build: 
+      context: .
+      dockerfile: Dockerfile.webui
+    ports:
+      - "8502:8501"
+    environment:
+      - API_URL=http://app:8000/api/v1
+    depends_on:
+      - app
+    restart: always
+
+volumes:
+  sqlite_data:

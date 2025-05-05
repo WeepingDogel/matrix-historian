@@ -1,0 +1,24 @@
+FROM python:3.12.3-slim
+
+# 安装locales和必要的依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen
+
+# 设置环境变量
+ENV LANG=zh_CN.UTF-8 \
+    LANGUAGE=zh_CN:zh \
+    LC_ALL=zh_CN.UTF-8
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir streamlit pandas requests humanize
+
+COPY . .
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app/webui/main.py", "--server.port=8501", "--server.address=0.0.0.0"]

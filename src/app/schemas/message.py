@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class MessageBase(BaseModel):
     content: str
@@ -29,3 +29,9 @@ class Message(MessageBase):
     
     class Config:
         from_attributes = True
+
+class MessageResponse(BaseModel):
+    messages: List[Message]
+    total: int
+    has_more: bool
+    next_skip: Optional[int] = None

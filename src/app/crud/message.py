@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.message import Message, User, Room
 
 def get_messages(db: Session, room_id: str = None, user_id: str = None, skip: int = 0, limit: int = 100):
@@ -39,6 +39,30 @@ def search_messages(db: Session, query: str, room_id: str = None, user_id: str =
         .offset(skip)\
         .limit(limit)\
         .all()
+
+def count_messages(db: Session, room_id: str = None, user_id: str = None):
+    """计算消息总数"""
+    query = db.query(func.count(Message.event_id))
+    
+    if room_id:
+        query = query.filter(Message.room_id == room_id)
+    if user_id:
+        query = query.filter(Message.sender_id == user_id)
+        
+    return query.scalar()
+
+def count_search_messages(db: Session, search_query: str, room_id: str = None, user_id: str = None):
+    """计算搜索结果的消息总数"""
+    query = db.query(func.count(Message.event_id)).filter(
+        Message.content.ilike(f"%{search_query}%")
+    )
+    
+    if room_id:
+        query = query.filter(Message.room_id == room_id)
+    if user_id:
+        query = query.filter(Message.sender_id == user_id)
+        
+    return query.scalar()
 
 def create_user(db: Session, user_id: str, display_name: str = None):
     db_user = get_user(db, user_id)
