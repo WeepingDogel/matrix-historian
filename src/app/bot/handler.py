@@ -6,33 +6,38 @@ import json
 import logging
 import os
 from dotenv import load_dotenv
+import backoff  # 需要添加到requirements.txt
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 class MatrixBot:
     def __init__(self):
-        homeserver = os.getenv("MATRIX_HOMESERVER")
-        username = os.getenv("MATRIX_USER")
-        if username and not username.startswith("@"):
-            username = f"@{username}:matrix.org"
-        password = os.getenv("MATRIX_PASSWORD")
+        self.homeserver = os.getenv("MATRIX_HOMESERVER")
+        self.username = os.getenv("MATRIX_USER")
+        if self.username and not self.username.startswith("@"):
+            self.username = f"@{self.username}:matrix.org"
+        self.password = os.getenv("MATRIX_PASSWORD")
 
-        if not all([homeserver, username, password]):
+        if not all([self.homeserver, self.username, self.password]):
             raise ValueError("Missing Matrix credentials in .env")
             
-        logger.info(f"Initializing bot with user {username}")
+        logger.info(f"Initializing bot with user {self.username}")
+        self.initialize_bot()
+        logger.info("Bot initialized successfully")
+
+    def initialize_bot(self):
+        """初始化或重新初始化bot"""
         self.creds = botlib.Creds(
-            homeserver=homeserver,
-            username=username,
-            password=password,
+            homeserver=self.homeserver,
+            username=self.username,
+            password=self.password,
             session_stored_file="bot_session.txt"
         )
         self.config = botlib.Config()
-        self.config.encryption_enabled = False  # 禁用加密以简化测试
+        self.config.encryption_enabled = False
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
-        logger.info("Bot initialized successfully")
 
     def setup_handlers(self):
         @self.bot.listener.on_message_event
@@ -73,15 +78,54 @@ class MatrixBot:
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
 
-    async def start(self):
+    @backoff.on_exception(
+        backoff.expo,
+        (asyncio.TimeoutError, ConnectionError),
+        max_tries=5,
+        max_time=300
+    )
+    async def try_connect(self):
+        """尝试连接到Matrix服务器，带有重试机制"""
         try:
-            logger.info("Starting Matrix bot...")
-            logger.info(f"Using credentials for user: {self.creds.username}")
             await self.bot.main()
+        except Exception as e:
+            logger.error(f"Connection attempt failed: {str(e)}")
+            raise
+
+    async def reconnect(self):
+        """重新连接到Matrix服务器"""
+        logger.info("Attempting to reconnect...")
+        try:
+            # 重新初始化bot
+            self.initialize_bot()
+            # 尝试重新连接
+            await self.try_connect()
+            logger.info("Successfully reconnected")
             return True
         except Exception as e:
-            logger.error(f"Failed to start bot: {str(e)}", exc_info=True)
+            logger.error(f"Reconnection failed: {str(e)}")
             return False
 
+    async def start(self):
+        """启动bot，包含重试和重连逻辑"""
+        while True:
+            try:
+                logger.info("Starting Matrix bot...")
+                await self.try_connect()
+                return True
+            except (asyncio.TimeoutError, ConnectionError) as e:
+                logger.error(f"Connection error: {str(e)}")
+                logger.info("Waiting 60 seconds before reconnecting...")
+                await asyncio.sleep(60)
+                await self.reconnect()
+            except Exception as e:
+                logger.error(f"Fatal error: {str(e)}", exc_info=True)
+                return False
+
     async def stop(self):
-        pass  # simplematrixbotlib handles cleanup automatically
+        """停止bot"""
+        try:
+            if hasattr(self.bot, 'async_client'):
+                await self.bot.async_client.close()
+        except Exception as e:
+            logger.error(f"Error stopping bot: {str(e)}")

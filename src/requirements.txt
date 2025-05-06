@@ -21,3 +21,6 @@ humanize==4.12.3
 # 开发工具
 pytest==8.3.5
 python-dotenv==1.1.0
+
+# 重试机制
+backoff==2.2.1
