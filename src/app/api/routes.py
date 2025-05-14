@@ -78,6 +78,17 @@ def read_users(skip: int = Query(0, description="Skip N records"), limit: int = 
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
+@router.get("/users/search/", response_model=List[UserBase])
+def search_users(
+    query: str = Query(..., description="Search query string"),
+    skip: int = Query(0, description="Skip N records"),
+    limit: int = Query(100, description="Limit the number of records"),
+    db: Session = Depends(get_db)
+):
+    """搜索用户API"""
+    users = crud.search_users(db, query=query, skip=skip, limit=limit)
+    return users
+
 @router.get("/rooms/", response_model=List[RoomBase])
 def read_rooms(skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
     rooms = crud.get_rooms(db, skip=skip, limit=limit)

@@ -64,6 +64,17 @@ def count_search_messages(db: Session, search_query: str, room_id: str = None, u
         
     return query.scalar()
 
+def count_users(db: Session):
+    """计算用户总数"""
+    return db.query(func.count(User.user_id)).scalar()
+
+def count_search_users(db: Session, query: str):
+    """计算搜索用户结果总数"""
+    return db.query(func.count(User.user_id)).filter(
+        User.display_name.ilike(f"%{query}%") | 
+        User.user_id.ilike(f"%{query}%")
+    ).scalar()
+
 def create_user(db: Session, user_id: str, display_name: str = None):
     db_user = get_user(db, user_id)
     if not db_user:
@@ -103,3 +114,10 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def get_rooms(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Room).offset(skip).limit(limit).all()
+
+def search_users(db: Session, query: str, skip: int = 0, limit: int = 100):
+    """搜索用户"""
+    return db.query(User).filter(
+        User.display_name.ilike(f"%{query}%") | 
+        User.user_id.ilike(f"%{query}%")
+    ).offset(skip).limit(limit).all()
