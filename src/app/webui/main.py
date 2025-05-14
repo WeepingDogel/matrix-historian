@@ -125,10 +125,6 @@ def main():
                 st.session_state.all_messages = []
                 st.session_state.filters = current_filters
                 
-            # 添加基本统计信息
-            st.header("统计信息")
-            st.metric("总房间数", len(rooms) if rooms else 0)
-            st.metric("总用户数", len(users) if users else 0)
         except Exception as e:
             st.error(f"加载数据时出错: {str(e)}")
             return
