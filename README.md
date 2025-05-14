@@ -2,6 +2,24 @@
 
 A Matrix message archival and search service.
 
+
+```mermaid
+    graph TB
+        A[Matrix Server] -->|Events| B[Matrix Bot]
+        B -->|Extract Data| C[SQLite DB]
+        D[Web Interface] -->|API Requests| E[FastAPI Backend]
+        E -->|Query| C
+        C -->|Results| E
+        E -->|Response| D
+        
+        style A fill:#f9f,stroke:#333
+        style B fill:#bbf,stroke:#333
+        style C fill:#dfd,stroke:#333
+        style D fill:#fbb,stroke:#333
+        style E fill:#bfb,stroke:#333
+```
+
+
 ## Features
 
 - Automatically records Matrix room message history

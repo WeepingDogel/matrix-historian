@@ -2,6 +2,24 @@
 
 一个Matrix消息存档和搜索服务。
 
+
+```mermaid
+    graph TB
+        A[Matrix Server] -->|Events| B[Matrix Bot]
+        B -->|Extract Data| C[SQLite DB]
+        D[Web Interface] -->|API Requests| E[FastAPI Backend]
+        E -->|Query| C
+        C -->|Results| E
+        E -->|Response| D
+        
+        style A fill:#f9f,stroke:#333
+        style B fill:#bbf,stroke:#333
+        style C fill:#dfd,stroke:#333
+        style D fill:#fbb,stroke:#333
+        style E fill:#bfb,stroke:#333
+```
+
+
 ## 功能特性
 
 - 自动记录Matrix房间的消息历史
