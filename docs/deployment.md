@@ -89,3 +89,33 @@ server {
 - Verify that the `.env` file contains valid Matrix configuration.
 - Use `docker logs <container_name>` to inspect container logs if issues arise.
 - Confirm that the required ports are available and not conflicted by other applications.
+
+## AI Analysis Configuration
+
+To enable AI analysis features (sentiment analysis, etc.), you need to:
+
+1. Register and obtain a Groq API key
+2. Set the environment variable:
+   ```bash
+   GROQ_API_KEY=your_api_key_here
+   ```
+
+## System Requirements
+
+In addition to basic requirements, for analysis features we recommend:
+
+- CPU: 4+ cores
+- Memory: 8GB+ RAM
+- Disk: 20GB+ storage
+- Python 3.9+
+
+## Dependencies
+
+New analysis features require:
+- pandas
+- plotly
+- networkx
+- wordcloud
+- matplotlib
+- jieba
+

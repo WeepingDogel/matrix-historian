@@ -194,3 +194,122 @@ All endpoints are prefixed with `/api/v1`.
   ```json
   {"status": "healthy"}
   ```
+
+## Analytics API Endpoints
+
+### GET /api/v1/analytics/overview
+- Description: Get analytics overview including message stats and user activity.
+- Parameters:
+  - days (optional): Number of days to analyze. Default: 7
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "message_stats": [
+      {"date": "2024-01-01", "count": 150}
+    ],
+    "user_activity": [
+      {
+        "user": {
+          "user_id": "@user:matrix.org",
+          "display_name": "User Name"
+        },
+        "message_count": 42
+      }
+    ],
+    "cache_info": {
+      "cache_time": "20240101",
+      "expires_in": "1 hour"
+    }
+  }
+  ```
+
+### GET /api/v1/analytics/wordcloud
+- Description: Generate word frequency data for word cloud visualization.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - limit (optional): Maximum number of words. Default: 50
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "messages": [
+      {"word": "hello", "count": 42},
+      {"word": "matrix", "count": 28}
+    ]
+  }
+  ```
+
+### GET /api/v1/analytics/user-network
+- Description: Get user interaction network data.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - min_weight (optional): Minimum interaction weight. Default: 3
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "nodes": [
+      {"id": "@user1:matrix.org"},
+      {"id": "@user2:matrix.org"}
+    ],
+    "edges": [
+      {
+        "source": "@user1:matrix.org",
+        "target": "@user2:matrix.org",
+        "weight": 5
+      }
+    ]
+  }
+  ```
+
+### GET /api/v1/analytics/sentiment
+- Description: Analyze sentiment of messages using AI.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "sentiment": "positive",
+    "confidence": 0.85,
+    "analysis": "Generally positive discussions",
+    "model": "llama-3.1-8b-instant"
+  }
+  ```
+
+### GET /api/v1/analytics/activity-heatmap
+- Description: Get activity heatmap data by hour and weekday.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "heatmap": [[0, 1, 2], [3, 4, 5]],
+    "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "hours": [0, 1, 2, ..., 23]
+  }
+  ```
+
+### GET /api/v1/analytics/topic-evolution
+- Description: Analyze topic evolution over time.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {
+    "topics": [
+      {
+        "topic": "Technical Discussion",
+        "weight": 1.0,
+        "timestamp": "2024-01-01T12:00:00Z"
+      }
+    ],
+    "summary": {
+      "main_topics": ["Daily Chat", "Tech Support", "Q&A"],
+      "trend": "stable"
+    }
+  }
+  ```
