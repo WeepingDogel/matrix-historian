@@ -4,19 +4,26 @@ A Matrix message archival and analysis tool.
 
 
 ```mermaid
-    graph TB
-        A[Matrix Server] -->|Events| B[Matrix Bot]
-        B -->|Extract Data| C[SQLite DB]
-        D[Web Interface] -->|API Requests| E[FastAPI Backend]
-        E -->|Query| C
-        C -->|Results| E
-        E -->|Response| D
-        
-        style A fill:#f9f,stroke:#333
-        style B fill:#bbf,stroke:#333
-        style C fill:#dfd,stroke:#333
-        style D fill:#fbb,stroke:#333
-        style E fill:#bfb,stroke:#333
+graph TB
+    A[Matrix Server] -->|Events| B[Matrix Bot]
+    B -->|Extract Data| C[SQLite DB]
+    D[Web Interface] -->|API Requests| E[FastAPI Backend]
+    E -->|Query| C
+    C -->|Results| E
+    E -->|Response| D
+    
+    F[Analysis Engine] -->|Process Data| C
+    E -->|Request Analysis| F
+    F -->|Analysis Results| E
+    G[AI Models] -->|Sentiment/Topic Analysis| F
+    
+    style A fill:#f9f,stroke:#333
+    style B fill:#bbf,stroke:#333
+    style C fill:#dfd,stroke:#333
+    style D fill:#fbb,stroke:#333
+    style E fill:#bfb,stroke:#333
+    style F fill:#bff,stroke:#333
+    style G fill:#fbf,stroke:#333
 ```
 
 
