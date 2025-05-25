@@ -1,22 +1,29 @@
 # Matrix Historian
 
-A Matrix message archival and search service.
+A Matrix message archival and analysis tool.
 
 
 ```mermaid
-    graph TB
-        A[Matrix Server] -->|Events| B[Matrix Bot]
-        B -->|Extract Data| C[SQLite DB]
-        D[Web Interface] -->|API Requests| E[FastAPI Backend]
-        E -->|Query| C
-        C -->|Results| E
-        E -->|Response| D
-        
-        style A fill:#f9f,stroke:#333
-        style B fill:#bbf,stroke:#333
-        style C fill:#dfd,stroke:#333
-        style D fill:#fbb,stroke:#333
-        style E fill:#bfb,stroke:#333
+graph TB
+    A[Matrix Server] -->|Events| B[Matrix Bot]
+    B -->|Extract Data| C[SQLite DB]
+    D[Web Interface] -->|API Requests| E[FastAPI Backend]
+    E -->|Query| C
+    C -->|Results| E
+    E -->|Response| D
+    
+    F[Analysis Engine] -->|Process Data| C
+    E -->|Request Analysis| F
+    F -->|Analysis Results| E
+    G[AI Models] -->|Sentiment/Topic Analysis| F
+    
+    style A fill:#f9f,stroke:#333
+    style B fill:#bbf,stroke:#333
+    style C fill:#dfd,stroke:#333
+    style D fill:#fbb,stroke:#333
+    style E fill:#bfb,stroke:#333
+    style F fill:#bff,stroke:#333
+    style G fill:#fbf,stroke:#333
 ```
 
 
@@ -27,6 +34,17 @@ A Matrix message archival and search service.
 - Provides Web interface for message browsing and searching
 - Docker deployment support
 - Uses SQLite database for message storage
+
+### Data Analysis Features
+
+- **Activity Overview**: Displays message trends and user activity levels
+- **Word Cloud Analysis**: Generates statistics and visualizations of word frequency in chats
+- **User Interaction**: Shows the network and intensity of interactions between users
+- **Topic Analysis**: Tracks the evolution of topics over time
+- **Sentiment Analysis**: AI-based analysis of message sentiment tendencies
+- **Activity Analysis**: Displays heatmaps of group activity during different times
+
+All analysis features support filtering by time range and room.
 
 ## Quick Start
 
@@ -64,11 +82,29 @@ Main configuration items:
 - `MATRIX_USER`: Bot username
 - `MATRIX_PASSWORD`: Bot password
 
+### Environment Variables
+
+```bash
+# Required environment variables
+MATRIX_HOMESERVER=...
+BOT_USER_ID=...
+BOT_ACCESS_TOKEN=...
+
+# AI analysis related configuration (optional)
+GROQ_API_KEY=...  # For sentiment analysis
+```
+
 ## Usage
 
 1. Visit http://localhost:8502 to open the Web interface
 2. Use the search box to search messages
 3. Use filters to filter messages by room or user
+
+### Data Analysis
+
+1. Go to the "Message Analysis" page on the Web interface
+2. Use the sidebar to select the analysis time range and target room
+3. View various analysis charts and statistics
 
 ## Development
 

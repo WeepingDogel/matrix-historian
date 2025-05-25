@@ -13,6 +13,7 @@ services:
       - MATRIX_USER=${MATRIX_USER:-goz-historian}
       - MATRIX_PASSWORD=${MATRIX_PASSWORD:-historian:nanonanoda}
       - DATABASE_URL=sqlite:///app/db/database.db
+      - GROQ_API_KEY=${GROQ_API_KEY:-your_groq_api_key}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
@@ -24,10 +25,13 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.webui
-    ports:
-      - "8502:8501"
     environment:
       - API_URL=http://app:8000/api/v1
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    ports:
+      - "8502:8501"
     depends_on:
       - app
     restart: always

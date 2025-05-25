@@ -8,6 +8,14 @@ import humanize
 import locale
 import os
 import logging
+from app.webui.tools.analysis import render_analysis_page
+
+# 修改导入语句
+import sys
+from pathlib import Path
+
+# 添加项目根目录到Python路径
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 # 尝试设置中文locale，如果失败则使用系统默认
 try:
@@ -172,118 +180,128 @@ def main():
         health_check()
         return
 
-    st.title("Matrix Historian")
+    # 添加页面导航
+    page = st.sidebar.selectbox(
+        "选择页面",
+        ["消息浏览", "消息分析"],
+        key="page_selection"
+    )
     
-    # 初始化会话状态
-    if 'page' not in st.session_state:
-        st.session_state.page = 0
-        st.session_state.all_messages = []
-        st.session_state.loaded_users = []
-        st.session_state.search_users = []
-        st.session_state.selected_users = []
-        st.session_state.show_search = False
-        st.session_state.filters = {
-            'query': '',
-            'room': '全部',
-            'user': '全部'
-        }
-
-    def toggle_search_window():
-        st.session_state.show_search = not st.session_state.show_search
-
-    with st.sidebar:
-        st.header("过滤器")
-        search_query = st.text_input("搜索消息")
+    if page == "消息浏览":
+        st.title("Matrix Historian")
         
-        try:
-            # 获取房间列表并格式化显示
-            rooms = fetch_data("rooms")
-            room_display = {"全部": "全部"}
-            if rooms:
-                room_display.update({format_room_name(room): room["room_id"] for room in rooms})
-            
-            selected_room_display = st.selectbox("选择房间", options=list(room_display.keys()))
-            selected_room = room_display[selected_room_display]
-            
-            # 使用优化后的用户选择组件
-            user_selection_area()
-
-            # 检查过滤条件是否改变
-            current_filters = {
-                'query': search_query,
-                'room': selected_room_display,
-                'user': st.session_state.filters.get('user', '全部')
+        # 初始化会话状态
+        if 'page' not in st.session_state:
+            st.session_state.page = 0
+            st.session_state.all_messages = []
+            st.session_state.loaded_users = []
+            st.session_state.search_users = []
+            st.session_state.selected_users = []
+            st.session_state.show_search = False
+            st.session_state.filters = {
+                'query': '',
+                'room': '全部',
+                'user': '全部'
             }
-            
-            if current_filters != st.session_state.filters:
-                st.session_state.page = 0
-                st.session_state.all_messages = []
-                st.session_state.filters = current_filters
-                
-        except Exception as e:
-            st.error(f"加载数据时出错: {str(e)}")
-            return
-    
-    # 构建查询参数
-    params = {
-        'skip': len(st.session_state.all_messages),
-        'limit': 100  # 修改为100以匹配API默认值
-    }
-    if search_query:
-        params["query"] = search_query
-    if selected_room != "全部":
-        params["room_id"] = selected_room
-    if st.session_state.filters.get('user') != "全部":
-        params["user_id"] = st.session_state.filters['user']
 
-    # 获取消息
-    endpoint = "search" if search_query else "messages"
-    response = fetch_data(endpoint, params)
-    
-    if response:
-        new_messages = response.get("messages", [])
-        total = response.get("total", 0)
-        has_more = response.get("has_more", False)
-        
-        # 追加新消息
-        if new_messages:
-            st.session_state.all_messages.extend(new_messages)
-        
-        # 显示所有消息
-        if st.session_state.all_messages:
-            df = pd.DataFrame(st.session_state.all_messages)
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-            df = df.sort_values("timestamp", ascending=False)
-            df = df.drop_duplicates(subset=['event_id'])
-            
-            for _, msg in df.iterrows():
-                with st.container():
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        # 使用格式化的显示名称
-                        sender_name = format_user_name(msg['sender'])
-                        room_name = format_room_name(msg['room'])
-                        st.markdown(f"**{sender_name}** in *{room_name}*")
-                        # 使用高亮显示消息内容
-                        highlighted_content = highlight_text(msg["content"], search_query)
-                        st.markdown(highlighted_content, unsafe_allow_html=True)
-                    with col2:
-                        # 显示相对时间
-                        st.text(get_relative_time(msg["timestamp"]))
-                    st.divider()
-            
-            # 添加加载更多按钮
-            loaded_count = len(st.session_state.all_messages)
-            if has_more:
-                if st.button(f"加载更多消息 ({loaded_count}/{total})"):
-                    st.session_state.page += 1
-                    st.rerun()
-                    
-        # 在侧边栏显示统计信息
+        def toggle_search_window():
+            st.session_state.show_search = not st.session_state.show_search
+
         with st.sidebar:
-            st.metric("消息总数", total)
-    else:
-        st.error("加载消息失败")
+            st.header("过滤器")
+            search_query = st.text_input("搜索消息")
+            
+            try:
+                # 获取房间列表并格式化显示
+                rooms = fetch_data("rooms")
+                room_display = {"全部": "全部"}
+                if rooms:
+                    room_display.update({format_room_name(room): room["room_id"] for room in rooms})
+                
+                selected_room_display = st.selectbox("选择房间", options=list(room_display.keys()))
+                selected_room = room_display[selected_room_display]
+                
+                # 使用优化后的用户选择组件
+                user_selection_area()
+
+                # 检查过滤条件是否改变
+                current_filters = {
+                    'query': search_query,
+                    'room': selected_room_display,
+                    'user': st.session_state.filters.get('user', '全部')
+                }
+                
+                if current_filters != st.session_state.filters:
+                    st.session_state.page = 0
+                    st.session_state.all_messages = []
+                    st.session_state.filters = current_filters
+                    
+            except Exception as e:
+                st.error(f"加载数据时出错: {str(e)}")
+                return
+        
+        # 构建查询参数
+        params = {
+            'skip': len(st.session_state.all_messages),
+            'limit': 100  # 修改为100以匹配API默认值
+        }
+        if search_query:
+            params["query"] = search_query
+        if selected_room != "全部":
+            params["room_id"] = selected_room
+        if st.session_state.filters.get('user') != "全部":
+            params["user_id"] = st.session_state.filters['user']
+
+        # 获取消息
+        endpoint = "search" if search_query else "messages"
+        response = fetch_data(endpoint, params)
+        
+        if response:
+            new_messages = response.get("messages", [])
+            total = response.get("total", 0)
+            has_more = response.get("has_more", False)
+            
+            # 追加新消息
+            if new_messages:
+                st.session_state.all_messages.extend(new_messages)
+            
+            # 显示所有消息
+            if st.session_state.all_messages:
+                df = pd.DataFrame(st.session_state.all_messages)
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                df = df.sort_values("timestamp", ascending=False)
+                df = df.drop_duplicates(subset=['event_id'])
+                
+                for _, msg in df.iterrows():
+                    with st.container():
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            # 使用格式化的显示名称
+                            sender_name = format_user_name(msg['sender'])
+                            room_name = format_room_name(msg['room'])
+                            st.markdown(f"**{sender_name}** in *{room_name}*")
+                            # 使用高亮显示消息内容
+                            highlighted_content = highlight_text(msg["content"], search_query)
+                            st.markdown(highlighted_content, unsafe_allow_html=True)
+                        with col2:
+                            # 显示相对时间
+                            st.text(get_relative_time(msg["timestamp"]))
+                        st.divider()
+                
+                # 添加加载更多按钮
+                loaded_count = len(st.session_state.all_messages)
+                if has_more:
+                    if st.button(f"加载更多消息 ({loaded_count}/{total})"):
+                        st.session_state.page += 1
+                        st.rerun()
+                        
+            # 在侧边栏显示统计信息
+            with st.sidebar:
+                st.metric("消息总数", total)
+        else:
+            st.error("加载消息失败")
+    elif page == "消息分析":
+        render_analysis_page()  # 新添加的分析页面
 
 if __name__ == "__main__":
     main()

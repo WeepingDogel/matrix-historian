@@ -24,3 +24,12 @@ python-dotenv==1.1.0
 
 # 重试机制
 backoff==2.2.1
+
+# 数据分析和可视化
+plotly==5.20.0
+wordcloud==1.9.3
+jieba==0.42.1
+networkx==3.2.1
+
+# AI 相关
+groq
