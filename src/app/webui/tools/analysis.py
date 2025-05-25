@@ -75,7 +75,6 @@ def render_analysis_page():
     render_activity_patterns(api_url, days, room_id)
 
 def render_activity_overview(api_url: str, days: int, room_id: str = None):
-    st.subheader("活动概览")
     try:
         # 获取概览数据
         overview = fetch_api_data(f"{api_url}/analytics/overview", {"days": days, "room_id": room_id})
@@ -103,7 +102,6 @@ def render_activity_overview(api_url: str, days: int, room_id: str = None):
 
 def render_wordcloud_analysis(api_url: str, days: int, room_id: str = None):
     """渲染词云分析"""
-    st.subheader("词云分析")
     
     try:
         params = {"days": days, "room_id": room_id}
@@ -160,7 +158,6 @@ def render_wordcloud_analysis(api_url: str, days: int, room_id: str = None):
             st.exception(e)
 
 def render_user_interactions(api_url: str, days: int, room_id: str = None):
-    st.subheader("用户互动网络")
     try:
         params = {"days": days, "room_id": room_id}
         data = fetch_api_data(f"{api_url}/analytics/user-network", params)
@@ -196,7 +193,6 @@ def render_user_interactions(api_url: str, days: int, room_id: str = None):
         st.error(f"加载用户互动分析失败: {str(e)}")
 
 def render_topic_analysis(api_url: str, days: int, room_id: str = None):
-    st.subheader("话题分析")
     try:
         params = {"days": days, "room_id": room_id}
         data = fetch_api_data(f"{api_url}/analytics/topic-evolution", params)
@@ -219,7 +215,6 @@ def render_topic_analysis(api_url: str, days: int, room_id: str = None):
         st.error(f"加载话题分析失败: {str(e)}")
 
 def render_sentiment_analysis(api_url: str, days: int, room_id: str = None):
-    st.subheader("情感分析")
     try:
         params = {"days": days, "room_id": room_id}
         data = fetch_api_data(f"{api_url}/analytics/sentiment", params)
@@ -249,7 +244,6 @@ def render_sentiment_analysis(api_url: str, days: int, room_id: str = None):
         st.error(f"加载情感分析失败: {str(e)}")
 
 def render_activity_patterns(api_url: str, days: int, room_id: str = None):
-    st.subheader("活跃度模式")
     try:
         params = {"days": days, "room_id": room_id}
         data = fetch_api_data(f"{api_url}/analytics/activity-heatmap", params)
