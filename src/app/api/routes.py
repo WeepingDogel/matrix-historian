@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 from app.db.database import get_db
 from app.crud import message as crud
 from app.schemas.message import Message, UserBase, RoomBase, MessageResponse
+from datetime import datetime
 
 router = APIRouter()
 
@@ -25,12 +26,22 @@ def get_messages_count(
 def read_messages(
     room_id: str = Query(None, description="Filter by room ID"),
     user_id: str = Query(None, description="Filter by user ID"),
+    after: datetime = Query(None, description="Filter messages after this time"),
     skip: int = Query(0, description="Skip N records"), 
     limit: int = Query(100, description="Limit the number of records"), 
     db: Session = Depends(get_db)
 ):
-    total = crud.count_messages(db, room_id=room_id, user_id=user_id)
-    messages = crud.get_messages(db, room_id=room_id, user_id=user_id, skip=skip, limit=limit)
+    query_params = {}
+    if room_id:
+        query_params["room_id"] = room_id
+    if user_id:
+        query_params["user_id"] = user_id
+    if after:
+        query_params["after"] = after
+        
+    total = crud.count_messages(db, **query_params)
+    messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)
+    
     return MessageResponse(
         messages=messages,
         total=total,
@@ -97,3 +108,42 @@ def read_rooms(skip: int = Query(0, description="Skip N records"), limit: int = 
 @router.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@router.get("/analytics/message-stats")
+def get_message_statistics(
+    days: int = Query(7, description="Number of days to analyze"),
+    db: Session = Depends(get_db)
+):
+    """获取消息统计数据"""
+    stats = crud.get_message_stats(db, days)
+    return {"stats": stats}
+
+@router.get("/analytics/user-activity")
+def get_user_activity(
+    limit: int = Query(10, description="Number of users to return"),
+    db: Session = Depends(get_db)
+):
+    """获取用户活跃度统计"""
+    activity = crud.get_user_activity(db, limit)
+    return {
+        "users": [{
+            "user": user.user_id,
+            "display_name": user.display_name,
+            "message_count": count
+        } for user, count in activity]
+    }
+
+@router.get("/analytics/room-activity")
+def get_room_activity(
+    limit: int = Query(10, description="Number of rooms to return"),
+    db: Session = Depends(get_db)
+):
+    """获取房间活跃度统计"""
+    activity = crud.get_room_activity(db, limit)
+    return {
+        "rooms": [{
+            "room": room.room_id,
+            "name": room.name,
+            "message_count": count
+        } for room, count in activity]
+    }

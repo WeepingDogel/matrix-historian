@@ -10,6 +10,7 @@ import logging
 import asyncio
 from app.bot.handler import MatrixBot
 from app.utils.logging_config import setup_logging
+from app.api import analytics
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 
 

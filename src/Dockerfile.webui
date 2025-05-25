@@ -4,6 +4,9 @@ FROM python:3.12.3-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     curl \
+    fonts-noto-cjk \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen
@@ -11,12 +14,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 设置环境变量
 ENV LANG=zh_CN.UTF-8 \
     LANGUAGE=zh_CN:zh \
-    LC_ALL=zh_CN.UTF-8
+    LC_ALL=zh_CN.UTF-8 \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir streamlit pandas requests humanize
+RUN pip install --no-cache-dir \
+    streamlit==1.45.0 \
+    pandas==2.2.3 \
+    requests==2.32.3 \
+    plotly==5.20.0 \
+    humanize==4.12.3 \
+    wordcloud==1.9.3 \
+    networkx==2.8.8 \
+    matplotlib==3.8.0 \
+    scipy==1.12.0
+
 
 COPY . .
 
