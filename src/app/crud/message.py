@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from collections import Counter
 from typing import List, Tuple, Optional
 
-def get_messages(db: Session, room_id: str = None, user_id: str = None, 
-                after: datetime = None, skip: int = 0, limit: int = 100):
+def get_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[str] = None, 
+                after: Optional[datetime] = None, skip: int = 0, limit: int = 100):
     query = db.query(Message)
     
     if room_id:
@@ -33,7 +33,7 @@ def get_user_messages(db: Session, user_id: str, skip: int = 0, limit: int = 100
     return db.query(Message).filter(Message.sender_id == user_id)\
         .order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
 
-def search_messages(db: Session, query: str, room_id: str = None, user_id: str = None, skip: int = 0, limit: int = 100):
+def search_messages(db: Session, query: str, room_id: Optional[str] = None, user_id: Optional[str] = None, skip: int = 0, limit: int = 100):
     search_query = db.query(Message)\
         .filter(Message.content.like(f"%{query}%"))
     
@@ -47,8 +47,8 @@ def search_messages(db: Session, query: str, room_id: str = None, user_id: str =
         .limit(limit)\
         .all()
 
-def count_messages(db: Session, room_id: str = None, user_id: str = None, 
-                  after: datetime = None):
+def count_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[str] = None, 
+                  after: Optional[datetime] = None):
     query = db.query(func.count(Message.event_id))
     
     if room_id:
@@ -60,7 +60,7 @@ def count_messages(db: Session, room_id: str = None, user_id: str = None,
         
     return query.scalar()
 
-def count_search_messages(db: Session, search_query: str, room_id: str = None, user_id: str = None):
+def count_search_messages(db: Session, search_query: str, room_id: Optional[str] = None, user_id: Optional[str] = None):
     """计算搜索结果的消息总数"""
     query = db.query(func.count(Message.event_id)).filter(
         Message.content.ilike(f"%{search_query}%")
@@ -84,7 +84,7 @@ def count_search_users(db: Session, query: str):
         User.user_id.ilike(f"%{query}%")
     ).scalar()
 
-def create_user(db: Session, user_id: str, display_name: str = None):
+def create_user(db: Session, user_id: str, display_name: Optional[str] = None):
     db_user = get_user(db, user_id)
     if not db_user:
         db_user = User(user_id=user_id, display_name=display_name)
@@ -92,7 +92,7 @@ def create_user(db: Session, user_id: str, display_name: str = None):
         db.commit()
     return db_user
 
-def create_room(db: Session, room_id: str, name: str = None):
+def create_room(db: Session, room_id: str, name: Optional[str] = None):
     db_room = get_room(db, room_id)
     if not db_room:
         db_room = Room(room_id=room_id, name=name)
@@ -193,7 +193,7 @@ def get_word_frequency(db: Session, limit: int = 50, days: int = 7):
     # 返回原始消息内容供后续处理
     return [msg[0] for msg in messages]
 
-def get_user_interaction_pairs(db: Session, days: int = 7, min_count: int = 3, room_id: str = None) -> List[Tuple]:
+def get_user_interaction_pairs(db: Session, days: int = 7, min_count: int = 3, room_id: Optional[str] = None) -> List[Tuple]:
     """
     获取用户互动对，支持按房间筛选
     """
@@ -211,7 +211,8 @@ def get_user_interaction_pairs(db: Session, days: int = 7, min_count: int = 3, r
     if room_id:
         query = query.filter(Message.room_id == room_id)
     
-    return query.order_by(Message.timestamp).all()
+    # 转换为 tuple 列表
+    return [tuple(row) for row in query.order_by(Message.timestamp).all()]
 
 def get_message_trends(db: Session, days: int = 7, interval: str = "day"):
     """获取消息趋势数据"""
@@ -311,7 +312,8 @@ def get_activity_heatmap(db: Session, days: int = 7, room_id: Optional[str] = No
     if room_id:
         query = query.filter(Message.room_id == room_id)
     
-    return query.group_by(
+    # 转换为 tuple 列表
+    return [tuple(row) for row in query.group_by(
         'weekday',
         'hour'
-    ).order_by('weekday', 'hour').all()
+    ).order_by('weekday', 'hour').all()]

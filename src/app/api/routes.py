@@ -41,9 +41,10 @@ def read_messages(
         
     total = crud.count_messages(db, **query_params)
     messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)
-    
+    # 转换 ORM model 为 Pydantic schema
+    messages_schema = [Message.model_validate(msg) for msg in messages]
     return MessageResponse(
-        messages=messages,
+        messages=messages_schema,
         total=total,
         has_more=total > (skip + limit),
         next_skip=skip + limit if total > (skip + limit) else None
@@ -54,17 +55,17 @@ def read_message(event_id: str, db: Session = Depends(get_db)):
     message = crud.get_message(db, event_id=event_id)
     if message is None:
         raise HTTPException(status_code=404, detail="Message not found")
-    return message
+    return Message.model_validate(message)
 
 @router.get("/rooms/{room_id}/messages", response_model=List[Message])
 def read_room_messages(room_id: str, skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
     messages = crud.get_room_messages(db, room_id=room_id, skip=skip, limit=limit)
-    return messages
+    return [Message.model_validate(msg) for msg in messages]
 
 @router.get("/users/{user_id}/messages", response_model=List[Message])
 def read_user_messages(user_id: str, skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
     messages = crud.get_user_messages(db, user_id=user_id, skip=skip, limit=limit)
-    return messages
+    return [Message.model_validate(msg) for msg in messages]
 
 @router.get("/search/", response_model=MessageResponse)
 def search_messages(
@@ -77,8 +78,9 @@ def search_messages(
 ):
     total = crud.count_search_messages(db, query, room_id, user_id)
     messages = crud.search_messages(db, query, room_id, user_id, skip=skip, limit=limit)
+    messages_schema = [Message.model_validate(msg) for msg in messages]
     return MessageResponse(
-        messages=messages,
+        messages=messages_schema,
         total=total,
         has_more=total > (skip + limit),
         next_skip=skip + limit if total > (skip + limit) else None

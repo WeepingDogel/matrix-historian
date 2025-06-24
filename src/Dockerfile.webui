@@ -1,6 +1,6 @@
 FROM python:3.12.3-slim
 
-# 安装locales和curl
+# Install locales and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     curl \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen
 
-# 设置环境变量
+# Set environment variables
 ENV LANG=zh_CN.UTF-8 \
     LANGUAGE=zh_CN:zh \
     LC_ALL=zh_CN.UTF-8 \
@@ -37,3 +37,4 @@ COPY . .
 EXPOSE 8501
 
 CMD ["streamlit", "run", "app/webui/main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
