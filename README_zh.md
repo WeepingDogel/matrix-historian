@@ -78,6 +78,7 @@ docker-compose up -d
 - `MATRIX_HOMESERVER`: Matrix服务器地址
 - `MATRIX_USER`: Bot用户名
 - `MATRIX_PASSWORD`: Bot密码
+- `GROQ_API_KEY`: Groq API KEY，用于访问模型
 
 ### 环境变量
 
