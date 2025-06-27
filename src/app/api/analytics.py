@@ -78,29 +78,49 @@ def get_wordcloud_data(
     room_id: str = Query(None, description="房间ID"),
     db: Session = Depends(get_db)
 ):
-    """获取词云数据"""
+    """获取词云数据（仅统计名词，扩展停用词）"""
     try:
         messages = crud.get_messages(db, room_id=room_id, limit=1000)  # 获取原始消息
-        
-        # 使用jieba分词统计词频
+
+        # 使用jieba.posseg分词并统计名词词频
         from collections import Counter
-        import jieba
-        
+        import jieba.posseg as pseg
+
+        # 扩展停用词列表
+        stop_words = set([
+            '的', '了', '和', '是', '就', '都', '而', '及', '与', '着', '在', '也', '我', '你', '他', '她', '它',
+            '我们', '你们', '他们', '她们', '它们', '这', '那', '一个', '没有', '上', '下', '啊', '哦', '嗯', '吧',
+            '吗', '呀', '呢', '吧', '啊', '哦', '哇', '啦', '嘛', '呗', '哎', '哈', '嘿', '哟', '哼', '哎呀',
+            '与', '及', '并', '或', '如果', '因为', '所以', '而且', '但是', '不过', '虽然', '但是', '就是', '还有',
+            '并且', '以及', '等', '等到', '从', '到', '为', '被', '给', '让', '把', '对', '向', '往', '跟', '和',
+            '与', '及', '等', '等到', '之', '其', '此', '每', '各', '本', '该', '这些', '那些', '某', '某些', '任何',
+            '所有', '全部', '自己', '自身', '本人', '大家', '咱们', '有人', '没人', '什么', '啥', '哪个', '哪儿', '哪里',
+            '怎么', '怎样', '如何', '多少', '几', '谁', '谁的', '啥的', '什么的', '这儿', '那儿', '这里', '那里',
+            '时候', '时间', '现在', '今天', '明天', '昨天', '刚才', '刚刚', '已经', '还', '再', '就', '才', '又', '也',
+            '很', '挺', '非常', '特别', '极其', '十分', '相当', '比较', '更', '最', '太', '真', '都', '全', '总', '只',
+            '仅', '光', '单', '独', '每', '各', '本', '该', '这些', '那些', '某', '某些', '任何', '所有', '全部', '自己',
+            '自身', '本人', '大家', '咱们', '有人', '没人', '什么', '啥', '哪个', '哪儿', '哪里', '怎么', '怎样', '如何',
+            '多少', '几', '谁', '谁的', '啥的', '什么的', '这儿', '那儿', '这里', '那里', '时候', '时间', '现在', '今天',
+            '明天', '昨天', '刚才', '刚刚', '已经', '还', '再', '就', '才', '又', '也', '很', '挺', '非常', '特别', '极其',
+            '十分', '相当', '比较', '更', '最', '太', '真', '都', '全', '总', '只', '仅', '光', '单', '独'
+        ])
+
         words = []
         for msg in messages:
-            if msg.content:  # 确保消息内容不为空
-                words.extend(jieba.cut(msg.content))
-        
-        # 过滤掉停用词和单字词
-        stop_words = {'的', '了', '和', '是', '就', '都', '而', '及', '与', '着'}
-        word_freq = Counter(w for w in words if len(w) > 1 and w not in stop_words)
-        
+            content = getattr(msg, "content", None)
+            if content is not None and isinstance(content, str) and content.strip() != "":
+                for word, flag in pseg.cut(content):
+                    if flag.startswith('n') and word not in stop_words and len(word) > 1:
+                        words.append(word)
+
+        word_freq = Counter(words)
+
         # 转换为所需格式
         result = [
             {"word": word, "count": count}
             for word, count in word_freq.most_common(limit)
         ]
-        
+
         return {"messages": result}
     except Exception as e:
         raise HTTPException(
@@ -138,12 +158,11 @@ def analyze_content(
     from app.ai.analyzer import MessageAnalyzer
     analyzer = MessageAnalyzer()
     
-    messages = crud.get_word_frequency(db, days=days, room_id=room_id)
+    messages = crud.get_word_frequency(db, days=days)
     word_freq = analyzer.analyze_word_frequency(messages)
     
     return {
-        "word_frequency": word_freq,
-        "top_topics": analyzer.extract_topics(messages)
+        "word_frequency": word_freq
     }
 
 @router.get("/user-network")
@@ -256,8 +275,13 @@ async def analyze_topic_evolution(
         topics_data = []
         for msg in messages:
             # 为每条消息生成话题数据
+            content = getattr(msg, "content", None)
+            if content is not None and isinstance(content, str):
+                topic = analyze_single_topic(content)
+            else:
+                topic = ""
             topic_info = {
-                "topic": analyze_single_topic(msg.content),
+                "topic": topic,
                 "weight": 1.0,  # 简单起见设置为1.0
                 "timestamp": msg.timestamp.isoformat()
             }
@@ -268,7 +292,7 @@ async def analyze_topic_evolution(
         
         return {
             "topics": topics_data,
-            "summary": generate_topic_summary([msg.content for msg in messages])
+            "summary": generate_topic_summary([getattr(msg, "content", "") or "" for msg in messages])
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -308,10 +332,6 @@ async def get_ai_analysis(
         
         if analysis_type == "sentiment":
             result = await analyzer.analyze_sentiment(message_texts, model="llama-3.1-8b-instant")
-        elif analysis_type == "topic":
-            result = await analyzer.analyze_topic_evolution(message_texts, model="llama-3.1-8b-instant")
-        elif analysis_type == "pattern":
-            result = await analyzer.analyze_conversation_patterns(message_texts, model="llama-3.1-8b-instant")
         else:
             raise HTTPException(status_code=400, detail="不支持的分析类型")
             
