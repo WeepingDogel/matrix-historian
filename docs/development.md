@@ -1,8 +1,14 @@
-# Development Guide
+# Category
+* [Overview](./overview.md)
+* [Get Started](./get-started.md)
+* [Deployment](./deployment.md)
+* [Development](./development.md)
+* [API Reference](./reference/api-reference.md)
 
-{% hint style="info" %}
-**Category**: Development
-{% endhint %}
+---
+
+
+# Development Guide
 
 ## Setup
 
@@ -13,10 +19,6 @@
 
 - Follow PEP8 style guidelines.
 - Use the built-in logging module for logging.
-- Test the project with pytest:
-   ```bash
-   pytest
-   ```
 
 ## Project Structure
 

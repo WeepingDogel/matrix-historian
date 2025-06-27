@@ -1,9 +1,5 @@
 # Deployment Guide
 
-{% hint style="info" %}
-**Category**: Deployment
-{% endhint %}
-
 ## Docker Deployment
 
 ### Build Docker Images
