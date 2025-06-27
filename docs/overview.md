@@ -1,8 +1,13 @@
-# Project Overview
+# Category
+* [Overview](./overview.md)
+* [Get Started](./get-started.md)
+* [Deployment](./deployment.md)
+* [Development](./development.md)
+* [API Reference](./reference/api-reference.md)
 
-{% hint style="info" %}
-**Category**: Overview
-{% endhint %}
+---
+
+# Project Overview
 
 Matrix Historian is a service for archiving and searching messages from Matrix rooms. It automatically collects historical messages, supports filtering by room and user, and provides a web interface for easy browsing and searching.
 
@@ -35,19 +40,26 @@ Matrix Historian is a service for archiving and searching messages from Matrix r
 Here is a visual representation of how data flows through the system:
 
 ```mermaid
-    graph TB
-        A[Matrix Server] -->|Events| B[Matrix Bot]
-        B -->|Extract Data| C[SQLite DB]
-        D[Web Interface] -->|API Requests| E[FastAPI Backend]
-        E -->|Query| C
-        C -->|Results| E
-        E -->|Response| D
-        
-        style A fill:#f9f,stroke:#333
-        style B fill:#bbf,stroke:#333
-        style C fill:#dfd,stroke:#333
-        style D fill:#fbb,stroke:#333
-        style E fill:#bfb,stroke:#333
+graph TB
+    A[Matrix Server] -->|Events| B[Matrix Bot]
+    B -->|Extract Data| C[SQLite DB]
+    D[Web Interface] -->|API Requests| E[FastAPI Backend]
+    E -->|Query| C
+    C -->|Results| E
+    E -->|Response| D
+    
+    F[Analysis Engine] -->|Process Data| C
+    E -->|Request Analysis| F
+    F -->|Analysis Results| E
+    G[AI Models] -->|Sentiment/Topic Analysis| F
+    
+    style A fill:#f9f,stroke:#333
+    style B fill:#bbf,stroke:#333
+    style C fill:#dfd,stroke:#333
+    style D fill:#fbb,stroke:#333
+    style E fill:#bfb,stroke:#333
+    style F fill:#bff,stroke:#333
+    style G fill:#fbf,stroke:#333
 ```
 
 1. The Matrix Bot connects to the Matrix server using SimpleMatrixBotLib.

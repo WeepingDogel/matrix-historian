@@ -267,7 +267,7 @@ def get_conversation_patterns(db: Session, days: int = 7):
     }
 
 def _calculate_peak_hours(messages):
-    """计算活跃高峰时段"""
+    """Calculate peak activity hours"""
     hours = [msg.timestamp.hour for msg in messages]
     hour_counts = Counter(hours)
     return sorted(hour_counts.items(), key=lambda x: x[1], reverse=True)

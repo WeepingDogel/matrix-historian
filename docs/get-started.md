@@ -1,8 +1,13 @@
-# Quick Start Guide
+# Category
+* [Overview](./overview.md)
+* [Get Started](./get-started.md)
+* [Deployment](./deployment.md)
+* [Development](./development.md)
+* [API Reference](./reference/api-reference.md)
 
-{% hint style="info" %}
-**Category**: Getting Started
-{% endhint %}
+---
+
+# Quick Start Guide
 
 ## Prerequisites
 - Docker and docker-compose installed (optional)

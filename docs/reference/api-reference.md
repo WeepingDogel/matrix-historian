@@ -1,9 +1,5 @@
 # API Reference
 
-{% hint style="info" %}
-**Category**: Reference
-{% endhint %}
-
 ## Base URL
 All endpoints are prefixed with `/api/v1`.
 
