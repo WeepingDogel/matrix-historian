@@ -102,18 +102,14 @@ def get_wordcloud_data(
             '自身', '本人', '大家', '咱们', '有人', '没人', '什么', '啥', '哪个', '哪儿', '哪里', '怎么', '怎样', '如何',
             '多少', '几', '谁', '谁的', '啥的', '什么的', '这儿', '那儿', '这里', '那里', '时候', '时间', '现在', '今天',
             '明天', '昨天', '刚才', '刚刚', '已经', '还', '再', '就', '才', '又', '也', '很', '挺', '非常', '特别', '极其',
-            '十分', '相当', '比较', '更', '最', '太', '真', '都', '全', '总', '只', '仅', '光', '单', '独', '每', '各',
-            '本', '该', '这些', '那些', '某', '某些', '任何', '所有', '全部', '自己', '自身', '本人', '大家', '咱们', '有人',
-            '没人', '什么', '啥', '哪个', '哪儿', '哪里', '怎么', '怎样', '如何', '多少', '几', '谁', '谁的', '啥的',
-            '什么的', '这儿', '那儿', '这里', '那里', '时候', '时间', '现在', '今天', '明天', '昨天', '刚才', '刚刚',
-            '已经', '还', '再', '就', '才', '又', '也', '很', '挺', '非常', '特别', '极其', '十分', '相当', '比较', '更',
-            '最', '太', '真', '都', '全', '总', '只', '仅', '光', '单', '独'
+            '十分', '相当', '比较', '更', '最', '太', '真', '都', '全', '总', '只', '仅', '光', '单', '独'
         ])
 
         words = []
         for msg in messages:
-            if hasattr(msg, 'content') and msg.content:
-                for word, flag in pseg.cut(msg.content):
+            content = getattr(msg, "content", None)
+            if content is not None and isinstance(content, str) and content.strip() != "":
+                for word, flag in pseg.cut(content):
                     if flag.startswith('n') and word not in stop_words and len(word) > 1:
                         words.append(word)
 
@@ -162,12 +158,11 @@ def analyze_content(
     from app.ai.analyzer import MessageAnalyzer
     analyzer = MessageAnalyzer()
     
-    messages = crud.get_word_frequency(db, days=days, room_id=room_id)
+    messages = crud.get_word_frequency(db, days=days)
     word_freq = analyzer.analyze_word_frequency(messages)
     
     return {
-        "word_frequency": word_freq,
-        "top_topics": analyzer.extract_topics(messages)
+        "word_frequency": word_freq
     }
 
 @router.get("/user-network")
@@ -280,8 +275,13 @@ async def analyze_topic_evolution(
         topics_data = []
         for msg in messages:
             # 为每条消息生成话题数据
+            content = getattr(msg, "content", None)
+            if content is not None and isinstance(content, str):
+                topic = analyze_single_topic(content)
+            else:
+                topic = ""
             topic_info = {
-                "topic": analyze_single_topic(msg.content),
+                "topic": topic,
                 "weight": 1.0,  # 简单起见设置为1.0
                 "timestamp": msg.timestamp.isoformat()
             }
@@ -292,7 +292,7 @@ async def analyze_topic_evolution(
         
         return {
             "topics": topics_data,
-            "summary": generate_topic_summary([msg.content for msg in messages])
+            "summary": generate_topic_summary([getattr(msg, "content", "") or "" for msg in messages])
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -332,10 +332,6 @@ async def get_ai_analysis(
         
         if analysis_type == "sentiment":
             result = await analyzer.analyze_sentiment(message_texts, model="llama-3.1-8b-instant")
-        elif analysis_type == "topic":
-            result = await analyzer.analyze_topic_evolution(message_texts, model="llama-3.1-8b-instant")
-        elif analysis_type == "pattern":
-            result = await analyzer.analyze_conversation_patterns(message_texts, model="llama-3.1-8b-instant")
         else:
             raise HTTPException(status_code=400, detail="不支持的分析类型")
             
