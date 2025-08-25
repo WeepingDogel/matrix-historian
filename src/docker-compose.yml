@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: weepingdogel/matrix-historian:api-server-v0.1-alpha
     ports:
       - "8001:8000"
     volumes:
@@ -22,9 +22,7 @@ services:
       start_period: 40s
 
   webui:
-    build: 
-      context: .
-      dockerfile: Dockerfile.webui
+    image: weepingdogel/matrix-historian:webui-v0.1-alpha
     environment:
       - API_URL=http://app:8000/api/v1
       - PYTHONPATH=/app
