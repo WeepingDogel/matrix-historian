@@ -1,8 +1,8 @@
-version: '3.8'
+name: matrix-historian
 
 services:
   app:
-    image: weepingdogel/matrix-historian:api-server-v0.1-alpha
+    image: weepingdogel/matrix-historian:api-server-v1.0-alpha
     ports:
       - "8001:8000"
     volumes:
@@ -22,7 +22,7 @@ services:
       start_period: 40s
 
   webui:
-    image: weepingdogel/matrix-historian:webui-v0.1-alpha
+    image: weepingdogel/matrix-historian:webui-v1.0-alpha
     environment:
       - API_URL=http://app:8000/api/v1
       - PYTHONPATH=/app
