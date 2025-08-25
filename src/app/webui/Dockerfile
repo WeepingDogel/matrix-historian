@@ -19,7 +19,6 @@ ENV LANG=zh_CN.UTF-8 \
 
 WORKDIR /app
 
-COPY requirements.txt .
 RUN pip install --no-cache-dir \
     streamlit==1.45.0 \
     pandas==2.2.3 \
