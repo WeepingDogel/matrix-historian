@@ -26,8 +26,6 @@ services:
     environment:
       - API_URL=http://app:8000/api/v1
       - PYTHONPATH=/app
-    volumes:
-      - .:/app
     ports:
       - "8502:8501"
     depends_on:
