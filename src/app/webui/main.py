@@ -8,7 +8,7 @@ import humanize
 import locale
 import os
 import logging
-from app.webui.tools.analysis import render_analysis_page
+from tools.analysis import render_analysis_page
 
 # 修改导入语句
 import sys
