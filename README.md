@@ -68,8 +68,8 @@ docker-compose up -d
 ```
 
 Services will start on the following ports:
-- API service: http://localhost:8001
-- Web interface: http://localhost:8502
+- API service: http://localhost:8000
+- Web interface: http://localhost:8501
 
 <!-- ### Manual Configuration
 
@@ -96,7 +96,7 @@ GROQ_API_KEY=...  # For sentiment analysis
 
 ## Usage
 
-1. Visit http://localhost:8502 to open the Web interface
+1. Visit http://localhost:8501 to open the Web interface
 2. Use the search box to search messages
 3. Use filters to filter messages by room or user
 

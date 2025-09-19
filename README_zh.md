@@ -94,7 +94,7 @@ GROQ_API_KEY=...  # 用于AI驱动的分析功能
 
 ## 使用方法
 
-1. 访问 http://localhost:8502 打开Web界面
+1. 访问 http://localhost:8501 打开Web界面
 2. 使用搜索框搜索消息
 3. 使用过滤器按房间或用户筛选消息
 4. 访问"消息分析"页面查看数据分析结果：
@@ -104,19 +104,124 @@ GROQ_API_KEY=...  # 用于AI驱动的分析功能
    - 跟踪话题演变
    - 获取AI驱动的情感分析
 
+## 数据分析功能
+
+访问"消息分析"页面查看详细的数据分析结果：
+
+1. **活动概览**: 显示消息趋势和用户活跃度
+2. **词云分析**: 生成聊天中词频统计和可视化
+3. **用户互动**: 展示用户间的网络和互动强度
+4. **话题分析**: 跟踪话题随时间的演变
+5. **情感分析**: 基于AI的消息情感倾向分析
+6. **活跃度分析**: 显示群组在不同时段的活跃度热力图
+
+所有分析功能都支持按时间范围和房间进行筛选。
+
+## 技术架构
+
+### 技术栈
+- **后端**: Python 3.12, FastAPI, SQLAlchemy, SQLite
+- **前端**: Streamlit, Pandas
+- **Matrix机器人**: SimpleMatrixBotLib
+- **AI分析**: Groq API
+
+### 数据流程
+1. Matrix机器人连接到Matrix服务器
+2. 自动收集房间消息事件
+3. 提取并存储消息数据到SQLite数据库
+4. Web界面通过FastAPI后端查询数据
+5. 分析引擎处理数据并提供AI驱动的洞察
+
 ## 开发说明
 
-项目结构：
+### 项目结构
 ```
 src/
 ├── app/             # 主应用代码
 │   ├── api/        # API接口
 │   ├── bot/        # Matrix机器人
 │   ├── db/         # 数据库模型
+│   ├── models/     # 数据模型
+│   ├── schemas/    # API模式
+│   ├── crud/       # 数据库操作
+│   ├── ai/         # AI分析模块
 │   └── webui/      # Web界面
 ├── tests/          # 测试代码
 └── docker-compose.yml
 ```
+
+### 开发环境设置
+
+1. 克隆仓库并进入目录
+```bash
+git clone https://github.com/yourusername/matrix-historian.git
+cd matrix-historian/src
+```
+
+2. 创建虚拟环境
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
+```
+
+3. 安装依赖
+```bash
+pip install -r requirements.txt
+```
+
+4. 初始化数据库
+```bash
+python app/db/database.py
+```
+
+5. 启动服务
+```bash
+# 启动API服务
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# 启动Web界面（新终端）
+streamlit run app/webui/main.py --server.port=8501 --server.address=0.0.0.0
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **机器人无法连接Matrix服务器**
+   - 检查`MATRIX_HOMESERVER`配置是否正确
+   - 确认机器人账号和密码正确
+   - 检查网络连接
+
+2. **Web界面无法访问**
+   - 确认端口8001和8502未被占用
+   - 检查Docker容器是否正常运行
+   - 查看容器日志: `docker-compose logs`
+
+3. **数据分析功能异常**
+   - 确认`GROQ_API_KEY`配置正确
+   - 检查API配额是否充足
+   - 查看应用日志获取详细错误信息
+
+### 日志查看
+```bash
+# 查看所有服务日志
+docker-compose logs
+
+# 查看特定服务日志
+docker-compose logs app
+docker-compose logs webui
+```
+
+## 贡献指南
+
+欢迎贡献代码！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建功能分支: `git checkout -b feature/your-feature`
+3. 提交更改: `git commit -am 'Add some feature'`
+4. 推送分支: `git push origin feature/your-feature`
+5. 提交 Pull Request
 
 ## 许可证
 
