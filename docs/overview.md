@@ -24,6 +24,7 @@ Matrix Historian is a service for archiving and searching messages from Matrix r
 - Frontend: Streamlit
 - Database: SQLite
 - Matrix Bot: SimpleMatrixBotLib for message collection
+ - Analytics: Additional endpoints under `/api/v1/analytics/*` for overviews, word clouds, user networks, heatmaps, trends, and AI-assisted sentiment analysis
 
 ## Technology Stack
 - **Backend**:

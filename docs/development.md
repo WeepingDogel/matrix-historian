@@ -19,6 +19,7 @@
 
 - Follow PEP8 style guidelines.
 - Use the built-in logging module for logging.
+ - All API routes are mounted under `/api/v1`; analytics routes are nested under `/api/v1/analytics`.
 
 ## Project Structure
 
@@ -42,3 +43,4 @@ src/
 - FastAPI supports auto-reload for development.
 - Streamlit automatically refreshes the interface.
 - Refer to `app/utils/logging_config.py` for logging configuration details.
+ - The app launches a background Matrix bot task via `MatrixBot` during FastAPI lifespan; be mindful of async behavior when debugging.
