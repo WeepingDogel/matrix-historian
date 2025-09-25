@@ -19,7 +19,7 @@
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/matrix-historian.git
-  cd matrix-historian/src
+   cd matrix-historian/src
    ```
 
 2. Configure Environment Variables:
@@ -55,7 +55,7 @@
 
 3. Initialize the database:
    ```bash
-  python app/db/database.py
+   python app/db/database.py
    ```
 
 4. Start the FastAPI service:
