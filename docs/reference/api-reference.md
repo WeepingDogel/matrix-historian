@@ -10,6 +10,7 @@ All endpoints are prefixed with `/api/v1`.
 - Parameters:
   - room_id (optional): Filter by room ID. Example: `!roomid:matrix.org`
   - user_id (optional): Filter by user ID. Example: `@user:matrix.org`
+  - after (optional): ISO datetime to filter messages after. Example: `2024-01-01T00:00:00Z`
   - skip (optional): Offset for pagination (default is 0). Example: `0`
   - limit (optional): Maximum number of records (default is 100). Example: `50`
 - Request Example:
@@ -166,6 +167,23 @@ All endpoints are prefixed with `/api/v1`.
   ]
   ```
 
+### GET /users/search/
+- Description: Search users by keyword.
+- Parameters:
+  - query (required): Search keyword. Example: `alice`
+  - skip (optional): Example: `0`
+  - limit (optional): Example: `50`
+- Request Example:
+  ```
+  /api/v1/users/search/?query=alice&skip=0&limit=50
+  ```
+- Response Example:
+  ```json
+  [
+    {"user_id": "@alice:matrix.org", "display_name": "Alice"}
+  ]
+  ```
+
 ### GET /rooms/
 - Description: Retrieve the list of rooms.
 - Request Example:
@@ -220,6 +238,33 @@ All endpoints are prefixed with `/api/v1`.
   }
   ```
 
+### GET /api/v1/analytics/message-stats
+- Description: Get daily message counts for the given period.
+- Parameters:
+  - days (optional): Number of days to analyze. Default: 7
+- Response Example:
+  ```json
+  {"stats": [{"date": "2024-01-01", "count": 150}]}
+  ```
+
+### GET /api/v1/analytics/user-activity
+- Description: Top user activity by message count.
+- Parameters:
+  - limit (optional): Number of users to return. Default: 10
+- Response Example:
+  ```json
+  {"users": [{"user": "@user:matrix.org", "display_name": "User Name", "message_count": 42}]}
+  ```
+
+### GET /api/v1/analytics/room-activity
+- Description: Top room activity by message count.
+- Parameters:
+  - limit (optional): Number of rooms to return. Default: 10
+- Response Example:
+  ```json
+  {"rooms": [{"room": "!room:matrix.org", "name": "Room Name", "message_count": 120}]}
+  ```
+
 ### GET /api/v1/analytics/wordcloud
 - Description: Generate word frequency data for word cloud visualization.
 - Parameters:
@@ -259,6 +304,17 @@ All endpoints are prefixed with `/api/v1`.
   }
   ```
 
+### GET /api/v1/analytics/interactions
+- Description: Get user interaction pairs with counts.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - min_count (optional): Minimum interaction count. Default: 3
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {"interactions": [["@user1:matrix.org", "@user2:matrix.org", 5]]}
+  ```
+
 ### GET /api/v1/analytics/sentiment
 - Description: Analyze sentiment of messages using AI.
 - Parameters:
@@ -272,6 +328,16 @@ All endpoints are prefixed with `/api/v1`.
     "analysis": "Generally positive discussions",
     "model": "llama-3.1-8b-instant"
   }
+  ```
+
+### GET /api/v1/analytics/trends
+- Description: Message trends aggregated by interval.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - interval (optional): Aggregation interval. One of: hour/day/week. Default: day
+- Response Example:
+  ```json
+  {"trends": [["2024-01-01", 100]]}
   ```
 
 ### GET /api/v1/analytics/activity-heatmap
@@ -307,5 +373,41 @@ All endpoints are prefixed with `/api/v1`.
       "main_topics": ["Daily Chat", "Tech Support", "Q&A"],
       "trend": "stable"
     }
+  }
+  ```
+
+### GET /api/v1/analytics/content-analysis
+- Description: Content analysis utilities like word frequency.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - room_id (optional): Filter by room ID
+- Response Example:
+  ```json
+  {"word_frequency": [{"word": "hello", "count": 42}]}
+  ```
+
+### GET /api/v1/analytics/ai-analysis
+- Description: Unified AI analysis endpoint.
+- Parameters:
+  - days (optional): Number of days. Default: 7
+  - room_id (optional): Filter by room ID
+  - analysis_type (optional): Supported: `sentiment`. Default: `sentiment`
+- Response Example:
+  ```json
+  {
+    "type": "sentiment",
+    "result": {"sentiment": "positive", "confidence": 0.85},
+    "metadata": {"message_count": 100, "room_id": null, "analysis_time": "2024-01-01T00:00:00Z", "model": "llama-3.1-8b-instant"}
+  }
+  ```
+
+### GET /api/v1/analytics/analytics-health
+- Description: Health check for analytics features and cache info.
+- Response Example:
+  ```json
+  {
+    "status": "healthy",
+    "features": ["sentiment_analysis", "topic_analysis", "pattern_analysis"],
+    "cache_info": {"enabled": true, "size": 128}
   }
   ```

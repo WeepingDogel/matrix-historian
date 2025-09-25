@@ -19,7 +19,7 @@
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/matrix-historian.git
-   cd matrix-historian/src
+  cd matrix-historian/src
    ```
 
 2. Configure Environment Variables:
@@ -34,10 +34,10 @@
 
 ### Using Docker
    ```bash
-   docker-compose up -d
+   docker-compose -f src/docker-compose.yml up -d
    ```
-   - API Service will be accessible at: http://localhost:8001
-   - Web Interface will be accessible at: http://localhost:8502
+   - API Service will be accessible at: http://localhost:8001 (proxies to container port 8000)
+   - Web Interface will be accessible at: http://localhost:8502 (proxies to container port 8501)
 
 ### Running Manually
 
@@ -55,7 +55,7 @@
 
 3. Initialize the database:
    ```bash
-   python app/db/database.py
+  python app/db/database.py
    ```
 
 4. Start the FastAPI service:
@@ -67,3 +67,7 @@
    ```bash
    streamlit run app/webui/main.py --server.port=8501 --server.address=0.0.0.0
    ```
+
+## API Base Path
+
+All HTTP endpoints are mounted under `/api/v1` per the application router configuration.
