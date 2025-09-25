@@ -55,7 +55,7 @@
 
 3. Initialize the database:
    ```bash
-  python app/db/database.py
+   python app/db/database.py
    ```
 
 4. Start the FastAPI service:
