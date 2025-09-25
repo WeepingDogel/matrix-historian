@@ -19,7 +19,7 @@
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/matrix-historian.git
-  cd matrix-historian/src
+   cd matrix-historian/src
    ```
 
 2. Configure Environment Variables:
