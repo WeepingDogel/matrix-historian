@@ -13,7 +13,24 @@
 ## Setup
 
 - Recommended Python version: 3.12 or higher.
-- Use a virtual environment (venv or conda) for dependency management.
+- The project uses **uv** for dependency management.
+- Dependencies are defined in `pyproject.toml` at the project root.
+
+### Installing Dependencies
+
+1. Install uv (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. Install project dependencies:
+   ```bash
+   # Using uv pip install
+   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq
+   
+   # Or using traditional pip
+   pip install -r ../src/requirements.txt
+   ```
 
 ## Code Standards
 

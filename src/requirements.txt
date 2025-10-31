@@ -30,6 +30,8 @@ plotly==5.20.0
 wordcloud==1.9.3
 jieba==0.42.1
 networkx==3.2.1
+matplotlib==3.8.0
+scipy==1.12.0
 
 # AI 相关
 groq

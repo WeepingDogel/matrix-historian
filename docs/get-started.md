@@ -48,8 +48,15 @@
    .venv\Scripts\activate  # On Windows
    ```
 
-2. Install dependencies:
+2. Install uv and dependencies:
    ```bash
+   # Install uv
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Install project dependencies using uv
+   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq
+   
+   # Or using traditional pip
    pip install -r requirements.txt
    ```
 

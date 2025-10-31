@@ -53,7 +53,7 @@ All analysis features support filtering by time range and room.
 1. Clone the repository
 ```bash
 git clone https://github.com/yourusername/matrix-historian.git
-cd matrix-historian/src
+cd matrix-historian
 ```
 
 2. Configure environment variables
@@ -64,12 +64,13 @@ cp .env.example .env
 
 3. Start the service
 ```bash
+cd src
 docker-compose up -d
 ```
 
 Services will start on the following ports:
-- API service: http://localhost:8000
-- Web interface: http://localhost:8501
+- API service: http://localhost:8001
+- Web interface: http://localhost:8502
 
 <!-- ### Manual Configuration
 
@@ -108,17 +109,41 @@ GROQ_API_KEY=...  # For sentiment analysis
 
 ## Development
 
-Project structure:
+### Project Dependencies
+
+This project uses **uv** for fast and reliable dependency management. Dependencies are defined in `pyproject.toml`.
+
+**Install uv:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-src/
-├── app/             # Main application code
-│   ├── api/        # API interfaces
-│   ├── bot/        # Matrix bot
-│   ├── db/         # Database models
-│   └── webui/      # Web interface
-├── tests/          # Test code
-└── docker-compose.yml
+
+**Install dependencies:**
+```bash
+# Using uv pip install (recommended)
+uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq
+
+# Or using traditional pip
+pip install -r src/requirements.txt
 ```
+
+### Project Structure
+```
+matrix-historian/
+├── pyproject.toml      # Python project configuration and dependencies
+├── src/
+│   ├── app/             # Main application code
+│   │   ├── api/        # API interfaces
+│   │   ├── bot/        # Matrix bot
+│   │   ├── db/         # Database models
+│   │   └── webui/      # Web interface
+│   ├── tests/          # Test code
+│   ├── Dockerfile      # Main API server Dockerfile
+│   └── docker-compose.yml
+└── docs/               # Documentation
+```
+
+See [Development Guide](docs/development.md) for detailed setup instructions.
 
 <!-- ## Documentation
 

@@ -13,15 +13,15 @@
 
 1. Navigate to the source directory:
    ```bash
-   cd matrix-historian/src
+   cd matrix-historian
    ```
-2. Build the API image (uses `src/Dockerfile`):
+2. Build the API image:
    ```bash
-   docker build -f Dockerfile -t matrix-historian-api .
+   docker build -f src/Dockerfile -t matrix-historian-api .
    ```
-3. Build the Web UI image (uses `src/app/webui/Dockerfile`):
+3. Build the Web UI image:
    ```bash
-   docker build -f Dockerfile.webui -t matrix-historian-webui .
+   docker build -f src/app/webui/Dockerfile -t matrix-historian-webui .
    ```
 
 ### Launch with docker-compose
@@ -37,19 +37,34 @@ Service configuration (as defined in `src/docker-compose.yml`):
 
 ## Manual Deployment
 
-1. Install dependencies:
+1. Install uv (if not already installed):
    ```bash
-   pip install -r requirements.txt
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
-2. Start the FastAPI service:
+
+2. Install dependencies:
+   ```bash
+   # Using uv pip install with package list
+   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq
+   
+   # Or create a virtual environment and install
+   uv venv
+   source .venv/bin/activate  # Linux/macOS
+   .venv\Scripts\activate     # Windows
+   pip install -r ../src/requirements.txt
+   ```
+
+3. Start the FastAPI service:
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
-3. Launch the Matrix Bot and Web UI separately (e.g., using Streamlit):
+
+4. Launch the Matrix Bot and Web UI separately (e.g., using Streamlit):
    ```bash
    streamlit run app/webui/main.py --server.port=8501 --server.address=0.0.0.0
    ```
-4. Ensure all environment variables in the `.env` file are properly configured.
+
+5. Ensure all environment variables in the `.env` file are properly configured.
 
 ## Reverse Proxy Configuration (Example with Nginx)
 
@@ -110,15 +125,16 @@ In addition to basic requirements, for analysis features we recommend:
 - CPU: 4+ cores
 - Memory: 8GB+ RAM
 - Disk: 20GB+ storage
-- Python 3.9+
+- Python 3.12+
 
 ## Dependencies
 
-New analysis features require:
-- pandas
-- plotly
-- networkx
-- wordcloud
-- matplotlib
-- jieba
+The project uses **uv** for dependency management. All dependencies are defined in `pyproject.toml`:
+- Matrix Bot libraries (matrix-nio, simplematrixbotlib)
+- FastAPI and uvicorn
+- Streamlit for web UI
+- pandas, plotly, networkx, wordcloud, matplotlib, jieba for analysis
+- Groq for AI-powered features
+
+Builds use uv for faster, more reliable dependency resolution.
 
