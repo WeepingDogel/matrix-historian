@@ -2,19 +2,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# 安装系统依赖和curl
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制依赖文件
-COPY requirements.txt .
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# 安装Python依赖
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements.txt from src/
+COPY src/requirements.txt ./
 
-COPY . .
+# Install dependencies with uv
+RUN uv pip install --system --no-cache -r requirements.txt
+
+# Copy application code from src/
+COPY src/ .
 
 EXPOSE 8000
 

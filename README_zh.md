@@ -50,7 +50,7 @@ graph TB
 1. 克隆仓库
 ```bash
 git clone https://github.com/yourusername/matrix-historian.git
-cd matrix-historian/src
+cd matrix-historian
 ```
 
 2. 配置环境变量
@@ -61,6 +61,7 @@ cp .env.example .env
 
 3. 启动服务
 ```bash
+cd src
 docker-compose up -d
 ```
 
@@ -121,9 +122,10 @@ GROQ_API_KEY=...  # 用于AI驱动的分析功能
 
 ### 技术栈
 - **后端**: Python 3.12, FastAPI, SQLAlchemy, SQLite
-- **前端**: Streamlit, Pandas
+- **前端**: Streamlit, Pandas, Plotly
 - **Matrix机器人**: SimpleMatrixBotLib
 - **AI分析**: Groq API
+- **依赖管理**: uv (快速可靠的Python包管理工具)
 
 ### 数据流程
 1. Matrix机器人连接到Matrix服务器
@@ -136,37 +138,52 @@ GROQ_API_KEY=...  # 用于AI驱动的分析功能
 
 ### 项目结构
 ```
-src/
-├── app/             # 主应用代码
-│   ├── api/        # API接口
-│   ├── bot/        # Matrix机器人
-│   ├── db/         # 数据库模型
-│   ├── models/     # 数据模型
-│   ├── schemas/    # API模式
-│   ├── crud/       # 数据库操作
-│   ├── ai/         # AI分析模块
-│   └── webui/      # Web界面
-├── tests/          # 测试代码
-└── docker-compose.yml
+matrix-historian/
+├── pyproject.toml      # Python项目配置和依赖定义
+├── src/
+│   ├── app/             # 主应用代码
+│   │   ├── api/        # API接口
+│   │   ├── bot/        # Matrix机器人
+│   │   ├── db/         # 数据库模型
+│   │   ├── models/     # 数据模型
+│   │   ├── schemas/    # API模式
+│   │   ├── crud/       # 数据库操作
+│   │   ├── ai/         # AI分析模块
+│   │   └── webui/      # Web界面
+│   ├── tests/          # 测试代码
+│   ├── Dockerfile      # API服务器Dockerfile
+│   └── docker-compose.yml
+└── docs/               # 文档
 ```
 
 ### 开发环境设置
 
+本项目使用 **uv** 进行快速可靠的依赖管理。依赖项定义在 `pyproject.toml` 中。
+
 1. 克隆仓库并进入目录
 ```bash
 git clone https://github.com/yourusername/matrix-historian.git
-cd matrix-historian/src
+cd matrix-historian
 ```
 
-2. 创建虚拟环境
+2. 安装 uv
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+3. 安装项目依赖
+
+使用 uv pip install：
+```bash
+cd src
+uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq streamlit==1.45.0 pandas==2.2.3 requests==2.32.3 humanize==4.12.3 plotly==5.20.0 wordcloud==1.9.3 jieba==0.42.1 networkx==3.2.1 matplotlib==3.8.0 scipy==1.12.0
+```
+
+或者使用传统方法：
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate     # Windows
-```
-
-3. 安装依赖
-```bash
 pip install -r requirements.txt
 ```
 
@@ -183,6 +200,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 # 启动Web界面（新终端）
 streamlit run app/webui/main.py --server.port=8501 --server.address=0.0.0.0
 ```
+
+详见 [开发指南](docs/development.md) 获取详细设置说明。
 
 ## 故障排除
 
