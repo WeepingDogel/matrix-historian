@@ -21,22 +21,5 @@ services:
       retries: 3
       start_period: 40s
 
-  webui:
-    image: weepingdogel/matrix-historian:webui-v1.0-alpha
-    environment:
-      - API_URL=http://app:8000/api/v1
-      - PYTHONPATH=/app
-    ports:
-      - "8502:8501"
-    depends_on:
-      - app
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/?health=check"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
 volumes:
   sqlite_data:
