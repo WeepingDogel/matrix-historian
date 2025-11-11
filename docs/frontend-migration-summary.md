@@ -12,7 +12,7 @@ Migrate Matrix Historian frontend from Streamlit (Python) to Vue.js 3 + TypeScri
 - **Tailwind CSS 3+** + **DaisyUI 4+** for styling
 
 ### Key Libraries
-- **Apache ECharts** (vue-echarts) - Charts and visualizations
+- **Plotly.js** (vue-plotly) - Charts and visualizations (matches Streamlit's plotly usage)
 - **wordcloud2** - Word cloud generation
 - **vis-network** - Network graphs
 - **Axios** - HTTP client
@@ -84,7 +84,7 @@ frontend/
 1. **Framework**: Vue.js 3 (progressive, excellent DX, Composition API)
 2. **State Management**: Pinia (official Vue state management) + Vue reactive refs
 3. **Styling**: Tailwind CSS + DaisyUI (beautiful components, theme support)
-4. **Charts**: Apache ECharts (comprehensive, Vue-friendly)
+4. **Charts**: Plotly.js (matches Streamlit implementation, comprehensive, interactive)
 5. **Build Tool**: Vite (fast, modern, optimized, first-class Vue support)
 
 ## API Integration

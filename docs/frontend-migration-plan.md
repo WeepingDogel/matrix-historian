@@ -89,6 +89,14 @@ This document outlines a comprehensive plan to migrate the Matrix Historian fron
    - Consistent design system
    - Easy customization
 
+5. **Plotly.js**
+   - **Consistency**: Matches existing Streamlit implementation (uses plotly.express and plotly.graph_objects)
+   - **Familiar API**: Similar API to Python's Plotly, easing migration
+   - **Comprehensive**: Supports all chart types needed (line, bar, pie, heatmap, gauge, scatter)
+   - **Interactive**: Built-in zoom, pan, tooltips, and hover interactions
+   - **Performance**: Handles large datasets efficiently with WebGL support
+   - **Vue Integration**: Good Vue wrapper (vue-plotly) available
+
 ### Technology Stack
 
 #### Core Framework
@@ -108,11 +116,10 @@ This document outlines a comprehensive plan to migrate the Matrix Historian fron
 - **@tanstack/vue-query** - Server state management, caching, and synchronization (optional, or use Pinia)
 
 #### Data Visualization
-- **Apache ECharts** with **vue-echarts** - Comprehensive charting library
-- **Chart.js** with **vue-chartjs** - Alternative chart library
+- **Plotly.js** with **vue-plotly** or **plotly.js-dist-min** - Comprehensive charting library (matches Streamlit's plotly usage)
 - **wordcloud2.js** - Word cloud visualization
 - **vis-network** - Network graph visualization (Vue wrapper available)
-- **vue3-heatmap** or custom heatmap component - Heatmap visualization
+- **@plotly/dash** (optional) - For more advanced dashboards if needed
 
 #### Utilities
 - **Axios** - HTTP client
@@ -277,7 +284,7 @@ Analytics (View)
 - **Caching**: Pinia stores with caching logic, or vue-query with staleTime based on data freshness needs
 
 #### Features
-- **Charts**: Interactive charts with zoom, pan, tooltips (ECharts)
+- **Charts**: Interactive charts with zoom, pan, tooltips (Plotly.js - matches Streamlit implementation)
 - **Loading States**: Skeleton loaders while data loads (DaisyUI skeleton component)
 - **Error Handling**: Graceful error messages (DaisyUI alert component)
 - **Filtering**: Time range and room filtering
@@ -610,12 +617,12 @@ services:
 - [ ] Add error states with DaisyUI alert
 
 ### Phase 3: Analytics Page (Week 3)
-- [ ] Implement activity overview charts (ECharts)
+- [ ] Implement activity overview charts (Plotly.js)
 - [ ] Implement word cloud visualization
 - [ ] Implement user network graph (vis-network)
-- [ ] Implement topic analysis charts
-- [ ] Implement sentiment analysis gauge
-- [ ] Implement activity heatmap
+- [ ] Implement topic analysis charts (Plotly.js)
+- [ ] Implement sentiment analysis gauge (Plotly.js)
+- [ ] Implement activity heatmap (Plotly.js)
 - [ ] Add filters and time range selector with DaisyUI components
 
 ### Phase 4: Polish and Optimization (Week 4)
@@ -777,7 +784,9 @@ services:
 - [Vite Documentation](https://vitejs.dev/)
 - [DaisyUI Documentation](https://daisyui.com/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/)
-- [Apache ECharts Documentation](https://echarts.apache.org/)
+- [Plotly.js Documentation](https://plotly.com/javascript/)
+- [vue-plotly Documentation](https://github.com/statnett/vue-plotly) (Vue 2/3 compatible)
+- [Alternative: Using Plotly.js directly](https://plotly.com/javascript/getting-started/) (without wrapper)
 - [VueUse Documentation](https://vueuse.org/)
 - [vue-i18n Documentation](https://vue-i18n.intlify.dev/)
 
@@ -794,8 +803,9 @@ services:
     "dayjs": "^1.11.10",
     "humanize-duration": "^3.31.0",
     "vue-i18n": "^9.8.0",
-    "echarts": "^5.4.3",
-    "vue-echarts": "^6.6.9",
+    "plotly.js": "^2.27.0",
+    "vue-plotly": "^1.2.1",
+    "@types/plotly.js": "^2.12.29",
     "wordcloud2": "^1.2.2",
     "vis-network": "^9.1.9",
     "@vueuse/core": "^10.7.0",
@@ -851,7 +861,9 @@ export default {
 };
 ```
 
-## Appendix: Example Vue Component
+## Appendix: Example Vue Components
+
+### MessageCard Component
 
 ```vue
 <!-- src/components/MessageCard.vue -->
@@ -899,6 +911,123 @@ const relativeTime = computed(() =>
           {{ relativeTime }}
         </div>
       </div>
+    </div>
+  </div>
+</template>
+```
+
+### Plotly Chart Component
+
+```vue
+<!-- src/components/analytics/MessageTrendsChart.vue -->
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { Plotly } from 'vue-plotly';
+import type { TrendData } from '@/types/analytics';
+
+interface Props {
+  data: TrendData[];
+  loading?: boolean;
+}
+
+const props = defineProps<Props>();
+
+const plotlyData = computed(() => [
+  {
+    x: props.data.map(d => d.date),
+    y: props.data.map(d => d.count),
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: 'Messages',
+    line: { color: '#3b82f6' },
+  },
+]);
+
+const plotlyLayout = computed(() => ({
+  title: 'Message Trends',
+  xaxis: { title: 'Date' },
+  yaxis: { title: 'Message Count' },
+  hovermode: 'closest',
+  responsive: true,
+}));
+
+const plotlyConfig = {
+  responsive: true,
+  displayModeBar: true,
+  displaylogo: false,
+};
+</script>
+
+<template>
+  <div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+      <div v-if="loading" class="skeleton h-64 w-full"></div>
+      <Plotly
+        v-else
+        :data="plotlyData"
+        :layout="plotlyLayout"
+        :config="plotlyConfig"
+        class="w-full"
+        style="height: 400px;"
+      />
+    </div>
+  </div>
+</template>
+```
+
+### Alternative: Using Plotly.js Directly
+
+```vue
+<!-- src/components/analytics/ActivityHeatmap.vue -->
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
+import Plotly from 'plotly.js-dist-min';
+import type { HeatmapData } from '@/types/analytics';
+
+interface Props {
+  data: HeatmapData;
+  loading?: boolean;
+}
+
+const props = defineProps<Props>();
+const chartContainer = ref<HTMLDivElement>();
+
+const renderChart = () => {
+  if (!chartContainer.value || props.loading) return;
+
+  const data: Plotly.Data[] = [
+    {
+      z: props.data.heatmap,
+      x: props.data.hours,
+      y: props.data.weekdays,
+      type: 'heatmap',
+      colorscale: 'Viridis',
+    },
+  ];
+
+  const layout: Partial<Plotly.Layout> = {
+    title: 'Activity Heatmap',
+    xaxis: { title: 'Hour' },
+    yaxis: { title: 'Weekday' },
+  };
+
+  Plotly.newPlot(chartContainer.value, data, layout, { responsive: true });
+};
+
+onMounted(() => {
+  renderChart();
+});
+
+watch(() => props.data, () => {
+  renderChart();
+}, { deep: true });
+</script>
+
+<template>
+  <div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+      <div v-if="loading" class="skeleton h-64 w-full"></div>
+      <div v-else ref="chartContainer" class="w-full" style="height: 400px;"></div>
     </div>
   </div>
 </template>

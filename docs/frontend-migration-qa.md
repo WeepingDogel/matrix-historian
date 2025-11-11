@@ -53,18 +53,20 @@ Tailwind's utility-first approach is intuitive and well-documented.
 
 Vuex is still supported but Pinia is the future of Vue state management.
 
-### Q5: Why ECharts instead of Chart.js or other charting libraries?
+### Q5: Why Plotly.js instead of ECharts, Chart.js, or other charting libraries?
 
-**A:** Apache ECharts was chosen for several reasons:
-- **Comprehensive**: Supports many chart types (line, bar, pie, heatmap, gauge, etc.)
-- **Vue Integration**: Good Vue wrapper (vue-echarts) available
-- **Performance**: Handles large datasets well
-- **Interactivity**: Built-in zoom, pan, tooltips, and legends
+**A:** Plotly.js was chosen for several reasons:
+- **Consistency**: Matches the Streamlit frontend which uses Plotly (plotly.express and plotly.graph_objects)
+- **Comprehensive**: Supports many chart types (line, bar, pie, heatmap, gauge, scatter, etc.)
+- **Interactivity**: Built-in zoom, pan, tooltips, legends, and hover interactions
+- **Performance**: Handles large datasets well with WebGL support
+- **Vue Integration**: Good Vue wrapper (vue-plotly) available, or use Plotly.js directly
+- **Familiar API**: Similar API to Python's Plotly, making migration easier
 - **Customization**: Highly customizable and extensible
 - **Documentation**: Excellent documentation and examples
-- **Active Development**: Actively maintained by Apache
+- **Active Development**: Actively maintained by Plotly team
 
-Chart.js is also good but ECharts offers more chart types and better performance for complex visualizations.
+ECharts and Chart.js are also good alternatives, but Plotly.js provides consistency with the existing Streamlit implementation and offers excellent interactivity.
 
 ## Migration Strategy Questions
 
