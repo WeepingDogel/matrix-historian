@@ -18,10 +18,7 @@ dependencies = [
     "pydantic==2.11.4",
     "email-validator==2.2.0",
     # Web UI
-    "streamlit==1.45.0",
     "pandas==2.2.3",
-    "requests==2.32.3",
-    "humanize==4.12.3",
     # Development tools
     "pytest==8.3.5",
     "python-dotenv==1.1.0",
@@ -29,11 +26,10 @@ dependencies = [
     "backoff==2.2.1",
     # Data analysis and visualization
     "plotly==5.20.0",
-    "wordcloud==1.9.3",
+    
     "jieba==0.42.1",
     "networkx==3.2.1",
-    "matplotlib==3.8.0",
-    "scipy==1.12.0",
+    
     # AI
     "groq",
 ]
