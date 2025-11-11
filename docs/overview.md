@@ -4,6 +4,8 @@
 * [Deployment](./deployment.md)
 * [Development](./development.md)
 * [API Reference](./reference/api-reference.md)
+* [Frontend Migration Plan](./frontend-migration-plan.md)
+* [Frontend Migration Summary](./frontend-migration-summary.md)
 
 ---
 
