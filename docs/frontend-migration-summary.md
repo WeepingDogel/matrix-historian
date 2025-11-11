@@ -1,23 +1,24 @@
 # Frontend Migration Plan - Quick Summary
 
 ## Overview
-Migrate Matrix Historian frontend from Streamlit (Python) to React + TypeScript + Vite.
+Migrate Matrix Historian frontend from Streamlit (Python) to Vue.js 3 + TypeScript + Vite + DaisyUI.
 
-## Recommended Stack
+## Selected Stack
 
 ### Core
-- **React 18+** + **TypeScript 5+** + **Vite 5+**
-- **React Router 6+** for routing
-- **TanStack Query 5+** for API state management
-- **Tailwind CSS 3+** for styling
+- **Vue.js 3.4+** + **TypeScript 5+** + **Vite 5+**
+- **Vue Router 4+** for routing
+- **Pinia 2+** for state management
+- **Tailwind CSS 3+** + **DaisyUI 4+** for styling
 
 ### Key Libraries
-- **Recharts** - Charts and visualizations
+- **Apache ECharts** (vue-echarts) - Charts and visualizations
 - **wordcloud2** - Word cloud generation
 - **vis-network** - Network graphs
 - **Axios** - HTTP client
-- **react-i18next** - Internationalization
-- **date-fns** - Date manipulation
+- **vue-i18n** - Internationalization
+- **date-fns** / **dayjs** - Date manipulation
+- **VueUse** - Vue composition utilities
 
 ## Project Structure
 
@@ -25,12 +26,14 @@ Migrate Matrix Historian frontend from Streamlit (Python) to React + TypeScript 
 frontend/
 ├── src/
 │   ├── api/           # API client & endpoints
-│   ├── components/    # React components
-│   ├── hooks/         # Custom React hooks
-│   ├── pages/         # Page components
+│   ├── components/    # Vue components
+│   ├── composables/   # Vue composition functions
+│   ├── views/         # Page components (Vue Router)
+│   ├── stores/        # Pinia stores
 │   ├── types/         # TypeScript types
 │   ├── utils/         # Utility functions
-│   └── i18n/          # Internationalization
+│   ├── i18n/          # Internationalization
+│   └── router/        # Vue Router configuration
 ```
 
 ## Features to Migrate
@@ -78,17 +81,18 @@ frontend/
 
 ## Key Decisions
 
-1. **Framework**: React (most popular, rich ecosystem)
-2. **State Management**: TanStack Query (server state) + React State (client state)
-3. **Styling**: Tailwind CSS (utility-first, fast development)
-4. **Charts**: Recharts (React-friendly, good documentation)
-5. **Build Tool**: Vite (fast, modern, optimized)
+1. **Framework**: Vue.js 3 (progressive, excellent DX, Composition API)
+2. **State Management**: Pinia (official Vue state management) + Vue reactive refs
+3. **Styling**: Tailwind CSS + DaisyUI (beautiful components, theme support)
+4. **Charts**: Apache ECharts (comprehensive, Vue-friendly)
+5. **Build Tool**: Vite (fast, modern, optimized, first-class Vue support)
 
 ## API Integration
 
 - All existing API endpoints remain unchanged
 - Type-safe API client with Axios
-- React Query for caching and synchronization
+- Pinia stores for caching and state management
+- Vue composables for reusable logic
 - 5-minute cache TTL (configurable)
 
 ## Deployment
@@ -105,35 +109,42 @@ frontend/
 ## Next Steps
 
 1. Review full migration plan: `docs/frontend-migration-plan.md`
-2. Set up development environment
-3. Create frontend repository/project
-4. Begin Phase 1 implementation
+2. Read Q&A document: `docs/frontend-migration-qa.md` for common questions
+3. Set up development environment
+4. Create frontend repository/project
+5. Begin Phase 1 implementation
 
 ## Key Files to Create
 
 - `frontend/package.json` - Dependencies
 - `frontend/vite.config.ts` - Vite configuration
-- `frontend/tailwind.config.js` - Tailwind configuration
+- `frontend/tailwind.config.js` - Tailwind + DaisyUI configuration
+- `frontend/postcss.config.js` - PostCSS configuration
 - `frontend/tsconfig.json` - TypeScript configuration
 - `frontend/Dockerfile` - Docker build
 - `frontend/nginx.conf` - Nginx configuration
 
 ## Benefits of Migration
 
-1. **Performance**: Faster load times, better UX
-2. **Maintainability**: Type-safe, modern tooling
-3. **Scalability**: Easier to add features
-4. **Developer Experience**: Better tooling, faster development
-5. **User Experience**: More interactive, responsive UI
-6. **Ecosystem**: Access to rich JavaScript ecosystem
+1. **Performance**: Faster load times, better UX, Vue's optimized reactivity
+2. **Maintainability**: Type-safe, modern tooling, Composition API
+3. **Scalability**: Easier to add features, component-based architecture
+4. **Developer Experience**: Excellent Vue tooling, fast development with Vite
+5. **User Experience**: More interactive, responsive UI with DaisyUI components
+6. **Ecosystem**: Access to rich Vue/JavaScript ecosystem
+7. **UI Components**: Beautiful, accessible components with DaisyUI
+8. **Theming**: Built-in theme support with DaisyUI
 
 ## Risks & Mitigation
 
 - **API Compatibility**: Use TypeScript for type safety
-- **Performance**: Virtual scrolling, code splitting
+- **Performance**: Virtual scrolling, code splitting, Vue's reactivity optimization
 - **Migration Complexity**: Phased approach, feature parity checklist
+- **DaisyUI Learning Curve**: Good documentation, component examples, theme customization
 
 ## Questions?
 
-Refer to the full migration plan document for detailed information.
+- **Common Questions**: See [Frontend Migration Q&A](./frontend-migration-qa.md) for answers to frequently asked questions
+- **Detailed Plan**: Refer to [Frontend Migration Plan](./frontend-migration-plan.md) for detailed information
+- **Quick Reference**: Use this summary for a quick overview
 

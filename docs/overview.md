@@ -6,6 +6,7 @@
 * [API Reference](./reference/api-reference.md)
 * [Frontend Migration Plan](./frontend-migration-plan.md)
 * [Frontend Migration Summary](./frontend-migration-summary.md)
+* [Frontend Migration Q&A](./frontend-migration-qa.md)
 
 ---
 
