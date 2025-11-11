@@ -57,16 +57,17 @@ This document outlines a comprehensive plan to migrate the Matrix Historian fron
 
 ## Framework Selection
 
-### Recommended Framework: **React + TypeScript + Vite**
+### Selected Framework: **Vue.js 3 + TypeScript + Vite + DaisyUI**
 
 #### Rationale
 
-1. **React**
-   - Most popular and well-supported framework
-   - Rich ecosystem of visualization libraries
-   - Excellent component reusability
-   - Strong community and resources
-   - Easy to find developers
+1. **Vue.js 3**
+   - Progressive framework with excellent developer experience
+   - Composition API for better code organization
+   - Excellent performance and reactivity system
+   - Strong TypeScript support
+   - Growing ecosystem with good visualization libraries
+   - Easy learning curve and great documentation
 
 2. **TypeScript**
    - Type safety for API responses
@@ -79,52 +80,55 @@ This document outlines a comprehensive plan to migrate the Matrix Historian fron
    - Optimized production builds
    - Excellent HMR (Hot Module Replacement)
    - Modern tooling
+   - First-class Vue support
 
-### Alternative Frameworks Considered
-
-1. **Next.js** - Overkill for this SPA, adds unnecessary complexity
-2. **Vue.js** - Good alternative, but smaller ecosystem for data visualization
-3. **Svelte** - Excellent performance, but smaller community
-4. **Angular** - Too heavyweight for this use case
+4. **DaisyUI**
+   - Beautiful, accessible UI components built on Tailwind CSS
+   - Pre-built component classes
+   - Theme support out of the box
+   - Consistent design system
+   - Easy customization
 
 ### Technology Stack
 
 #### Core Framework
-- **React 18+** - UI framework
+- **Vue.js 3.4+** - UI framework (Composition API)
 - **TypeScript 5+** - Type safety
 - **Vite 5+** - Build tool
-- **React Router 6+** - Client-side routing
+- **Vue Router 4+** - Client-side routing
 
 #### UI/Styling
-- **Tailwind CSS 3+** - Utility-first CSS framework
-- **shadcn/ui** or **MUI** - Component library
-- **Lucide React** - Icon library
+- **Tailwind CSS 3+** - Utility-first CSS framework (required by DaisyUI)
+- **DaisyUI 4+** - Component library built on Tailwind CSS
+- **Lucide Vue** or **Heroicons Vue** - Icon library
 
 #### State Management
-- **TanStack Query (React Query) 5+** - Server state management, caching, and synchronization
-- **Zustand** or **Jotai** - Client state management (if needed)
+- **Pinia 2+** - Official Vue state management
+- **VueUse** - Collection of Vue composition utilities
+- **@tanstack/vue-query** - Server state management, caching, and synchronization (optional, or use Pinia)
 
 #### Data Visualization
-- **Recharts** or **Victory** - Chart library (React-friendly)
-- **react-wordcloud2** or **wordcloud2.js** - Word cloud visualization
-- **vis-network** or **react-force-graph** - Network graph visualization
-- **react-heatmap-grid** - Heatmap visualization
+- **Apache ECharts** with **vue-echarts** - Comprehensive charting library
+- **Chart.js** with **vue-chartjs** - Alternative chart library
+- **wordcloud2.js** - Word cloud visualization
+- **vis-network** - Network graph visualization (Vue wrapper available)
+- **vue3-heatmap** or custom heatmap component - Heatmap visualization
 
 #### Utilities
 - **Axios** - HTTP client
 - **date-fns** or **Day.js** - Date manipulation
 - **humanize-duration** - Relative time formatting
-- **react-markdown** - Markdown rendering (if needed)
-- **react-virtual** - Virtual scrolling for large message lists
+- **marked** or **markdown-it** - Markdown rendering (if needed)
+- **@tanstack/vue-virtual** or **vue-virtual-scroller** - Virtual scrolling for large message lists
 
 #### Internationalization
-- **react-i18next** - Internationalization framework
+- **vue-i18n** - Internationalization framework for Vue
 
 #### Development Tools
 - **ESLint** - Linting
 - **Prettier** - Code formatting
 - **Vitest** - Unit testing
-- **React Testing Library** - Component testing
+- **@vue/test-utils** - Vue component testing utilities
 
 ## Project Structure
 
@@ -140,41 +144,43 @@ frontend/
 │   │   ├── analytics.ts    # Analytics endpoints
 │   │   ├── users.ts        # User endpoints
 │   │   └── rooms.ts        # Room endpoints
-│   ├── components/         # React components
+│   ├── components/         # Vue components
 │   │   ├── common/         # Shared components
-│   │   │   ├── Button.tsx
-│   │   │   ├── Input.tsx
-│   │   │   ├── Select.tsx
-│   │   │   ├── Loading.tsx
-│   │   │   ├── ErrorMessage.tsx
-│   │   │   └── MessageCard.tsx
+│   │   │   ├── Button.vue
+│   │   │   ├── Input.vue
+│   │   │   ├── Select.vue
+│   │   │   ├── Loading.vue
+│   │   │   ├── ErrorMessage.vue
+│   │   │   └── MessageCard.vue
 │   │   ├── message-browser/ # Message browsing components
-│   │   │   ├── MessageList.tsx
-│   │   │   ├── MessageSearch.tsx
-│   │   │   ├── RoomFilter.tsx
-│   │   │   ├── UserFilter.tsx
-│   │   │   └── MessageFilters.tsx
+│   │   │   ├── MessageList.vue
+│   │   │   ├── MessageSearch.vue
+│   │   │   ├── RoomFilter.vue
+│   │   │   ├── UserFilter.vue
+│   │   │   └── MessageFilters.vue
 │   │   └── analytics/      # Analytics components
-│   │       ├── ActivityOverview.tsx
-│   │       ├── WordCloud.tsx
-│   │       ├── UserNetwork.tsx
-│   │       ├── TopicAnalysis.tsx
-│   │       ├── SentimentAnalysis.tsx
-│   │       └── ActivityHeatmap.tsx
-│   ├── hooks/              # Custom React hooks
+│   │       ├── ActivityOverview.vue
+│   │       ├── WordCloud.vue
+│   │       ├── UserNetwork.vue
+│   │       ├── TopicAnalysis.vue
+│   │       ├── SentimentAnalysis.vue
+│   │       └── ActivityHeatmap.vue
+│   ├── composables/        # Vue composition functions (like React hooks)
 │   │   ├── useMessages.ts
 │   │   ├── useAnalytics.ts
 │   │   ├── useInfiniteScroll.ts
 │   │   └── useDebounce.ts
 │   ├── layouts/            # Layout components
-│   │   ├── MainLayout.tsx
-│   │   └── Sidebar.tsx
-│   ├── pages/              # Page components
-│   │   ├── MessageBrowser.tsx
-│   │   ├── Analytics.tsx
-│   │   └── NotFound.tsx
-│   ├── store/              # State management (if using Zustand)
-│   │   └── messageStore.ts
+│   │   ├── MainLayout.vue
+│   │   └── Sidebar.vue
+│   ├── views/              # Page components (Vue Router views)
+│   │   ├── MessageBrowser.vue
+│   │   ├── Analytics.vue
+│   │   └── NotFound.vue
+│   ├── stores/             # Pinia stores
+│   │   ├── messageStore.ts
+│   │   ├── userStore.ts
+│   │   └── analyticsStore.ts
 │   ├── types/              # TypeScript types
 │   │   ├── message.ts
 │   │   ├── analytics.ts
@@ -185,11 +191,14 @@ frontend/
 │   │   ├── highlight.ts    # Text highlighting
 │   │   └── constants.ts    # Constants
 │   ├── i18n/               # Internationalization
-│   │   ├── en.json
-│   │   ├── zh.json
+│   │   ├── locales/
+│   │   │   ├── en.json
+│   │   │   └── zh.json
 │   │   └── index.ts
-│   ├── App.tsx             # Root component
-│   ├── main.tsx            # Entry point
+│   ├── router/             # Vue Router configuration
+│   │   └── index.ts
+│   ├── App.vue             # Root component
+│   ├── main.ts             # Entry point
 │   └── vite-env.d.ts       # Vite type definitions
 ├── .env.example
 ├── .env.local
@@ -199,7 +208,8 @@ frontend/
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
-└── tailwind.config.js
+├── tailwind.config.js
+└── postcss.config.js
 ```
 
 ## Component Architecture
@@ -208,7 +218,7 @@ frontend/
 
 #### Components
 ```
-MessageBrowser (Page)
+MessageBrowser (View)
 ├── Sidebar
 │   ├── MessageSearch
 │   ├── RoomFilter
@@ -221,15 +231,15 @@ MessageBrowser (Page)
 ```
 
 #### State Management
-- **Server State**: TanStack Query for messages, users, rooms
-- **Client State**: React state for filters, pagination
-- **Caching**: TanStack Query automatic caching (5min default)
+- **Server State**: Pinia stores with API calls, or @tanstack/vue-query
+- **Client State**: Vue reactive refs for filters, pagination
+- **Caching**: Pinia stores with caching logic, or vue-query caching (5min default)
 
 #### Features
-- **Search**: Debounced search input (300ms delay)
+- **Search**: Debounced search input (300ms delay) using VueUse
 - **Filters**: Room and user selection with search
 - **Pagination**: Infinite scroll or "Load More" button
-- **Virtual Scrolling**: For large message lists (react-virtual)
+- **Virtual Scrolling**: For large message lists (vue-virtual-scroller)
 - **Highlighting**: Highlight search terms in message content
 - **Relative Time**: Display "2 hours ago" format
 
@@ -237,7 +247,7 @@ MessageBrowser (Page)
 
 #### Components
 ```
-Analytics (Page)
+Analytics (View)
 ├── Sidebar
 │   ├── TimeRangeSlider
 │   └── RoomFilter
@@ -262,14 +272,14 @@ Analytics (Page)
 ```
 
 #### State Management
-- **Server State**: TanStack Query for all analytics data
-- **Client State**: React state for filters (days, room_id)
-- **Caching**: TanStack Query with staleTime based on data freshness needs
+- **Server State**: Pinia stores for all analytics data, or @tanstack/vue-query
+- **Client State**: Vue reactive refs for filters (days, room_id)
+- **Caching**: Pinia stores with caching logic, or vue-query with staleTime based on data freshness needs
 
 #### Features
-- **Charts**: Interactive charts with zoom, pan, tooltips
-- **Loading States**: Skeleton loaders while data loads
-- **Error Handling**: Graceful error messages
+- **Charts**: Interactive charts with zoom, pan, tooltips (ECharts)
+- **Loading States**: Skeleton loaders while data loads (DaisyUI skeleton component)
+- **Error Handling**: Graceful error messages (DaisyUI alert component)
 - **Filtering**: Time range and room filtering
 - **Real-time Updates**: Optional polling for fresh data
 
@@ -307,25 +317,104 @@ apiClient.interceptors.response.use(
 );
 ```
 
-### React Query Hooks
+### Pinia Store for Messages
 
 ```typescript
-// src/hooks/useMessages.ts
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { getMessages, searchMessages } from '../api/messages';
+// src/stores/messageStore.ts
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { getMessages, searchMessages, type MessageFilters, type MessageResponse } from '../api/messages';
 
-export const useMessages = (filters: MessageFilters) => {
-  return useInfiniteQuery({
-    queryKey: ['messages', filters],
-    queryFn: ({ pageParam = 0 }) => 
-      filters.query 
-        ? searchMessages({ ...filters, skip: pageParam })
-        : getMessages({ ...filters, skip: pageParam }),
-    getNextPageParam: (lastPage) => 
-      lastPage.has_more ? lastPage.next_skip : undefined,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+export const useMessageStore = defineStore('messages', () => {
+  const messages = ref<Message[]>([]);
+  const total = ref(0);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
+  const filters = ref<MessageFilters>({});
+  const hasMore = ref(true);
+  const nextSkip = ref(0);
+
+  const fetchMessages = async (newFilters?: MessageFilters) => {
+    if (newFilters) {
+      filters.value = newFilters;
+      messages.value = [];
+      nextSkip.value = 0;
+    }
+
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const params = { ...filters.value, skip: nextSkip.value };
+      const response: MessageResponse = filters.value.query
+        ? await searchMessages(params)
+        : await getMessages(params);
+
+      messages.value.push(...response.messages);
+      total.value = response.total;
+      hasMore.value = response.has_more;
+      nextSkip.value = response.next_skip || 0;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch messages';
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const loadMore = async () => {
+    if (hasMore.value && !loading.value) {
+      await fetchMessages();
+    }
+  };
+
+  return {
+    messages,
+    total,
+    loading,
+    error,
+    filters,
+    hasMore,
+    fetchMessages,
+    loadMore,
+  };
+});
+```
+
+### Vue Composable for Messages
+
+```typescript
+// src/composables/useMessages.ts
+import { computed, watch } from 'vue';
+import { useMessageStore } from '../stores/messageStore';
+import { useDebounceFn } from '@vueuse/core';
+
+export function useMessages() {
+  const store = useMessageStore();
+
+  const debouncedFetch = useDebounceFn(() => {
+    store.fetchMessages();
+  }, 300);
+
+  watch(
+    () => store.filters,
+    () => {
+      debouncedFetch();
+    },
+    { deep: true }
+  );
+
+  return {
+    messages: computed(() => store.messages),
+    total: computed(() => store.total),
+    loading: computed(() => store.loading),
+    error: computed(() => store.error),
+    hasMore: computed(() => store.hasMore),
+    loadMore: store.loadMore,
+    updateFilters: (filters: MessageFilters) => {
+      store.filters = { ...store.filters, ...filters };
+    },
+  };
+}
 ```
 
 ### Type Definitions
@@ -360,19 +449,21 @@ export interface MessageFilters {
 
 ## State Management Strategy
 
-### Server State (TanStack Query)
+### Server State (Pinia Stores)
 - All API data (messages, analytics, users, rooms)
-- Automatic caching, refetching, and synchronization
+- Manual caching logic or use @tanstack/vue-query for automatic caching
+- Refetching and synchronization
 - Optimistic updates where appropriate
 
-### Client State (React State)
+### Client State (Vue Reactive Refs)
 - UI state (sidebar open/closed, modal states)
 - Form inputs (search query, filters)
-- Pagination state (handled by React Query)
+- Pagination state (handled by Pinia stores)
 
-### Global State (Zustand - Optional)
+### Global State (Pinia Stores)
 - User preferences (theme, language)
 - UI settings (items per page, default filters)
+- App-wide configuration
 
 ## UI/UX Improvements
 
@@ -401,27 +492,32 @@ export interface MessageFilters {
 ### Setup
 ```typescript
 // src/i18n/index.ts
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import en from './en.json';
-import zh from './zh.json';
+import { createI18n } from 'vue-i18n';
+import en from './locales/en.json';
+import zh from './locales/zh.json';
 
-i18n.use(initReactI18next).init({
-  resources: { en, zh },
-  lng: 'zh', // Default language
-  fallbackLng: 'en',
-  interpolation: { escapeValue: false },
+export default createI18n({
+  legacy: false,
+  locale: 'zh', // Default language
+  fallbackLocale: 'en',
+  messages: {
+    en,
+    zh,
+  },
 });
 ```
 
-### Usage
-```typescript
-import { useTranslation } from 'react-i18next';
+### Usage in Components
+```vue
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 
-function MyComponent() {
-  const { t } = useTranslation();
-  return <h1>{t('messageBrowser.title')}</h1>;
-}
+const { t } = useI18n();
+</script>
+
+<template>
+  <h1>{{ t('messageBrowser.title') }}</h1>
+</template>
 ```
 
 ## Deployment Strategy
@@ -449,6 +545,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
+
+Note: The Dockerfile is the same for Vue.js as it builds to static files.
 
 ```nginx
 # frontend/nginx.conf
@@ -494,36 +592,39 @@ services:
 ## Migration Path
 
 ### Phase 1: Setup and Infrastructure (Week 1)
-- [ ] Initialize React + TypeScript + Vite project
-- [ ] Set up Tailwind CSS and component library
+- [ ] Initialize Vue 3 + TypeScript + Vite project
+- [ ] Set up Tailwind CSS and DaisyUI
 - [ ] Configure ESLint, Prettier, and testing
-- [ ] Set up API client and React Query
-- [ ] Create basic layout and routing
+- [ ] Set up API client and Pinia stores
+- [ ] Set up Vue Router
+- [ ] Create basic layout with DaisyUI components
+- [ ] Configure vue-i18n
 
 ### Phase 2: Message Browser (Week 2)
-- [ ] Implement message list component
-- [ ] Implement search functionality
-- [ ] Implement room and user filters
+- [ ] Implement message list component with DaisyUI cards
+- [ ] Implement search functionality with debouncing
+- [ ] Implement room and user filters with DaisyUI select
 - [ ] Implement pagination/infinite scroll
 - [ ] Implement message card with highlighting
-- [ ] Add loading and error states
+- [ ] Add loading states with DaisyUI skeleton
+- [ ] Add error states with DaisyUI alert
 
 ### Phase 3: Analytics Page (Week 3)
-- [ ] Implement activity overview charts
+- [ ] Implement activity overview charts (ECharts)
 - [ ] Implement word cloud visualization
-- [ ] Implement user network graph
+- [ ] Implement user network graph (vis-network)
 - [ ] Implement topic analysis charts
 - [ ] Implement sentiment analysis gauge
 - [ ] Implement activity heatmap
-- [ ] Add filters and time range selector
+- [ ] Add filters and time range selector with DaisyUI components
 
 ### Phase 4: Polish and Optimization (Week 4)
-- [ ] Add internationalization (i18n)
+- [ ] Complete internationalization (vue-i18n)
 - [ ] Optimize performance (code splitting, lazy loading)
 - [ ] Add virtual scrolling for large lists
-- [ ] Improve responsive design
+- [ ] Improve responsive design with DaisyUI responsive classes
 - [ ] Add accessibility features
-- [ ] Write tests
+- [ ] Write tests with Vitest and @vue/test-utils
 
 ### Phase 5: Deployment and Migration (Week 5)
 - [ ] Create Docker configuration
@@ -536,13 +637,14 @@ services:
 ## Testing Strategy
 
 ### Unit Tests
-- Component rendering tests
-- Hook tests
+- Component rendering tests (@vue/test-utils)
+- Composable tests
 - Utility function tests
 - API client tests
+- Pinia store tests
 
 ### Integration Tests
-- Page navigation tests
+- Page navigation tests (Vue Router)
 - Filter interaction tests
 - API integration tests
 
@@ -593,7 +695,7 @@ services:
 
 ### Error Tracking
 - Sentry or similar error tracking
-- Error boundaries in React
+- Vue error handlers (app.config.errorHandler)
 - API error logging
 
 ### Performance Monitoring
@@ -610,8 +712,9 @@ services:
 
 ### Developer Documentation
 - Setup instructions
-- Component documentation
+- Component documentation (Vue component docs)
 - API integration guide
+- Pinia store usage guide
 - Contributing guidelines
 
 ### User Documentation
@@ -639,11 +742,13 @@ services:
 1. **API Compatibility**: API changes breaking frontend
    - **Mitigation**: Type-safe API client, versioned APIs
 2. **Performance Issues**: Large datasets causing slow rendering
-   - **Mitigation**: Virtual scrolling, pagination, caching
+   - **Mitigation**: Virtual scrolling, pagination, caching, Vue's reactivity optimization
 3. **Browser Compatibility**: Older browsers not supported
-   - **Mitigation**: Modern browser support, polyfills if needed
+   - **Mitigation**: Modern browser support (Vue 3 requires modern browsers), polyfills if needed
 4. **Migration Complexity**: Difficult to migrate all features
    - **Mitigation**: Phased migration, feature parity checklist
+5. **DaisyUI Learning Curve**: Team unfamiliar with DaisyUI
+   - **Mitigation**: Good documentation, component examples, DaisyUI theme customization
 
 ## Timeline Summary
 
@@ -658,56 +763,144 @@ services:
 ## Next Steps
 
 1. Review and approve this plan
-2. Set up development environment
-3. Create project repository
-4. Begin Phase 1 implementation
-5. Regular progress reviews and adjustments
+2. Read the [Q&A document](./frontend-migration-qa.md) for common questions
+3. Set up development environment
+4. Create project repository
+5. Begin Phase 1 implementation
+6. Regular progress reviews and adjustments
 
 ## References
 
-- [React Documentation](https://react.dev/)
-- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [Vue.js Documentation](https://vuejs.org/)
+- [Pinia Documentation](https://pinia.vuejs.org/)
+- [Vue Router Documentation](https://router.vuejs.org/)
 - [Vite Documentation](https://vitejs.dev/)
+- [DaisyUI Documentation](https://daisyui.com/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/)
-- [Recharts Documentation](https://recharts.org/)
-- [React Router Documentation](https://reactrouter.com/)
+- [Apache ECharts Documentation](https://echarts.apache.org/)
+- [VueUse Documentation](https://vueuse.org/)
+- [vue-i18n Documentation](https://vue-i18n.intlify.dev/)
 
 ## Appendix: Package.json Dependencies
 
 ```json
 {
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "@tanstack/react-query": "^5.14.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
     "axios": "^1.6.0",
     "date-fns": "^2.30.0",
+    "dayjs": "^1.11.10",
     "humanize-duration": "^3.31.0",
-    "react-i18next": "^13.5.0",
-    "i18next": "^23.7.0",
-    "recharts": "^2.10.0",
+    "vue-i18n": "^9.8.0",
+    "echarts": "^5.4.3",
+    "vue-echarts": "^6.6.9",
     "wordcloud2": "^1.2.2",
     "vis-network": "^9.1.9",
-    "zustand": "^4.4.0",
-    "react-virtual": "^2.10.4",
-    "lucide-react": "^0.294.0"
+    "@vueuse/core": "^10.7.0",
+    "@vueuse/components": "^10.7.0",
+    "lucide-vue-next": "^0.294.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
     "@types/node": "^20.10.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.4.3",
     "typescript": "^5.3.0",
     "vite": "^5.0.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "tailwindcss": "^3.3.0",
+    "vue-tsc": "^1.8.25",
+    "tailwindcss": "^3.3.6",
+    "daisyui": "^4.4.19",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
     "eslint": "^8.54.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "eslint-plugin-vue": "^9.18.1",
     "prettier": "^3.1.0",
-    "vitest": "^1.0.0",
-    "@testing-library/react": "^14.1.0"
+    "prettier-plugin-tailwindcss": "^0.5.9",
+    "vitest": "^1.0.4",
+    "@vitest/ui": "^1.0.4"
   }
 }
+```
+
+## Appendix: Tailwind and DaisyUI Configuration
+
+```javascript
+// tailwind.config.js
+export default {
+  content: [
+    './index.html',
+    './src/**/*.{vue,js,ts,jsx,tsx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [require('daisyui')],
+  daisyui: {
+    themes: ['light', 'dark', 'cupcake'], // Add more themes as needed
+    darkTheme: 'dark',
+    base: true,
+    styled: true,
+    utils: true,
+    prefix: '',
+    logs: true,
+    themeRoot: ':root',
+  },
+};
+```
+
+## Appendix: Example Vue Component
+
+```vue
+<!-- src/components/MessageCard.vue -->
+<script setup lang="ts">
+import { computed } from 'vue';
+import type { Message } from '@/types/message';
+import { formatRelativeTime } from '@/utils/date';
+import { highlightText } from '@/utils/highlight';
+
+interface Props {
+  message: Message;
+  searchQuery?: string;
+}
+
+const props = defineProps<Props>();
+
+const highlightedContent = computed(() => 
+  props.searchQuery 
+    ? highlightText(props.message.content, props.searchQuery)
+    : props.message.content
+);
+
+const relativeTime = computed(() => 
+  formatRelativeTime(props.message.timestamp)
+);
+</script>
+
+<template>
+  <div class="card bg-base-100 shadow-md mb-4">
+    <div class="card-body">
+      <div class="flex justify-between items-start">
+        <div class="flex-1">
+          <h3 class="card-title text-sm">
+            {{ message.sender.display_name || message.sender.user_id }}
+            <span class="text-xs text-base-content/60">
+              in {{ message.room.name || message.room.room_id }}
+            </span>
+          </h3>
+          <p 
+            class="mt-2" 
+            v-html="highlightedContent"
+          ></p>
+        </div>
+        <div class="text-xs text-base-content/60 ml-4">
+          {{ relativeTime }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 ```
 
