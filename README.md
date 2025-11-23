@@ -70,7 +70,7 @@ docker-compose up -d
 
 Services will start on the following ports:
 - API service: http://localhost:8001
-- Web interface: http://localhost:8502
+ - Web interface: removed (API-only deployment)
 
 <!-- ### Manual Configuration
 
@@ -97,15 +97,12 @@ GROQ_API_KEY=...  # For sentiment analysis
 
 ## Usage
 
-1. Visit http://localhost:8501 to open the Web interface
-2. Use the search box to search messages
-3. Use filters to filter messages by room or user
+This repository now contains only the API service. Use the API endpoints (see docs or
+`/api/v1` routes) to query messages and analytics. Example:
 
-### Data Analysis
+- API base URL: http://localhost:8001/api/v1
 
-1. Go to the "Message Analysis" page on the Web interface
-2. Use the sidebar to select the analysis time range and target room
-3. View various analysis charts and statistics
+See the docs in `docs/` or `docs/reference/api-reference.md` for available endpoints and examples.
 
 ## Development
 
@@ -121,7 +118,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 **Install dependencies:**
 ```bash
 # Using uv pip install (recommended)
-uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq streamlit==1.45.0 pandas==2.2.3 requests==2.32.3 humanize==4.12.3 plotly==5.20.0 wordcloud==1.9.3 jieba==0.42.1 networkx==3.2.1 matplotlib==3.8.0 scipy==1.12.0
+uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq pandas==2.2.3 plotly==5.20.0 jieba==0.42.1 networkx==3.2.1
 
 # Or using traditional pip
 pip install -r src/requirements.txt

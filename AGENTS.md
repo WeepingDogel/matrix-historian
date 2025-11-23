@@ -98,27 +98,11 @@ MATRIX_PASSWORD=your-bot-password
 - `User`: User profiles
 - `Analytics`: Cached analysis results
 
-### 4. Web Interface Agent
-**Location**: `src/app/webui/`
-**Purpose**: Provides user interface for browsing and analyzing messages
-
-**Key Components**:
-- `main.py`: Streamlit application
-- `tools/`: Analysis tools and utilities
-
-**Responsibilities**:
-- Render web interface
-- Display message search results
-- Show analytics visualizations
-- Handle user interactions
-- Provide filtering and sorting options
-
-**Features**:
-- Message search and filtering
-- Analytics dashboard
-- Interactive charts and graphs
-- Export functionality
-- Real-time updates
+# Web Interface Agent (removed)
+**Location**: `src/app/webui/` (removed / inert)
+**Note**: The Streamlit web UI has been removed from this repository; the project now
+focuses on the API service and analysis agents. If you need a frontend, use the
+`docs/frontend-migration-*` notes which describe migrating to a JS frontend.
 
 ### 5. Analysis Agent
 **Location**: `src/app/ai/`
