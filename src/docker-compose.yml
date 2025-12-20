@@ -4,7 +4,7 @@ services:
   app:
     image: weepingdogel/matrix-historian:api-server-v1.0-alpha
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - sqlite_data:/app/app/db
     restart: always
