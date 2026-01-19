@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# Copy requirements.txt from src/
-COPY src/requirements.txt ./
+# Copy requirements.txt
+COPY requirements.txt ./
 
 # Install dependencies with uv
 RUN uv pip install --system --no-cache -r requirements.txt
 
-# Copy application code from src/
-COPY src/ .
+# Copy application code
+COPY . .
 
 EXPOSE 8000
 
