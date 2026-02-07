@@ -2,9 +2,12 @@ import simplematrixbotlib as botlib
 import asyncio
 import os
 import logging
+from pathlib import Path
 from dotenv import load_dotenv
 import backoff
 from nio import DownloadResponse
+
+HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/healthcheck"))
 
 # Import from shared package
 import sys
@@ -167,6 +170,21 @@ class MatrixBot:
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
 
+    async def _heartbeat_loop(self):
+        """Periodically touch healthcheck file to signal the bot is alive.
+        
+        Docker healthcheck verifies this file was modified recently.
+        If the bot hangs (e.g. event loop blocked), the file goes stale
+        and Docker marks the container as unhealthy.
+        """
+        logger.info(f"Heartbeat loop started (file: {HEALTHCHECK_FILE})")
+        while True:
+            try:
+                HEALTHCHECK_FILE.touch()
+            except Exception as e:
+                logger.warning(f"Failed to touch healthcheck file: {e}")
+            await asyncio.sleep(30)
+
     @backoff.on_exception(
         backoff.expo,
         (asyncio.TimeoutError, ConnectionError),
@@ -194,11 +212,15 @@ class MatrixBot:
             return False
 
     async def start(self):
-        """Start bot with retry and reconnection logic"""
+        """Start bot with retry, reconnection logic, and heartbeat."""
+        # Start heartbeat in background
+        heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        
         while True:
             try:
                 logger.info("Starting Matrix bot...")
                 await self.try_connect()
+                heartbeat_task.cancel()
                 return True
             except (asyncio.TimeoutError, ConnectionError) as e:
                 logger.error(f"Connection error: {str(e)}")
@@ -207,6 +229,7 @@ class MatrixBot:
                 await self.reconnect()
             except Exception as e:
                 logger.error(f"Fatal error: {str(e)}", exc_info=True)
+                heartbeat_task.cancel()
                 return False
 
     async def stop(self):
