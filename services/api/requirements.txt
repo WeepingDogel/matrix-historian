@@ -1,0 +1,22 @@
+# FastAPI API Service dependencies
+fastapi==0.115.12
+uvicorn==0.34.2
+python-multipart==0.0.20
+email-validator==2.2.0
+
+# Database
+sqlalchemy==2.0.40
+psycopg2-binary==2.9.9
+pydantic==2.11.4
+
+# Analytics and Data Analysis
+pandas==2.2.3
+plotly==5.20.0
+jieba==0.42.1
+networkx==3.2.1
+
+# AI
+groq
+
+# Utilities
+python-dotenv==1.1.0

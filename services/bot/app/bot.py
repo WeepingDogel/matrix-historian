@@ -1,17 +1,26 @@
 import simplematrixbotlib as botlib
 import asyncio
+import os
+import logging
+from dotenv import load_dotenv
+import backoff
+
+# Import from shared package
+import sys
+sys.path.insert(0, '/app/shared')
 from app.db.database import SessionLocal
 from app.crud import message as crud
-import json
-import logging
-import os
-from dotenv import load_dotenv
-import backoff  # 需要添加到requirements.txt
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
+
 class MatrixBot:
+    """
+    Matrix Bot for archiving messages to PostgreSQL database.
+    Consolidated bot initialization - single source of truth.
+    """
+    
     def __init__(self):
         self.homeserver = os.getenv("MATRIX_HOMESERVER")
         self.username = os.getenv("MATRIX_USER")
@@ -20,14 +29,14 @@ class MatrixBot:
         self.password = os.getenv("MATRIX_PASSWORD")
 
         if not all([self.homeserver, self.username, self.password]):
-            raise ValueError("Missing Matrix credentials in .env")
+            raise ValueError("Missing Matrix credentials in environment variables")
             
         logger.info(f"Initializing bot with user {self.username}")
         self.initialize_bot()
         logger.info("Bot initialized successfully")
 
     def initialize_bot(self):
-        """初始化或重新初始化bot"""
+        """Initialize or reinitialize bot"""
         self.creds = botlib.Creds(
             homeserver=self.homeserver,
             username=self.username,
@@ -40,32 +49,34 @@ class MatrixBot:
         self.setup_handlers()
 
     def setup_handlers(self):
+        """Setup message event handlers"""
         @self.bot.listener.on_message_event
         async def handle_message(room, event):
             logger.debug(f"Received message in room {room.room_id}")
-            # 忽略机器人自己的消息
+            
+            # Ignore bot's own messages
             if event.sender == self.creds.username:
                 return
                 
             try:
-                # 只检查消息是否有body属性
+                # Check if message has body attribute
                 if hasattr(event, 'body') and event.body:
                     with SessionLocal() as db:
-                        # 创建或更新用户 - 简单使用用户 ID
+                        # Create or update user
                         crud.create_user(
                             db, 
                             event.sender,
-                            event.sender.split(':')[0][1:]  # 从 @user:domain.org 提取用户名
+                            event.sender.split(':')[0][1:]  # Extract username from @user:domain.org
                         )
                         
-                        # 创建或更新房间
+                        # Create or update room
                         crud.create_room(
                             db, 
                             room.room_id,
-                            getattr(room, 'name', room.room_id)  # 如果没有名称，使用房间ID
+                            getattr(room, 'name', room.room_id)  # Use room ID if no name
                         )
                         
-                        # 保存文本消息
+                        # Save text message
                         crud.create_message(
                             db,
                             event.event_id,
@@ -73,7 +84,7 @@ class MatrixBot:
                             event.sender,
                             event.body
                         )
-                        logger.info(f"Saved text message from {event.sender} in {room.room_id}")
+                        logger.info(f"Saved message from {event.sender} in {room.room_id}")
                     
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
@@ -85,7 +96,7 @@ class MatrixBot:
         max_time=300
     )
     async def try_connect(self):
-        """尝试连接到Matrix服务器，带有重试机制"""
+        """Attempt to connect to Matrix server with retry mechanism"""
         try:
             await self.bot.main()
         except Exception as e:
@@ -93,12 +104,10 @@ class MatrixBot:
             raise
 
     async def reconnect(self):
-        """重新连接到Matrix服务器"""
+        """Reconnect to Matrix server"""
         logger.info("Attempting to reconnect...")
         try:
-            # 重新初始化bot
             self.initialize_bot()
-            # 尝试重新连接
             await self.try_connect()
             logger.info("Successfully reconnected")
             return True
@@ -107,7 +116,7 @@ class MatrixBot:
             return False
 
     async def start(self):
-        """启动bot，包含重试和重连逻辑"""
+        """Start bot with retry and reconnection logic"""
         while True:
             try:
                 logger.info("Starting Matrix bot...")
@@ -123,7 +132,7 @@ class MatrixBot:
                 return False
 
     async def stop(self):
-        """停止bot"""
+        """Stop bot"""
         try:
             if hasattr(self.bot, 'async_client'):
                 await self.bot.async_client.close()

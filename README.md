@@ -1,13 +1,12 @@
 # Matrix Historian
 
-A Matrix message archival and analysis tool.
-
+A Matrix message archival and analysis tool with microservices architecture.
 
 ```mermaid
 graph TB
-    A[Matrix Server] -->|Events| B[Matrix Bot]
-    B -->|Extract Data| C[SQLite DB]
-    D[Web Interface] -->|API Requests| E[FastAPI Backend]
+    A[Matrix Server] -->|Events| B[Matrix Bot Service]
+    B -->|Save Messages| C[PostgreSQL DB]
+    D[API Clients] -->|HTTP Requests| E[FastAPI API Service]
     E -->|Query| C
     C -->|Results| E
     E -->|Response| D
@@ -20,20 +19,27 @@ graph TB
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333
-    style D fill:#fbb,stroke:#333
     style E fill:#bfb,stroke:#333
     style F fill:#bff,stroke:#333
     style G fill:#fbf,stroke:#333
 ```
 
+## Architecture
+
+Matrix Historian now uses a **microservices architecture** with the following components:
+
+- **Bot Service** (`services/bot/`): Connects to Matrix and archives messages to PostgreSQL
+- **API Service** (`services/api/`): FastAPI REST API for querying messages and analytics
+- **Shared Package** (`shared/`): Common code (models, schemas, database, CRUD operations)
+- **PostgreSQL Database**: Centralized data storage (replaces SQLite)
 
 ## Features
 
 - Automatically records Matrix room message history
 - Supports message search by room, user, and content
-- Provides Web interface for message browsing and searching
-- Docker deployment support
-- Uses SQLite database for message storage
+- RESTful API for message browsing and searching
+- Docker-based microservices deployment
+- PostgreSQL database for scalable storage
 
 ### Data Analysis Features
 
@@ -41,114 +47,267 @@ graph TB
 - **Word Cloud Analysis**: Generates statistics and visualizations of word frequency in chats
 - **User Interaction**: Shows the network and intensity of interactions between users
 - **Topic Analysis**: Tracks the evolution of topics over time
-- **Sentiment Analysis**: AI-based analysis of message sentiment tendencies
+- **Sentiment Analysis**: AI-based analysis of message sentiment tendencies (requires GROQ_API_KEY)
 - **Activity Analysis**: Displays heatmaps of group activity during different times
 
 All analysis features support filtering by time range and room.
 
 ## Quick Start
 
-### Deploy with Docker
+### Prerequisites
+
+- Docker and Docker Compose
+- A Matrix account for the bot
+- (Optional) GROQ API key for AI analysis features
+
+### Deploy with Docker Compose
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/matrix-historian.git
+git clone https://github.com/EnsueCollectR/matrix-historian.git
 cd matrix-historian
 ```
 
 2. Configure environment variables
 ```bash
 cp .env.example .env
-# Edit .env file to set Matrix bot account information
+# Edit .env file to set Matrix bot credentials and other configuration
 ```
 
-3. Start the service
+Required environment variables:
+- `MATRIX_HOMESERVER`: Your Matrix homeserver URL (e.g., https://matrix.org)
+- `MATRIX_USER`: Bot username (e.g., @yourbot:matrix.org)
+- `MATRIX_PASSWORD`: Bot password
+- `GROQ_API_KEY`: (Optional) For AI sentiment analysis
+
+3. Start the services
 ```bash
-cd src
 docker-compose up -d
 ```
 
+4. Check service status
+```bash
+docker-compose ps
+docker-compose logs -f
+```
+
 Services will start on the following ports:
-- API service: http://localhost:8001
- - Web interface: removed (API-only deployment)
+- **API service**: http://localhost:8000
+- **API documentation**: http://localhost:8000/docs (Swagger UI)
 
-<!-- ### Manual Configuration
+### Database Migration
 
-Refer to [Gitbook Documentation](https://your-gitbook-link) for detailed manual configuration instructions. -->
+The application automatically creates database tables on startup. For production deployments, consider using Alembic for migrations (see Development section).
 
 ## Configuration
 
-Main configuration items:
-- `MATRIX_HOMESERVER`: Matrix server address
-- `MATRIX_USER`: Bot username
-- `MATRIX_PASSWORD`: Bot password
-
 ### Environment Variables
 
-```bash
-# Required environment variables
-MATRIX_HOMESERVER=...
-BOT_USER_ID=...
-BOT_ACCESS_TOKEN=...
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `MATRIX_HOMESERVER` | Matrix server address | - | Yes |
+| `MATRIX_USER` | Bot username | - | Yes |
+| `MATRIX_PASSWORD` | Bot password | - | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://historian:historian@db:5432/historian` | No |
+| `GROQ_API_KEY` | API key for AI analysis | - | No |
 
-# AI analysis related configuration (optional)
-GROQ_API_KEY=...  # For sentiment analysis
-```
+## API Usage
 
-## Usage
+The API service provides RESTful endpoints for querying messages and analytics.
 
-This repository now contains only the API service. Use the API endpoints (see docs or
-`/api/v1` routes) to query messages and analytics. Example:
+**Base URL**: http://localhost:8000/api/v1
 
-- API base URL: http://localhost:8001/api/v1
+**Interactive Documentation**: http://localhost:8000/docs
 
-See the docs in `docs/` or `docs/reference/api-reference.md` for available endpoints and examples.
+### Example Endpoints
+
+- `GET /api/v1/messages` - List messages with pagination
+- `GET /api/v1/messages/search` - Search messages by content
+- `GET /api/v1/rooms` - List rooms
+- `GET /api/v1/users` - List users
+- `GET /api/v1/analytics/overview` - Get analytics overview
+- `GET /api/v1/analytics/trends` - Get message trends
+- `GET /api/v1/analytics/activity-heatmap` - Get activity heatmap
+
+See the [API documentation](http://localhost:8000/docs) for complete endpoint details.
 
 ## Development
 
-### Project Dependencies
-
-This project uses **uv** for fast and reliable dependency management. Dependencies are defined in `pyproject.toml`.
-
-**Install uv:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Install dependencies:**
-```bash
-# Using uv pip install (recommended)
-uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq pandas==2.2.3 plotly==5.20.0 jieba==0.42.1 networkx==3.2.1
-
-# Or using traditional pip
-pip install -r src/requirements.txt
-```
-
 ### Project Structure
+
 ```
 matrix-historian/
-├── pyproject.toml      # Python project configuration and dependencies
-├── src/
-│   ├── app/             # Main application code
-│   │   ├── api/        # API interfaces
-│   │   ├── bot/        # Matrix bot
-│   │   ├── db/         # Database models
-│   │   └── webui/      # Web interface
-│   ├── tests/          # Test code
-│   ├── Dockerfile      # Main API server Dockerfile
-│   └── docker-compose.yml
-└── docs/               # Documentation
+├── docker-compose.yml          # Multi-service orchestration
+├── .env.example                # Environment variables template
+├── shared/                     # Shared code package
+│   ├── app/
+│   │   ├── models/            # SQLAlchemy models
+│   │   ├── schemas/           # Pydantic schemas
+│   │   ├── crud/              # Database operations
+│   │   ├── db/                # Database configuration
+│   │   └── utils/             # Utility functions
+│   └── setup.py
+├── services/
+│   ├── bot/                   # Matrix bot service
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── app/
+│   │       ├── main.py
+│   │       └── bot.py
+│   └── api/                   # FastAPI service
+│       ├── Dockerfile
+│       ├── requirements.txt
+│       └── app/
+│           ├── main.py
+│           ├── api/           # API routes
+│           └── ai/            # AI analysis
+└── docs/                      # Documentation
 ```
 
-See [Development Guide](docs/development.md) for detailed setup instructions.
+### Local Development Setup
 
-<!-- ## Documentation
+For local development without Docker:
 
-[Gitbook Documentation](https://your-gitbook-link) -->
+1. **Install PostgreSQL**
+```bash
+# On Ubuntu/Debian
+sudo apt-get install postgresql postgresql-contrib
+
+# Create database and user
+sudo -u postgres psql
+CREATE DATABASE historian;
+CREATE USER historian WITH PASSWORD 'historian';
+GRANT ALL PRIVILEGES ON DATABASE historian TO historian;
+```
+
+2. **Install Python dependencies**
+```bash
+# Install shared package
+cd shared
+pip install -e .
+
+# Install bot service dependencies
+cd ../services/bot
+pip install -r requirements.txt
+
+# Install API service dependencies
+cd ../services/api
+pip install -r requirements.txt
+```
+
+3. **Set environment variables**
+```bash
+export DATABASE_URL="postgresql://historian:historian@localhost:5432/historian"
+export MATRIX_HOMESERVER="https://matrix.org"
+export MATRIX_USER="@yourbot:matrix.org"
+export MATRIX_PASSWORD="your_password"
+```
+
+4. **Run services**
+```bash
+# Terminal 1: Run bot service
+cd services/bot/app
+python main.py
+
+# Terminal 2: Run API service
+cd services/api/app
+uvicorn main:app --reload --port 8000
+```
+
+### Database Migrations with Alembic (Optional)
+
+For production deployments, use Alembic for database migrations:
+
+```bash
+# Install Alembic
+pip install alembic
+
+# Initialize Alembic in shared package
+cd shared
+alembic init alembic
+
+# Edit alembic.ini and set sqlalchemy.url
+# Edit alembic/env.py to import Base from app.db.database
+
+# Create initial migration
+alembic revision --autogenerate -m "Initial migration"
+
+# Apply migrations
+alembic upgrade head
+```
+
+### Testing
+
+```bash
+# Run tests
+cd tests
+pytest
+```
+
+## Migration from Previous Version
+
+This version represents a significant architectural change from the monolithic application:
+
+- **SQLite → PostgreSQL**: All data must be migrated to PostgreSQL
+- **Monolith → Microservices**: Bot and API now run as separate services
+- **Frontend Removed**: The web UI has been removed; use the API directly or build your own frontend
+
+### Breaking Changes
+
+- Database format changed from SQLite to PostgreSQL
+- Configuration now uses environment variables exclusively
+- Bot and API run as separate processes
+- `func.date_trunc` and `func.extract` queries now work correctly with PostgreSQL
+
+## Troubleshooting
+
+### Bot not connecting to Matrix
+- Check `MATRIX_HOMESERVER`, `MATRIX_USER`, and `MATRIX_PASSWORD` in `.env`
+- View bot logs: `docker-compose logs bot`
+
+### API service not starting
+- Ensure PostgreSQL is healthy: `docker-compose ps db`
+- Check API logs: `docker-compose logs api`
+
+### Database connection errors
+- Verify `DATABASE_URL` is correct
+- Ensure the `db` service is running and healthy
+- Check PostgreSQL logs: `docker-compose logs db`
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-[中文文档](README_zh.md)
+## Changelog
 
+### Version 0.2.0 (Microservices Refactor)
+
+- ✨ Migrated to microservices architecture
+- ✨ PostgreSQL database support (replaces SQLite)
+- ✨ Separate bot and API services
+- ✨ Shared package for common code
+- ✨ Docker Compose orchestration
+- ✨ Fixed `func.date_trunc` PostgreSQL compatibility issues
+- ✨ Consolidated bot initialization (removed duplicate patterns)
+- 🔧 Improved error handling and logging
+- 🔧 Health checks for all services
+- 📝 Updated documentation
+
+### Version 0.1.0 (Legacy Monolith)
+
+- Initial monolithic application
+- SQLite database
+- Combined bot + API in single process
+
+---
+
+[中文文档](README_zh.md) (Note: Chinese documentation may be outdated)

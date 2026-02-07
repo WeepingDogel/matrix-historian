@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: matrix-historian-db
+    environment:
+      POSTGRES_DB: historian
+      POSTGRES_USER: historian
+      POSTGRES_PASSWORD: historian
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U historian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - historian-network
+
+  bot:
+    build:
+      context: .
+      dockerfile: services/bot/Dockerfile
+    container_name: matrix-historian-bot
+    environment:
+      - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
+      - MATRIX_USER=${MATRIX_USER}
+      - MATRIX_PASSWORD=${MATRIX_PASSWORD}
+      - DATABASE_URL=postgresql://historian:historian@db:5432/historian
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - historian-network
+    volumes:
+      - bot_sessions:/app
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    container_name: matrix-historian-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://historian:historian@db:5432/historian
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - historian-network
+
+volumes:
+  postgres_data:
+    driver: local
+  bot_sessions:
+    driver: local
+
+networks:
+  historian-network:
+    driver: bridge
