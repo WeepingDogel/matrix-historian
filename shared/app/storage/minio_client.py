@@ -38,7 +38,7 @@ class MediaStorage:
             self.public_client = Minio(
                 public_endpoint,
                 access_key=access_key,
-                ecret_key=secret_key,
+                secret_key=secret_key,
                 secure=public_secure,
             )
         else:
