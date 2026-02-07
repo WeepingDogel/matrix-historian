@@ -13,7 +13,7 @@ from nio import (
     RoomMessageVideo,
 )
 
-HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/healthcheck"))
+HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/data/healthcheck"))
 
 # Import from shared package
 import sys
@@ -53,7 +53,7 @@ class MatrixBot:
             homeserver=self.homeserver,
             username=self.username,
             password=self.password,
-            session_stored_file="bot_session.txt"
+            session_stored_file="/app/data/bot_session.txt"
         )
         self.config = botlib.Config()
         self.config.encryption_enabled = False
@@ -61,7 +61,7 @@ class MatrixBot:
         # when the bot is in many rooms)
         self.config.timeout = int(os.getenv("MATRIX_SYNC_TIMEOUT", "300000"))  # 5 minutes
         # Persist sync state so restarts only fetch incremental updates
-        self.config.store_path = os.getenv("MATRIX_STORE_PATH", "/app/nio_store")
+        self.config.store_path = os.getenv("MATRIX_STORE_PATH", "/app/data/nio_store")
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
 

@@ -23,5 +23,8 @@ RUN uv pip install --system --no-cache -r requirements.txt
 
 COPY services/bot/app/ /app/
 
+# Create persistent data directory (mounted as volume at runtime)
+RUN mkdir -p /app/data
+
 # Run the bot
 CMD ["python", "main.py"]

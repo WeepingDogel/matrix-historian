@@ -60,7 +60,7 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "find /app/healthcheck -mmin -2 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "find /app/data/healthcheck -mmin -2 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -69,7 +69,7 @@ services:
     networks:
       - historian-network
     volumes:
-      - bot_sessions:/app
+      - bot_data:/app/data
 
   api:
     build:
@@ -103,7 +103,7 @@ services:
 volumes:
   postgres_data:
     driver: local
-  bot_sessions:
+  bot_data:
     driver: local
   minio_data:
     driver: local
