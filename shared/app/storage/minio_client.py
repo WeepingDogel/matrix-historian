@@ -28,6 +28,21 @@ class MediaStorage:
         )
         self.bucket = os.getenv("MINIO_BUCKET", "matrix-media")
         self._ensure_bucket()
+        # Public-facing MinIO client for presigned URLs
+        public_url = os.getenv("MINIO_PUBLIC_URL")
+        if public_url:
+            from urllib.parse import urlparse
+            parsed = urlparse(public_url)
+            public_endpoint = parsed.netloc or parsed.path
+            public_secure = parsed.scheme == "https"
+            self.public_client = Minio(
+                public_endpoint,
+                access_key=access_key,
+                ecret_key=secret_key,
+                secure=public_secure,
+            )
+        else:
+            self.public_client = self.client
     
     def _ensure_bucket(self):
         """Ensure the bucket exists, create if it doesn't"""
@@ -108,7 +123,7 @@ class MediaStorage:
             Presigned URL
         """
         try:
-            url = self.client.presigned_get_object(
+            url = self.public_client.presigned_get_object(
                 self.bucket,
                 key,
                 expires=timedelta(seconds=expires)

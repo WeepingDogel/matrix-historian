@@ -85,6 +85,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-historian123}
       - MINIO_BUCKET=${MINIO_BUCKET:-matrix-media}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-}
     depends_on:
       db:
         condition: service_healthy
