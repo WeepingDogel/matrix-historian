@@ -147,8 +147,19 @@ def get_message_trends(
     db: Session = Depends(get_db)
 ):
     """获取消息趋势分析"""
-    trends = crud.get_message_trends(db, days, interval)
-    return {"trends": trends}
+    try:
+        trends = crud.get_message_trends(db, days, interval)
+        return {
+            "trends": [
+                {"period": str(trend[0]), "count": trend[1]}
+                for trend in trends
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"获取消息趋势失败: {str(e)}"
+        )
 
 @router.get("/content-analysis")
 def analyze_content(
