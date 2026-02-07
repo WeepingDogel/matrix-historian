@@ -4,3 +4,4 @@ pydantic==2.11.4
 psycopg2-binary==2.9.9
 python-dotenv==1.1.0
 alembic==1.13.1
+minio==7.2.16

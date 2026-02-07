@@ -4,12 +4,15 @@ import os
 import logging
 from dotenv import load_dotenv
 import backoff
+from nio import DownloadResponse
 
 # Import from shared package
 import sys
 sys.path.insert(0, '/app/shared')
 from app.db.database import SessionLocal
 from app.crud import message as crud
+from app.crud import media as crud_media
+from app.storage.minio_client import MediaStorage
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -48,6 +51,21 @@ class MatrixBot:
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
 
+    async def download_matrix_media(self, mxc_url: str) -> bytes:
+        """Download media from Matrix server"""
+        try:
+            logger.debug(f"Downloading media from {mxc_url}")
+            response = await self.bot.async_client.download(mxc_url)
+            if isinstance(response, DownloadResponse):
+                logger.debug(f"Downloaded {len(response.body)} bytes")
+                return response.body
+            else:
+                logger.error(f"Failed to download media: {response}")
+                return None
+        except Exception as e:
+            logger.error(f"Error downloading media: {str(e)}", exc_info=True)
+            return None
+
     def setup_handlers(self):
         """Setup message event handlers"""
         @self.bot.listener.on_message_event
@@ -59,23 +77,23 @@ class MatrixBot:
                 return
                 
             try:
-                # Check if message has body attribute
-                if hasattr(event, 'body') and event.body:
-                    with SessionLocal() as db:
-                        # Create or update user
-                        crud.create_user(
-                            db, 
-                            event.sender,
-                            event.sender.split(':')[0][1:]  # Extract username from @user:domain.org
-                        )
-                        
-                        # Create or update room
-                        crud.create_room(
-                            db, 
-                            room.room_id,
-                            getattr(room, 'name', room.room_id)  # Use room ID if no name
-                        )
-                        
+                with SessionLocal() as db:
+                    # Create or update user
+                    crud.create_user(
+                        db, 
+                        event.sender,
+                        event.sender.split(':')[0][1:]  # Extract username from @user:domain.org
+                    )
+                    
+                    # Create or update room
+                    crud.create_room(
+                        db, 
+                        room.room_id,
+                        getattr(room, 'name', room.room_id)  # Use room ID if no name
+                    )
+                    
+                    # Check if message has body attribute (text message)
+                    if hasattr(event, 'body') and event.body:
                         # Save text message
                         crud.create_message(
                             db,
@@ -84,7 +102,67 @@ class MatrixBot:
                             event.sender,
                             event.body
                         )
-                        logger.info(f"Saved message from {event.sender} in {room.room_id}")
+                        logger.info(f"Saved text message from {event.sender} in {room.room_id}")
+                    
+                    # Check for media content
+                    if hasattr(event, 'source'):
+                        content = event.source.get('content', {})
+                        msgtype = content.get('msgtype')
+                        
+                        # Handle media messages (image, file, audio, video)
+                        if msgtype in ('m.image', 'm.file', 'm.audio', 'm.video'):
+                            mxc_url = content.get('url')
+                            
+                            if mxc_url:
+                                logger.info(f"Processing {msgtype} from {event.sender}")
+                                
+                                # Download media from Matrix
+                                media_data = await self.download_matrix_media(mxc_url)
+                                
+                                if media_data:
+                                    # Extract metadata
+                                    filename = content.get('body', 'unknown')
+                                    info = content.get('info', {})
+                                    mime_type = info.get('mimetype', 'application/octet-stream')
+                                    size = info.get('size')
+                                    width = info.get('w')
+                                    height = info.get('h')
+                                    
+                                    # Upload to MinIO
+                                    try:
+                                        storage = MediaStorage()
+                                        minio_key = storage.upload(media_data, filename, mime_type)
+                                        
+                                        # Save to database
+                                        # First save as a text message if it has a body
+                                        message_body = content.get('body', f'[{msgtype}]')
+                                        crud.create_message(
+                                            db,
+                                            event.event_id,
+                                            room.room_id,
+                                            event.sender,
+                                            message_body
+                                        )
+                                        
+                                        # Then save media metadata
+                                        crud_media.create_media(
+                                            db,
+                                            event_id=event.event_id,
+                                            room_id=room.room_id,
+                                            sender_id=event.sender,
+                                            minio_key=minio_key,
+                                            original_filename=filename,
+                                            mime_type=mime_type,
+                                            size=size,
+                                            width=width,
+                                            height=height
+                                        )
+                                        
+                                        logger.info(f"Saved media {filename} from {event.sender} to MinIO")
+                                    except Exception as e:
+                                        logger.error(f"Error saving media to MinIO: {str(e)}", exc_info=True)
+                                else:
+                                    logger.warning(f"Failed to download media from {mxc_url}")
                     
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
