@@ -44,7 +44,7 @@ services:
       dockerfile: services/api/Dockerfile
     container_name: matrix-historian-api
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8500}:8000"
     environment:
       - DATABASE_URL=postgresql://historian:historian@db:5432/historian
       - GROQ_API_KEY=${GROQ_API_KEY:-}
