@@ -18,5 +18,8 @@ networkx==3.2.1
 # AI
 groq
 
+# Storage
+minio==7.2.16
+
 # Utilities
 python-dotenv==1.1.0

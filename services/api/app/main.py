@@ -8,6 +8,7 @@ sys.path.insert(0, '/app/shared')
 
 from api.routes import router
 from api import analytics
+from api import media
 from app.db.database import init_db
 from app.utils.logging_config import setup_logging
 
@@ -39,6 +40,7 @@ app.add_middleware(
 # Include routers
 app.include_router(router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(media.router, prefix="/api/v1/media", tags=["media"])
 
 
 @app.get("/health")

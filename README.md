@@ -6,9 +6,11 @@ A Matrix message archival and analysis tool with microservices architecture.
 graph TB
     A[Matrix Server] -->|Events| B[Matrix Bot Service]
     B -->|Save Messages| C[PostgreSQL DB]
+    B -->|Store Media| H[MinIO Storage]
     D[API Clients] -->|HTTP Requests| E[FastAPI API Service]
     E -->|Query| C
     C -->|Results| E
+    E -->|Download Media| H
     E -->|Response| D
     
     F[Analysis Engine] -->|Process Data| C
@@ -22,16 +24,18 @@ graph TB
     style E fill:#bfb,stroke:#333
     style F fill:#bff,stroke:#333
     style G fill:#fbf,stroke:#333
+    style H fill:#fdb,stroke:#333
 ```
 
 ## Architecture
 
 Matrix Historian now uses a **microservices architecture** with the following components:
 
-- **Bot Service** (`services/bot/`): Connects to Matrix and archives messages to PostgreSQL
-- **API Service** (`services/api/`): FastAPI REST API for querying messages and analytics
-- **Shared Package** (`shared/`): Common code (models, schemas, database, CRUD operations)
-- **PostgreSQL Database**: Centralized data storage (replaces SQLite)
+- **Bot Service** (`services/bot/`): Connects to Matrix and archives messages to PostgreSQL, downloads and stores media files
+- **API Service** (`services/api/`): FastAPI REST API for querying messages, analytics, and media
+- **Shared Package** (`shared/`): Common code (models, schemas, database, CRUD operations, storage utilities)
+- **PostgreSQL Database**: Centralized data storage for messages and metadata
+- **MinIO Object Storage**: S3-compatible storage for media files (images, videos, audio, files)
 
 ## Features
 
@@ -40,6 +44,17 @@ Matrix Historian now uses a **microservices architecture** with the following co
 - RESTful API for message browsing and searching
 - Docker-based microservices deployment
 - PostgreSQL database for scalable storage
+- **Media storage with MinIO** for images, videos, audio, and files
+
+### Media Storage Features
+
+- **Automatic media archival**: Bot automatically downloads and stores media files from Matrix
+- **MinIO object storage**: S3-compatible storage for efficient media management
+- **Media metadata tracking**: Store filename, MIME type, file size, and image dimensions
+- **RESTful media API**: Query media by room, user, or type
+- **Presigned URLs**: Secure temporary download links for media files
+- **Media statistics**: Track total media count, size, and breakdown by type
+- **Filtered queries**: Search media by MIME type (e.g., images only)
 
 ### Data Analysis Features
 
@@ -92,8 +107,10 @@ docker-compose logs -f
 ```
 
 Services will start on the following ports:
-- **API service**: http://localhost:8000
-- **API documentation**: http://localhost:8000/docs (Swagger UI)
+- **API service**: http://localhost:8500 (configurable via `API_PORT`)
+- **API documentation**: http://localhost:8500/docs (Swagger UI)
+- **MinIO Console**: http://localhost:9001 (web UI for managing media storage)
+- **MinIO API**: http://localhost:9000 (S3-compatible API endpoint)
 
 ### Database Migration
 
@@ -109,27 +126,94 @@ The application automatically creates database tables on startup. For production
 | `MATRIX_USER` | Bot username | - | Yes |
 | `MATRIX_PASSWORD` | Bot password | - | Yes |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://historian:historian@db:5432/historian` | No |
+| `MINIO_ROOT_USER` | MinIO admin username | `historian` | No |
+| `MINIO_ROOT_PASSWORD` | MinIO admin password | `historian123` | No |
+| `MINIO_ENDPOINT` | MinIO endpoint | `minio:9000` | No |
+| `MINIO_BUCKET` | MinIO bucket name | `matrix-media` | No |
+| `MINIO_API_PORT` | MinIO API port | `9000` | No |
+| `MINIO_CONSOLE_PORT` | MinIO console port | `9001` | No |
+| `API_PORT` | API service port | `8500` | No |
 | `GROQ_API_KEY` | API key for AI analysis | - | No |
+
+## Media Storage with MinIO
+
+Matrix Historian uses MinIO for storing media files uploaded to Matrix rooms. MinIO is an S3-compatible object storage system that runs as a Docker container.
+
+### Accessing MinIO Console
+
+The MinIO web console is available at http://localhost:9001
+
+**Default credentials:**
+- Username: `historian`
+- Password: `historian123`
+
+From the console, you can:
+- Browse stored media files
+- Monitor storage usage
+- Manage buckets and policies
+- View access logs
+
+### How Media Storage Works
+
+1. **Bot receives media event** from Matrix (image, video, audio, or file)
+2. **Bot downloads media** from the Matrix server using the `mxc://` URL
+3. **Bot uploads to MinIO** with a unique UUID-based key
+4. **Metadata saved to PostgreSQL** including filename, MIME type, size, dimensions
+5. **API provides download URLs** via presigned URLs that expire after 1 hour
+
+### Supported Media Types
+
+- **Images**: `m.image` (JPEG, PNG, GIF, WebP, etc.)
+- **Videos**: `m.video` (MP4, WebM, etc.)
+- **Audio**: `m.audio` (MP3, OGG, etc.)
+- **Files**: `m.file` (any file type)
+
+### Storage Organization
+
+Media files are stored in MinIO with the following structure:
+```
+matrix-media/  (bucket)
+├── <uuid>/
+│   └── original_filename.ext
+```
+
+Each file is stored under a unique UUID path to prevent naming conflicts.
 
 ## API Usage
 
-The API service provides RESTful endpoints for querying messages and analytics.
+The API service provides RESTful endpoints for querying messages, analytics, and media.
 
-**Base URL**: http://localhost:8000/api/v1
+**Base URL**: http://localhost:8500/api/v1
 
-**Interactive Documentation**: http://localhost:8000/docs
+**Interactive Documentation**: http://localhost:8500/docs
 
 ### Example Endpoints
 
+#### Messages
 - `GET /api/v1/messages` - List messages with pagination
 - `GET /api/v1/messages/search` - Search messages by content
 - `GET /api/v1/rooms` - List rooms
 - `GET /api/v1/users` - List users
+
+#### Analytics
 - `GET /api/v1/analytics/overview` - Get analytics overview
 - `GET /api/v1/analytics/trends` - Get message trends
 - `GET /api/v1/analytics/activity-heatmap` - Get activity heatmap
 
-See the [API documentation](http://localhost:8000/docs) for complete endpoint details.
+#### Media
+- `GET /api/v1/media/` - List all media with pagination
+- `GET /api/v1/media/stats` - Get media statistics (count, size, by type)
+- `GET /api/v1/media/room/{room_id}` - List media in a specific room
+- `GET /api/v1/media/user/{user_id}` - List media sent by a specific user
+- `GET /api/v1/media/{media_id}` - Get media metadata with download URL
+- `GET /api/v1/media/{media_id}/download` - Download media file
+
+**Media query parameters:**
+- `skip` - Pagination offset
+- `limit` - Number of results (default: 100)
+- `mime_type` - Filter by MIME type prefix (e.g., `image/` for images only)
+
+See the [API documentation](http://localhost:8500/docs) for complete endpoint details.
 
 ## Development
 
@@ -144,6 +228,7 @@ matrix-historian/
 │   │   ├── models/            # SQLAlchemy models
 │   │   ├── schemas/           # Pydantic schemas
 │   │   ├── crud/              # Database operations
+│   │   ├── storage/           # Storage utilities (MinIO client)
 │   │   ├── db/                # Database configuration
 │   │   └── utils/             # Utility functions
 │   └── setup.py
@@ -159,7 +244,7 @@ matrix-historian/
 │       ├── requirements.txt
 │       └── app/
 │           ├── main.py
-│           ├── api/           # API routes
+│           ├── api/           # API routes (messages, analytics, media)
 │           └── ai/            # AI analysis
 └── docs/                      # Documentation
 ```
@@ -288,6 +373,18 @@ Contributions are welcome! Please:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### Version 0.3.0 (Media Storage)
+
+- ✨ **MinIO object storage integration** for media files
+- ✨ **Automatic media archival** from Matrix (images, videos, audio, files)
+- ✨ **Media API endpoints** for querying and downloading media
+- ✨ **Media metadata tracking** (filename, MIME type, size, dimensions)
+- ✨ **Presigned download URLs** for secure media access
+- ✨ **Media statistics** and filtering by type
+- 🔧 Enhanced bot to handle media events
+- 🔧 MinIO health checks and dependencies in docker-compose
+- 📝 Updated documentation with media storage guide
 
 ### Version 0.2.0 (Microservices Refactor)
 
