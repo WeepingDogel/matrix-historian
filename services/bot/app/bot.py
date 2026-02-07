@@ -54,6 +54,8 @@ class MatrixBot:
         # Increase timeout for initial sync (default 65536ms may not be enough
         # when the bot is in many rooms)
         self.config.timeout = int(os.getenv("MATRIX_SYNC_TIMEOUT", "300000"))  # 5 minutes
+        # Persist sync state so restarts only fetch incremental updates
+        self.config.store_path = os.getenv("MATRIX_STORE_PATH", "/app/nio_store")
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
 
@@ -98,9 +100,66 @@ class MatrixBot:
                         getattr(room, 'name', room.room_id)  # Use room ID if no name
                     )
                     
-                    # Check if message has body attribute (text message)
-                    if hasattr(event, 'body') and event.body:
-                        # Save text message
+                    # Determine if this is a media event
+                    is_media = False
+                    if hasattr(event, 'source'):
+                        content = event.source.get('content', {})
+                        msgtype = content.get('msgtype')
+                        if msgtype in ('m.image', 'm.file', 'm.audio', 'm.video'):
+                            is_media = True
+                    
+                    if is_media:
+                        # Handle media messages (image, file, audio, video)
+                        mxc_url = content.get('url')
+                        if mxc_url:
+                            logger.info(f"Processing {msgtype} from {event.sender}")
+                            
+                            # Extract metadata
+                            filename = content.get('body', 'unknown')
+                            info = content.get('info', {})
+                            mime_type = info.get('mimetype', 'application/octet-stream')
+                            size = info.get('size')
+                            width = info.get('w')
+                            height = info.get('h')
+                            
+                            # Save message record (with type prefix)
+                            message_body = f'[{msgtype}] {filename}'
+                            crud.create_message(
+                                db,
+                                event.event_id,
+                                room.room_id,
+                                event.sender,
+                                message_body
+                            )
+                            
+                            # Download media from Matrix
+                            media_data = await self.download_matrix_media(mxc_url)
+                            
+                            if media_data:
+                                try:
+                                    storage = MediaStorage()
+                                    minio_key = storage.upload(media_data, filename, mime_type)
+                                    
+                                    # Save media metadata
+                                    crud_media.create_media(
+                                        db,
+                                        event_id=event.event_id,
+                                        room_id=room.room_id,
+                                        sender_id=event.sender,
+                                        minio_key=minio_key,
+                                        original_filename=filename,
+                                        mime_type=mime_type,
+                                        size=size,
+                                        width=width,
+                                        height=height
+                                    )
+                                    logger.info(f"Saved media {filename} ({mime_type}, {size} bytes) to MinIO")
+                                except Exception as e:
+                                    logger.error(f"Error saving media to MinIO: {str(e)}", exc_info=True)
+                            else:
+                                logger.warning(f"Failed to download media from {mxc_url}")
+                    elif hasattr(event, 'body') and event.body:
+                        # Save text message (only for non-media events)
                         crud.create_message(
                             db,
                             event.event_id,
@@ -109,66 +168,6 @@ class MatrixBot:
                             event.body
                         )
                         logger.info(f"Saved text message from {event.sender} in {room.room_id}")
-                    
-                    # Check for media content
-                    if hasattr(event, 'source'):
-                        content = event.source.get('content', {})
-                        msgtype = content.get('msgtype')
-                        
-                        # Handle media messages (image, file, audio, video)
-                        if msgtype in ('m.image', 'm.file', 'm.audio', 'm.video'):
-                            mxc_url = content.get('url')
-                            
-                            if mxc_url:
-                                logger.info(f"Processing {msgtype} from {event.sender}")
-                                
-                                # Download media from Matrix
-                                media_data = await self.download_matrix_media(mxc_url)
-                                
-                                if media_data:
-                                    # Extract metadata
-                                    filename = content.get('body', 'unknown')
-                                    info = content.get('info', {})
-                                    mime_type = info.get('mimetype', 'application/octet-stream')
-                                    size = info.get('size')
-                                    width = info.get('w')
-                                    height = info.get('h')
-                                    
-                                    # Upload to MinIO
-                                    try:
-                                        storage = MediaStorage()
-                                        minio_key = storage.upload(media_data, filename, mime_type)
-                                        
-                                        # Save to database
-                                        # First save as a text message if it has a body
-                                        message_body = content.get('body', f'[{msgtype}]')
-                                        crud.create_message(
-                                            db,
-                                            event.event_id,
-                                            room.room_id,
-                                            event.sender,
-                                            message_body
-                                        )
-                                        
-                                        # Then save media metadata
-                                        crud_media.create_media(
-                                            db,
-                                            event_id=event.event_id,
-                                            room_id=room.room_id,
-                                            sender_id=event.sender,
-                                            minio_key=minio_key,
-                                            original_filename=filename,
-                                            mime_type=mime_type,
-                                            size=size,
-                                            width=width,
-                                            height=height
-                                        )
-                                        
-                                        logger.info(f"Saved media {filename} from {event.sender} to MinIO")
-                                    except Exception as e:
-                                        logger.error(f"Error saving media to MinIO: {str(e)}", exc_info=True)
-                                else:
-                                    logger.warning(f"Failed to download media from {mxc_url}")
                     
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
