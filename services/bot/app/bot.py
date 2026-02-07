@@ -51,6 +51,9 @@ class MatrixBot:
         )
         self.config = botlib.Config()
         self.config.encryption_enabled = False
+        # Increase timeout for initial sync (default 65536ms may not be enough
+        # when the bot is in many rooms)
+        self.config.timeout = int(os.getenv("MATRIX_SYNC_TIMEOUT", "300000"))  # 5 minutes
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
 
@@ -187,9 +190,9 @@ class MatrixBot:
 
     @backoff.on_exception(
         backoff.expo,
-        (asyncio.TimeoutError, ConnectionError),
-        max_tries=5,
-        max_time=300
+        (asyncio.TimeoutError, ConnectionError, OSError),
+        max_tries=10,
+        max_time=600
     )
     async def try_connect(self):
         """Attempt to connect to Matrix server with retry mechanism"""
@@ -203,6 +206,8 @@ class MatrixBot:
         """Reconnect to Matrix server"""
         logger.info("Attempting to reconnect...")
         try:
+            # Close old client session to avoid 'Unclosed client session' warning
+            await self.stop()
             self.initialize_bot()
             await self.try_connect()
             logger.info("Successfully reconnected")

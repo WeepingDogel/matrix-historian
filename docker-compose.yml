@@ -63,8 +63,8 @@ services:
       test: ["CMD-SHELL", "find /app/healthcheck -mmin -2 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 300s
     restart: unless-stopped
     networks:
       - historian-network
