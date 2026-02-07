@@ -19,7 +19,7 @@ RUN uv pip install --system --no-cache -e /app/shared/
 
 # Copy bot service
 COPY services/bot/requirements.txt .
-RUN uv pip install --system --no-cache -r requirements.txt --override
+RUN uv pip install --system --no-cache -r requirements.txt 
 
 COPY services/bot/app/ /app/
 
