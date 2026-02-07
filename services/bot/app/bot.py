@@ -5,7 +5,13 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 import backoff
-from nio import DownloadResponse
+from nio import (
+    DownloadResponse,
+    RoomMessageImage,
+    RoomMessageFile,
+    RoomMessageAudio,
+    RoomMessageVideo,
+)
 
 HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/healthcheck"))
 
@@ -171,6 +177,15 @@ class MatrixBot:
                     
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
+
+        # Register listeners for media event types.
+        # simplematrixbotlib's on_message_event only captures RoomMessageText,
+        # so we use on_custom_event to route media events into the same handler.
+        for event_type in [RoomMessageImage, RoomMessageFile,
+                           RoomMessageAudio, RoomMessageVideo]:
+            @self.bot.listener.on_custom_event(event_type)
+            async def _media_proxy(room, event):
+                await handle_message(room, event)
 
     async def _heartbeat_loop(self):
         """Periodically touch healthcheck file to signal the bot is alive.
