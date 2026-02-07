@@ -82,7 +82,6 @@ class MatrixBot:
 
     def setup_handlers(self):
         """Setup message event handlers"""
-        @self.bot.listener.on_message_event
         async def handle_message(room, event):
             logger.debug(f"Received message in room {room.room_id}")
             
@@ -177,6 +176,11 @@ class MatrixBot:
                     
             except Exception as e:
                 logger.error(f"Error handling message: {str(e)}", exc_info=True)
+
+        # Register handle_message for text events (call explicitly instead of
+        # using @decorator syntax, because on_message_event returns None which
+        # would shadow the function name and break media proxy references).
+        self.bot.listener.on_message_event(handle_message)
 
         # Register listeners for media event types.
         # simplematrixbotlib's on_message_event only captures RoomMessageText,
