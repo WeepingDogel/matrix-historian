@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict
-import pandas as pd
 from functools import lru_cache
 from datetime import datetime, timedelta
 import sys
@@ -158,7 +157,7 @@ def analyze_content(
     db: Session = Depends(get_db)
 ):
     """获取内容分析"""
-    from app.ai.analyzer import MessageAnalyzer
+    from ai.analyzer import MessageAnalyzer
     analyzer = MessageAnalyzer()
     
     messages = crud.get_word_frequency(db, days=days)
@@ -177,7 +176,7 @@ def get_user_network(
 ):
     """获取用户互动网络"""
     try:
-        from app.ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer
         analyzer = MessageAnalyzer()
         
         # 获取消息并转换格式
@@ -213,7 +212,7 @@ async def analyze_sentiment(
 ):
     """获取情感分析数据"""
     try:
-        from app.ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer
         analyzer = MessageAnalyzer()
         
         messages = crud.get_messages(db, room_id=room_id, limit=100)
@@ -327,7 +326,7 @@ async def get_ai_analysis(
 ):
     """AI分析统一接口"""
     try:
-        from app.ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer
         analyzer = MessageAnalyzer()
         
         messages = crud.get_messages(db, room_id=room_id, limit=100)

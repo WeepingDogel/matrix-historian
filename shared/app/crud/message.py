@@ -137,12 +137,14 @@ def get_message_stats(db: Session, days: int = 7):
     start_date = end_date - timedelta(days=days)
     
     daily_stats = db.query(
-        func.date(Message.timestamp).label('date'),
+        func.date_trunc('day', Message.timestamp).label('date'),
         func.count(Message.event_id).label('count')
     ).filter(
         Message.timestamp >= start_date
     ).group_by(
-        func.date(Message.timestamp)
+        func.date_trunc('day', Message.timestamp)
+    ).order_by(
+        func.date_trunc('day', Message.timestamp)
     ).all()
     
     return daily_stats
