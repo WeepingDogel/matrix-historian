@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from app.db.database import get_db
-from app.crud import message as crud
 from typing import List, Dict
 import pandas as pd
 from functools import lru_cache
 from datetime import datetime, timedelta
+import sys
+sys.path.insert(0, '/app/shared')
+
+from app.db.database import get_db
+from app.crud import message as crud
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

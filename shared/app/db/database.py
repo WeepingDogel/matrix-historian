@@ -1,14 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_URL = f"sqlite:///{BASE_DIR}/database.db"
+# Get DATABASE_URL from environment variable
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://historian:historian@db:5432/historian"
+)
 
+# Create engine for PostgreSQL (no check_same_thread needed)
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    pool_pre_ping=True,  # Enable connection health checks
+    pool_size=10,
+    max_overflow=20
 )
 
 SessionLocal = sessionmaker(
@@ -20,9 +25,11 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 def init_db():
+    """Initialize database tables"""
     Base.metadata.create_all(bind=engine)
 
 def get_db():
+    """Dependency for getting database session"""
     db = SessionLocal()
     try:
         yield db

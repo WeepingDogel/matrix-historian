@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+from datetime import datetime
+import sys
+sys.path.insert(0, '/app/shared')
+
 from app.db.database import get_db
 from app.crud import message as crud
 from app.schemas.message import Message, UserBase, RoomBase, MessageResponse
-from datetime import datetime
 
 router = APIRouter()
 
