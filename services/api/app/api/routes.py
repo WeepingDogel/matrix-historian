@@ -121,7 +121,12 @@ def get_message_statistics(
 ):
     """获取消息统计数据"""
     stats = crud.get_message_stats(db, days)
-    return {"stats": stats}
+    return {
+        "stats": [
+            {"date": str(row.date), "count": row.count}
+            for row in stats
+        ]
+    }
 
 @router.get("/analytics/user-activity")
 def get_user_activity(
