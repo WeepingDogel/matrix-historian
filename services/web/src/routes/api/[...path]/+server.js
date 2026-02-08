@@ -13,17 +13,23 @@ async function proxy({ request, params }) {
 	const incoming = new URL(request.url);
 	url.search = incoming.search;
 
+	// Follow redirects (FastAPI may 307 for trailing slash normalization)
 	const res = await fetch(url.toString(), {
 		method: request.method,
 		headers: request.headers,
 		body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
-		duplex: 'half'
+		duplex: 'half',
+		redirect: 'follow'
 	});
+
+	// Strip redirect-related headers before forwarding back
+	const responseHeaders = new Headers(res.headers);
+	responseHeaders.delete('location');
 
 	return new Response(res.body, {
 		status: res.status,
 		statusText: res.statusText,
-		headers: res.headers
+		headers: responseHeaders
 	});
 }
 

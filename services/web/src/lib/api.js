@@ -9,14 +9,17 @@ const BASE = '/api/v1';
  * Tiny wrapper around fetch that throws on non-OK responses.
  */
 async function request(path, params = {}, fetchFn = fetch) {
-	const url = new URL(path, 'http://localhost'); // URL only used for searchParams
+	// Strip trailing slash to avoid SvelteKit 308 redirects (trailingSlash: 'never')
+	const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
+
+	const url = new URL(cleanPath, 'http://localhost'); // URL only used for searchParams
 	for (const [k, v] of Object.entries(params)) {
 		if (v !== undefined && v !== null && v !== '') {
 			url.searchParams.set(k, String(v));
 		}
 	}
 	const qs = url.searchParams.toString();
-	const fullPath = qs ? `${path}?${qs}` : path;
+	const fullPath = qs ? `${cleanPath}?${qs}` : cleanPath;
 
 	const res = await fetchFn(fullPath);
 	if (!res.ok) {
