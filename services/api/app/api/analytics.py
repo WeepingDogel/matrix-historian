@@ -138,7 +138,16 @@ def get_user_interactions(
 ):
     """获取用户互动数据"""
     interactions = crud.get_user_interaction_pairs(db, days, min_count)
-    return {"interactions": interactions}
+    return {
+        "interactions": [
+            {
+                "room_id": row[0],
+                "sender_id": row[1],
+                "timestamp": row[2].isoformat() if hasattr(row[2], 'isoformat') else str(row[2])
+            }
+            for row in interactions
+        ]
+    }
 
 @router.get("/trends")
 def get_message_trends(
