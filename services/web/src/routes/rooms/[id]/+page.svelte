@@ -4,6 +4,9 @@
 	let roomName = $derived(
 		data.messages.length > 0 ? (data.messages[0].room?.name || data.roomId) : data.roomId
 	);
+
+	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
+	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
 </script>
 
 <svelte:head>
@@ -17,8 +20,12 @@
 	</ul>
 </div>
 
-<h2 class="text-2xl font-bold mb-4">{roomName}</h2>
-<p class="text-xs font-mono opacity-50 mb-6">{data.roomId}</p>
+<h2 class="text-2xl font-bold mb-2">{roomName}</h2>
+<p class="text-xs font-mono opacity-50 mb-2">{data.roomId}</p>
+<p class="text-sm opacity-60 mb-6">
+	{data.total.toLocaleString()} message{data.total !== 1 ? 's' : ''}
+	{#if data.total > 0}· Page {currentPage} of {totalPages}{/if}
+</p>
 
 {#if data.error}
 	<div class="alert alert-warning mb-4"><span>⚠️ {data.error}</span></div>
@@ -43,14 +50,15 @@
 		{/each}
 	</div>
 
-	<div class="flex gap-2 mt-6 justify-center">
+	<div class="flex items-center gap-2 mt-6 justify-center">
 		{#if data.skip > 0}
-			<a href="/rooms/{encodeURIComponent(data.roomId)}?skip={Math.max(0, data.skip - 100)}" class="btn btn-outline btn-sm">
+			<a href="/rooms/{encodeURIComponent(data.roomId)}?skip={Math.max(0, data.skip - data.limit)}" class="btn btn-outline btn-sm">
 				← Previous
 			</a>
 		{/if}
+		<span class="text-sm opacity-60">Page {currentPage} / {totalPages}</span>
 		{#if data.hasMore}
-			<a href="/rooms/{encodeURIComponent(data.roomId)}?skip={data.skip + 100}" class="btn btn-outline btn-sm">
+			<a href="/rooms/{encodeURIComponent(data.roomId)}?skip={data.skip + data.limit}" class="btn btn-outline btn-sm">
 				Next →
 			</a>
 		{/if}

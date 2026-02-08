@@ -3,13 +3,42 @@
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
+	let selectedRoom = $state(data.room_id ?? '');
+	let selectedUser = $state(data.user_id ?? '');
+
+	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
+	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+
+	function buildParams(overrides = {}) {
+		const params = new URLSearchParams();
+		const q = overrides.q ?? searchInput;
+		const room = overrides.room_id ?? selectedRoom;
+		const user = overrides.user_id ?? selectedUser;
+		const skip = overrides.skip ?? 0;
+		if (q) params.set('q', q);
+		if (room) params.set('room_id', room);
+		if (user) params.set('user_id', user);
+		if (skip > 0) params.set('skip', String(skip));
+		return params.toString();
+	}
 
 	function doSearch(e) {
 		e.preventDefault();
-		const params = new URLSearchParams();
-		if (searchInput) params.set('q', searchInput);
-		goto(`/messages?${params.toString()}`);
+		goto(`/messages?${buildParams()}`);
 	}
+
+	function onFilterChange() {
+		goto(`/messages?${buildParams({ skip: 0 })}`);
+	}
+
+	function clearFilters() {
+		searchInput = '';
+		selectedRoom = '';
+		selectedUser = '';
+		goto('/messages');
+	}
+
+	let hasFilters = $derived(data.query || data.room_id || data.user_id);
 </script>
 
 <svelte:head>
@@ -25,23 +54,46 @@
 {/if}
 
 <!-- Search bar -->
-<form onsubmit={doSearch} class="flex gap-2 mb-6">
+<form onsubmit={doSearch} class="flex flex-wrap gap-2 mb-4">
 	<input
 		type="text"
 		placeholder="Search messages…"
-		class="input input-bordered flex-1"
+		class="input input-bordered flex-1 min-w-48"
 		bind:value={searchInput}
 	/>
 	<button class="btn btn-primary" type="submit">Search</button>
-	{#if data.query}
-		<a href="/messages" class="btn btn-ghost">Clear</a>
+	{#if hasFilters}
+		<button type="button" class="btn btn-ghost" onclick={clearFilters}>Clear All</button>
 	{/if}
 </form>
 
-<p class="text-sm opacity-60 mb-4">
-	{data.total.toLocaleString()} message{data.total !== 1 ? 's' : ''}
-	{#if data.query}matching "<strong>{data.query}</strong>"{/if}
-</p>
+<!-- Filters -->
+<div class="flex flex-wrap gap-2 mb-6">
+	<select class="select select-bordered select-sm" bind:value={selectedRoom} onchange={onFilterChange}>
+		<option value="">All Rooms</option>
+		{#each data.rooms as room}
+			<option value={room.room_id}>{room.name || room.room_id}</option>
+		{/each}
+	</select>
+	<select class="select select-bordered select-sm" bind:value={selectedUser} onchange={onFilterChange}>
+		<option value="">All Users</option>
+		{#each data.users as user}
+			<option value={user.user_id}>{user.display_name || user.user_id}</option>
+		{/each}
+	</select>
+</div>
+
+<div class="flex justify-between items-center mb-4">
+	<p class="text-sm opacity-60">
+		{data.total.toLocaleString()} message{data.total !== 1 ? 's' : ''}
+		{#if data.query}matching "<strong>{data.query}</strong>"{/if}
+		{#if data.room_id}in room{/if}
+		{#if data.user_id}by user{/if}
+	</p>
+	<p class="text-sm opacity-60">
+		Page {currentPage} of {totalPages}
+	</p>
+</div>
 
 <!-- Message list -->
 {#if data.messages.length === 0}
@@ -69,18 +121,19 @@
 	</div>
 
 	<!-- Pagination -->
-	<div class="flex gap-2 mt-6 justify-center">
+	<div class="flex items-center gap-2 mt-6 justify-center">
 		{#if data.skip > 0}
 			<a
-				href="/messages?skip={Math.max(0, data.skip - 50)}{data.query ? `&q=${encodeURIComponent(data.query)}` : ''}"
+				href="/messages?{buildParams({ skip: Math.max(0, data.skip - data.limit) })}"
 				class="btn btn-outline btn-sm"
 			>
 				← Previous
 			</a>
 		{/if}
+		<span class="text-sm opacity-60">Page {currentPage} / {totalPages}</span>
 		{#if data.hasMore}
 			<a
-				href="/messages?skip={data.nextSkip}{data.query ? `&q=${encodeURIComponent(data.query)}` : ''}"
+				href="/messages?{buildParams({ skip: data.nextSkip })}"
 				class="btn btn-outline btn-sm"
 			>
 				Next →
