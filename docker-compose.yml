@@ -101,6 +101,22 @@ services:
     networks:
       - historian-network
 
+  web:
+    build:
+      context: .
+      dockerfile: services/web/Dockerfile
+    container_name: matrix-historian-web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - historian-network
+
 volumes:
   postgres_data:
     driver: local
