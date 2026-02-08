@@ -4,9 +4,16 @@
 
 	let { data } = $props();
 
-	// Message trend chart data (14-day stats)
-	let trendLabels = $derived(data.messageStats.map((s) => s[0] ?? s.date ?? ''));
-	let trendCounts = $derived(data.messageStats.map((s) => s[1] ?? s.count ?? 0));
+	// Message trend chart data (14-day stats) — API returns {date, count} objects
+	let trendLabels = $derived(data.messageStats.map((s) => {
+		const raw = s.date ?? s[0] ?? '';
+		// Try to format as short date
+		try {
+			const d = new Date(raw);
+			return isNaN(d) ? String(raw) : `${d.getMonth() + 1}/${d.getDate()}`;
+		} catch { return String(raw); }
+	}));
+	let trendCounts = $derived(data.messageStats.map((s) => s.count ?? s[1] ?? 0));
 
 	// User activity chart data
 	let userLabels = $derived(data.userActivity.map((u) => u.display_name || u.user || ''));
@@ -16,18 +23,23 @@
 	let roomLabels = $derived(data.roomActivity.map((r) => r.name || r.room || ''));
 	let roomCounts = $derived(data.roomActivity.map((r) => r.message_count));
 
-	// Hourly activity from overview
-	let hourlyActivity = $derived(data.overview?.hourly_activity ?? []);
-	let hourlyLabels = $derived(hourlyActivity.map((h) => `${String(h.hour ?? h[0] ?? '').padStart(2, '0')}:00`));
-	let hourlyCounts = $derived(hourlyActivity.map((h) => h.count ?? h[1] ?? 0));
+	// Hourly activity — array of {hour, count} from overview endpoint
+	let hourlyLabels = $derived((data.hourlyActivity ?? []).map((h) => `${String(h.hour ?? h[0] ?? '').padStart(2, '0')}:00`));
+	let hourlyCounts = $derived((data.hourlyActivity ?? []).map((h) => h.count ?? h[1] ?? 0));
 
 	// Trends with interval
-	let trendsLabels = $derived(data.trends.map((t) => t.period ?? t.date ?? t[0] ?? ''));
+	let trendsLabels = $derived(data.trends.map((t) => {
+		const raw = t.period ?? t.date ?? t[0] ?? '';
+		try {
+			const d = new Date(raw);
+			return isNaN(d) ? String(raw) : `${d.getMonth() + 1}/${d.getDate()}`;
+		} catch { return String(raw); }
+	}));
 	let trendsTotals = $derived(data.trends.map((t) => t.count ?? t.total ?? t[1] ?? 0));
 
 	// Word cloud - sort by count descending, take top 60
 	let wordCloudData = $derived(
-		[...data.wordcloud]
+		[...(data.wordcloud ?? [])]
 			.sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
 			.slice(0, 60)
 	);
@@ -67,26 +79,24 @@
 {/if}
 
 <!-- Overview stats -->
-{#if data.overview}
-	<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Total Messages</div>
-			<div class="stat-value text-lg text-primary">{(data.overview.total_messages ?? 0).toLocaleString()}</div>
-		</div>
-		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Total Rooms</div>
-			<div class="stat-value text-lg text-secondary">{(data.overview.total_rooms ?? 0).toLocaleString()}</div>
-		</div>
-		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Total Users</div>
-			<div class="stat-value text-lg text-accent">{(data.overview.total_users ?? 0).toLocaleString()}</div>
-		</div>
-		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Avg/Day</div>
-			<div class="stat-value text-lg">{Math.round(data.overview.avg_messages_per_day ?? 0).toLocaleString()}</div>
-		</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+	<div class="stat bg-base-200 rounded-box shadow p-3">
+		<div class="stat-title text-xs">Total Messages</div>
+		<div class="stat-value text-lg text-primary">{(data.totalMessages ?? 0).toLocaleString()}</div>
 	</div>
-{/if}
+	<div class="stat bg-base-200 rounded-box shadow p-3">
+		<div class="stat-title text-xs">Total Rooms</div>
+		<div class="stat-value text-lg text-secondary">{(data.totalRooms ?? 0).toLocaleString()}</div>
+	</div>
+	<div class="stat bg-base-200 rounded-box shadow p-3">
+		<div class="stat-title text-xs">Total Users</div>
+		<div class="stat-value text-lg text-accent">{(data.totalUsers ?? 0).toLocaleString()}</div>
+	</div>
+	<div class="stat bg-base-200 rounded-box shadow p-3">
+		<div class="stat-title text-xs">Avg/Day (14d)</div>
+		<div class="stat-value text-lg">{(data.avgPerDay ?? 0).toLocaleString()}</div>
+	</div>
+</div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 	<!-- Message Trends (14 days) -->
@@ -286,57 +296,28 @@
 
 	<!-- User Interactions -->
 	{#if data.interactions.length > 0}
-		<div class="card bg-base-200 shadow">
+		<div class="card bg-base-200 shadow lg:col-span-2">
 			<div class="card-body">
 				<h3 class="card-title text-lg">User Interactions</h3>
 				<div class="overflow-x-auto max-h-64 overflow-y-auto">
 					<table class="table table-xs">
 						<thead>
 							<tr>
-								<th>User A</th>
-								<th>User B</th>
-								<th class="text-right">Interactions</th>
+								<th>Room</th>
+								<th>User</th>
+								<th>Time</th>
 							</tr>
 						</thead>
 						<tbody>
-							{#each data.interactions.slice(0, 20) as pair}
+							{#each data.interactions.slice(0, 30) as row}
 								<tr>
-									<td class="text-xs">{pair.user_a ?? pair.source ?? ''}</td>
-									<td class="text-xs">{pair.user_b ?? pair.target ?? ''}</td>
-									<td class="text-right">
-										<span class="badge badge-sm badge-primary">{pair.count ?? pair.weight ?? 0}</span>
-									</td>
+									<td class="text-xs">{row.room_id ?? ''}</td>
+									<td class="text-xs">{row.sender_id ?? ''}</td>
+									<td class="text-xs opacity-60">{row.timestamp ?? ''}</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- User Network summary -->
-	{#if data.userNetwork && ((data.userNetwork.nodes ?? []).length > 0)}
-		<div class="card bg-base-200 shadow">
-			<div class="card-body">
-				<h3 class="card-title text-lg">User Network</h3>
-				<p class="text-sm opacity-60 mb-2">
-					{(data.userNetwork.nodes ?? []).length} users,
-					{(data.userNetwork.edges ?? []).length} connections
-				</p>
-				<div class="overflow-y-auto max-h-64">
-					<ul class="space-y-1">
-						{#each (data.userNetwork.nodes ?? []).slice(0, 20) as node}
-							<li class="flex justify-between items-center text-sm">
-								<a href="/users/{encodeURIComponent(node.id ?? node.user_id ?? '')}" class="link link-hover">
-									{node.label ?? node.display_name ?? node.id ?? ''}
-								</a>
-								{#if node.weight || node.message_count}
-									<span class="badge badge-sm">{node.weight ?? node.message_count}</span>
-								{/if}
-							</li>
-						{/each}
-					</ul>
 				</div>
 			</div>
 		</div>
