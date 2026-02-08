@@ -1,19 +1,23 @@
-import { getMessagesCount, getRooms, getUsers, getMessages } from '$lib/api.js';
+import { getMessagesCount, getRooms, getUsers, getMessages, getAnalyticsOverview } from '$lib/api.js';
 
 export async function load({ fetch }) {
 	try {
-		const [countData, rooms, users, recent] = await Promise.all([
+		const [countData, rooms, users, recent, overview] = await Promise.all([
 			getMessagesCount({}, fetch),
 			getRooms({ limit: 100 }, fetch),
 			getUsers({ limit: 100 }, fetch),
-			getMessages({ limit: 10 }, fetch)
+			getMessages({ limit: 10 }, fetch),
+			getAnalyticsOverview(fetch).catch(() => null)
 		]);
 
 		return {
 			messageCount: countData.total ?? 0,
 			roomCount: rooms.length ?? 0,
 			userCount: users.length ?? 0,
-			recentMessages: recent.messages ?? []
+			recentMessages: recent.messages ?? [],
+			rooms: rooms.slice(0, 5),
+			users: users.slice(0, 5),
+			overview
 		};
 	} catch (e) {
 		console.error('Dashboard load error:', e);
@@ -22,6 +26,9 @@ export async function load({ fetch }) {
 			roomCount: 0,
 			userCount: 0,
 			recentMessages: [],
+			rooms: [],
+			users: [],
+			overview: null,
 			error: e.message
 		};
 	}

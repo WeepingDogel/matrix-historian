@@ -1,5 +1,6 @@
 <script>
 	import '../app.css';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 
@@ -11,6 +12,12 @@
 		{ href: '/media', label: 'Media', icon: '🖼️' },
 		{ href: '/analytics', label: 'Analytics', icon: '📈' }
 	];
+
+	function isActive(href) {
+		const path = page.url?.pathname ?? '/';
+		if (href === '/') return path === '/';
+		return path === href || path.startsWith(href + '/');
+	}
 </script>
 
 <div class="drawer lg:drawer-open">
@@ -38,6 +45,11 @@
 		<main class="flex-1 p-4 md:p-6">
 			{@render children()}
 		</main>
+
+		<!-- Footer -->
+		<footer class="footer footer-center p-4 text-base-content/50 text-xs">
+			<p>Matrix Historian — Message Archive Browser</p>
+		</footer>
 	</div>
 
 	<!-- Sidebar -->
@@ -45,19 +57,30 @@
 		<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 		<aside class="bg-base-200 min-h-full w-64 p-4">
 			<div class="mb-8 px-2">
-				<h1 class="text-xl font-bold">📜 Matrix Historian</h1>
-				<p class="text-xs opacity-60 mt-1">Message Archive Browser</p>
+				<a href="/" class="block">
+					<h1 class="text-xl font-bold">📜 Matrix Historian</h1>
+					<p class="text-xs opacity-60 mt-1">Message Archive Browser</p>
+				</a>
 			</div>
 			<ul class="menu gap-1">
 				{#each navItems as item}
 					<li>
-						<a href={item.href} class="text-base">
+						<a href={item.href} class="text-base" class:active={isActive(item.href)}>
 							<span>{item.icon}</span>
 							{item.label}
 						</a>
 					</li>
 				{/each}
 			</ul>
+
+			<!-- Sidebar stats summary -->
+			<div class="mt-auto pt-8 px-2">
+				<div class="divider text-xs opacity-40">Quick Links</div>
+				<ul class="menu menu-xs gap-0.5 opacity-70">
+					<li><a href="/analytics">📊 View Analytics</a></li>
+					<li><a href="/media">🖼️ Media Gallery</a></li>
+				</ul>
+			</div>
 		</aside>
 	</div>
 </div>
