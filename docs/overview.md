@@ -1,55 +1,20 @@
-# Category
-* [Overview](./overview.md)
-* [Get Started](./get-started.md)
-* [Deployment](./deployment.md)
-* [Development](./development.md)
-* [API Reference](./reference/api-reference.md)
-* [Frontend Migration Plan](./frontend-migration-plan.md)
-* [Frontend Migration Summary](./frontend-migration-summary.md)
-* [Frontend Migration Q&A](./frontend-migration-qa.md)
+# Matrix Historian - Overview
 
----
+## What is Matrix Historian?
 
-# Project Overview
+Matrix Historian is a powerful, microservices-based message archival and analysis tool for Matrix chat platforms. It automatically archives messages from Matrix rooms, stores media files, and provides a comprehensive REST API for querying and analyzing chat history.
 
-Matrix Historian is a service for archiving and searching messages from Matrix rooms. It automatically collects historical messages, supports filtering by room and user, and provides a web interface for easy browsing and searching.
-
-## Features
-- Automatic message archival.
-- Search messages by content, room, and user.
-- RESTful API built with FastAPI.
-- Web interface powered by Streamlit.
-- Docker deployment support.
-- Uses SQLite for message storage.
-
-## Architecture
-- Backend: FastAPI, SQLAlchemy
-- Frontend: Streamlit
-- Database: SQLite
-- Matrix Bot: SimpleMatrixBotLib for message collection
- - Analytics: Additional endpoints under `/api/v1/analytics/*` for overviews, word clouds, user networks, heatmaps, trends, and AI-assisted sentiment analysis
-
-## Technology Stack
-- **Backend**:
-    - Python 3.12
-    - FastAPI: Web framework for building the API
-    - SQLAlchemy: ORM for database interactions
-    - SQLite: Database for storing messages
-- **Frontend**:
-    - Streamlit: Python library for creating interactive web apps
-    - Pandas: Data analysis and manipulation tool
-- **Matrix Bot**:
-    - SimpleMatrixBotLib: Library for creating Matrix bots
-## Data Flow
-Here is a visual representation of how data flows through the system:
+## Architecture Overview
 
 ```mermaid
 graph TB
-    A[Matrix Server] -->|Events| B[Matrix Bot]
-    B -->|Extract Data| C[SQLite DB]
-    D[Web Interface] -->|API Requests| E[FastAPI Backend]
+    A[Matrix Server] -->|Events| B[Matrix Bot Service]
+    B -->|Save Messages| C[PostgreSQL DB]
+    B -->|Store Media| H[MinIO Storage]
+    D[API Clients] -->|HTTP Requests| E[FastAPI API Service]
     E -->|Query| C
     C -->|Results| E
+    E -->|Download Media| H
     E -->|Response| D
     
     F[Analysis Engine] -->|Process Data| C
@@ -60,16 +25,125 @@ graph TB
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333
-    style D fill:#fbb,stroke:#333
     style E fill:#bfb,stroke:#333
     style F fill:#bff,stroke:#333
     style G fill:#fbf,stroke:#333
+    style H fill:#fdb,stroke:#333
 ```
 
-1. The Matrix Bot connects to the Matrix server using SimpleMatrixBotLib.
-2. When a new message is sent in a room, the bot receives the message event.
-3. The bot extracts relevant information (sender, room, content, timestamp) from the event.
-4. The bot stores the message in the SQLite database using SQLAlchemy.
-5. Users can search and browse messages through the Streamlit web interface.
-6. The web interface makes API requests to the FastAPI backend to retrieve messages from the database.
-7. The FastAPI backend queries the database using SQLAlchemy and returns the results to the web interface.
+## Core Components
+
+### 1. Bot Service (`services/bot/`)
+- **Purpose**: Connects to Matrix homeserver and listens for messages
+- **Features**:
+  - Real-time message archiving from configured rooms
+  - Media file download and storage
+  - User presence tracking
+  - Room membership management
+- **Technology**: Python, matrix-nio
+
+### 2. API Service (`services/api/`)
+- **Purpose**: Provides RESTful API for accessing archived data
+- **Features**:
+  - Message search and filtering
+  - Media file retrieval
+  - Analytics endpoints
+  - User and room statistics
+- **Technology**: FastAPI, PostgreSQL, MinIO
+
+### 3. Shared Package (`shared/`)
+- **Purpose**: Common utilities and models used across services
+- **Features**:
+  - Database models and schemas
+  - Storage utilities (MinIO/S3 compatible)
+  - Configuration management
+  - Common helper functions
+
+### 4. Storage Backends
+- **PostgreSQL**: Primary database for messages, users, rooms metadata
+- **MinIO**: Object storage for media files (images, videos, documents)
+
+## Key Features
+
+### Message Archiving
+- Automatic capture of all messages in configured rooms
+- Support for text, images, videos, files, and other media types
+- Preservation of message metadata (timestamps, sender, room, etc.)
+
+### Search & Retrieval
+- Full-text search across all archived messages
+- Filter by room, user, date range, and content type
+- Pagination and sorting options
+
+### Media Management
+- Automatic download and storage of media attachments
+- S3-compatible storage with MinIO
+- Media preview generation and thumbnail support
+
+### Analytics & Insights
+- Message volume statistics
+- User activity analysis
+- Room engagement metrics
+- Sentiment analysis (planned)
+
+### API-First Design
+- Comprehensive REST API with OpenAPI documentation
+- Support for multiple client types (web, mobile, CLI)
+- Authentication and authorization
+
+## Use Cases
+
+### 1. Community Archives
+- Preserve important community discussions
+- Create searchable knowledge bases
+- Archive announcements and decisions
+
+### 2. Research & Analysis
+- Study communication patterns
+- Analyze community engagement
+- Track topic evolution over time
+
+### 3. Compliance & Governance
+- Maintain records for regulatory compliance
+- Audit trails for organizational communications
+- Evidence preservation
+
+### 4. Personal Archives
+- Backup personal conversations
+- Search through chat history
+- Media file organization
+
+## Technology Stack
+
+- **Backend**: Python 3.9+, FastAPI, SQLAlchemy
+- **Database**: PostgreSQL 14+
+- **Storage**: MinIO (S3-compatible object storage)
+- **Matrix SDK**: matrix-nio
+- **Containerization**: Docker, Docker Compose
+- **Deployment**: Kubernetes-ready microservices
+
+## Project Status
+
+✅ **Stable**: Core archiving functionality  
+✅ **Stable**: REST API with comprehensive endpoints  
+✅ **Stable**: Media storage and retrieval  
+🔄 **In Development**: Advanced analytics features  
+📋 **Planned**: Web interface for browsing archives  
+📋 **Planned**: Real-time search indexing  
+
+## Getting Started
+
+1. **Quick Start**: See [Get Started](./get-started.md) for a 5-minute setup
+2. **Deployment**: Follow the [Deployment Guide](./deployment.md) for production setup
+3. **Development**: Check [Development Guide](./development.md) for contributing
+4. **API Reference**: Browse the [API Documentation](./reference/api-reference.md)
+
+## Community & Support
+
+- **Issues**: Report bugs or request features on GitHub
+- **Contributions**: Pull requests welcome!
+- **Questions**: Open a discussion for help
+
+---
+
+*Matrix Historian - Preserving your conversations, empowering your analysis.*
