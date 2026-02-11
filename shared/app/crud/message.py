@@ -7,7 +7,8 @@ from collections import Counter
 from typing import List, Tuple, Optional
 
 def get_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[str] = None, 
-                after: Optional[datetime] = None, skip: int = 0, limit: int = 100):
+                after: Optional[datetime] = None, before: Optional[datetime] = None, 
+                skip: int = 0, limit: int = 100):
     query = db.query(Message)
     
     if room_id:
@@ -16,6 +17,8 @@ def get_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[s
         query = query.filter(Message.sender_id == user_id)
     if after:
         query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
         
     return query.order_by(Message.timestamp.desc())\
         .offset(skip)\
@@ -25,15 +28,31 @@ def get_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[s
 def get_message(db: Session, event_id: str):
     return db.query(Message).filter(Message.event_id == event_id).first()
 
-def get_room_messages(db: Session, room_id: str, skip: int = 0, limit: int = 100):
-    return db.query(Message).filter(Message.room_id == room_id)\
-        .order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
+def get_room_messages(db: Session, room_id: str, after: Optional[datetime] = None, 
+                     before: Optional[datetime] = None, skip: int = 0, limit: int = 100):
+    query = db.query(Message).filter(Message.room_id == room_id)
+    
+    if after:
+        query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
+        
+    return query.order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
 
-def get_user_messages(db: Session, user_id: str, skip: int = 0, limit: int = 100):
-    return db.query(Message).filter(Message.sender_id == user_id)\
-        .order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
+def get_user_messages(db: Session, user_id: str, after: Optional[datetime] = None, 
+                     before: Optional[datetime] = None, skip: int = 0, limit: int = 100):
+    query = db.query(Message).filter(Message.sender_id == user_id)
+    
+    if after:
+        query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
+        
+    return query.order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
 
-def search_messages(db: Session, query: str, room_id: Optional[str] = None, user_id: Optional[str] = None, skip: int = 0, limit: int = 100):
+def search_messages(db: Session, query: str, room_id: Optional[str] = None, user_id: Optional[str] = None, 
+                   after: Optional[datetime] = None, before: Optional[datetime] = None, 
+                   skip: int = 0, limit: int = 100):
     search_query = db.query(Message)\
         .filter(Message.content.like(f"%{query}%"))
     
@@ -41,6 +60,10 @@ def search_messages(db: Session, query: str, room_id: Optional[str] = None, user
         search_query = search_query.filter(Message.room_id == room_id)
     if user_id:
         search_query = search_query.filter(Message.sender_id == user_id)
+    if after:
+        search_query = search_query.filter(Message.timestamp >= after)
+    if before:
+        search_query = search_query.filter(Message.timestamp <= before)
         
     return search_query.order_by(Message.timestamp.desc())\
         .offset(skip)\
@@ -48,7 +71,7 @@ def search_messages(db: Session, query: str, room_id: Optional[str] = None, user
         .all()
 
 def count_messages(db: Session, room_id: Optional[str] = None, user_id: Optional[str] = None, 
-                  after: Optional[datetime] = None):
+                  after: Optional[datetime] = None, before: Optional[datetime] = None):
     query = db.query(func.count(Message.event_id))
     
     if room_id:
@@ -57,10 +80,13 @@ def count_messages(db: Session, room_id: Optional[str] = None, user_id: Optional
         query = query.filter(Message.sender_id == user_id)
     if after:
         query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
         
     return query.scalar()
 
-def count_search_messages(db: Session, search_query: str, room_id: Optional[str] = None, user_id: Optional[str] = None):
+def count_search_messages(db: Session, search_query: str, room_id: Optional[str] = None, user_id: Optional[str] = None, 
+                         after: Optional[datetime] = None, before: Optional[datetime] = None):
     """计算搜索结果的消息总数"""
     query = db.query(func.count(Message.event_id)).filter(
         Message.content.ilike(f"%{search_query}%")
@@ -70,6 +96,10 @@ def count_search_messages(db: Session, search_query: str, room_id: Optional[str]
         query = query.filter(Message.room_id == room_id)
     if user_id:
         query = query.filter(Message.sender_id == user_id)
+    if after:
+        query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
         
     return query.scalar()
 

@@ -16,13 +16,15 @@ def get_messages_count(
     room_id: str = Query(None, description="Filter by room ID"),
     user_id: str = Query(None, description="Filter by user ID"),
     query: str = Query(None, description="Search query string"),
+    after: datetime = Query(None, description="Filter messages after this time"),
+    before: datetime = Query(None, description="Filter messages before this time"),
     db: Session = Depends(get_db)
 ):
     """获取消息总数，支持筛选条件"""
     if query:
-        total = crud.count_search_messages(db, query, room_id, user_id)
+        total = crud.count_search_messages(db, query, room_id, user_id, after, before)
     else:
-        total = crud.count_messages(db, room_id, user_id)
+        total = crud.count_messages(db, room_id, user_id, after, before)
     return {"total": total}
 
 @router.get("/messages/", response_model=MessageResponse)
@@ -30,6 +32,7 @@ def read_messages(
     room_id: str = Query(None, description="Filter by room ID"),
     user_id: str = Query(None, description="Filter by user ID"),
     after: datetime = Query(None, description="Filter messages after this time"),
+    before: datetime = Query(None, description="Filter messages before this time"),
     skip: int = Query(0, description="Skip N records"), 
     limit: int = Query(100, description="Limit the number of records"), 
     db: Session = Depends(get_db)
@@ -41,6 +44,8 @@ def read_messages(
         query_params["user_id"] = user_id
     if after:
         query_params["after"] = after
+    if before:
+        query_params["before"] = before
         
     total = crud.count_messages(db, **query_params)
     messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)
@@ -61,13 +66,27 @@ def read_message(event_id: str, db: Session = Depends(get_db)):
     return Message.model_validate(message)
 
 @router.get("/rooms/{room_id}/messages", response_model=List[Message])
-def read_room_messages(room_id: str, skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
-    messages = crud.get_room_messages(db, room_id=room_id, skip=skip, limit=limit)
+def read_room_messages(
+    room_id: str, 
+    after: datetime = Query(None, description="Filter messages after this time"),
+    before: datetime = Query(None, description="Filter messages before this time"),
+    skip: int = Query(0, description="Skip N records"), 
+    limit: int = Query(100, description="Limit the number of records"), 
+    db: Session = Depends(get_db)
+):
+    messages = crud.get_room_messages(db, room_id=room_id, after=after, before=before, skip=skip, limit=limit)
     return [Message.model_validate(msg) for msg in messages]
 
 @router.get("/users/{user_id}/messages", response_model=List[Message])
-def read_user_messages(user_id: str, skip: int = Query(0, description="Skip N records"), limit: int = Query(100, description="Limit the number of records"), db: Session = Depends(get_db)):
-    messages = crud.get_user_messages(db, user_id=user_id, skip=skip, limit=limit)
+def read_user_messages(
+    user_id: str, 
+    after: datetime = Query(None, description="Filter messages after this time"),
+    before: datetime = Query(None, description="Filter messages before this time"),
+    skip: int = Query(0, description="Skip N records"), 
+    limit: int = Query(100, description="Limit the number of records"), 
+    db: Session = Depends(get_db)
+):
+    messages = crud.get_user_messages(db, user_id=user_id, after=after, before=before, skip=skip, limit=limit)
     return [Message.model_validate(msg) for msg in messages]
 
 @router.get("/search/", response_model=MessageResponse)
@@ -75,12 +94,14 @@ def search_messages(
     query: str = Query(..., description="Search query string"),
     room_id: str = Query(None, description="Filter by room ID"),
     user_id: str = Query(None, description="Filter by user ID"),
+    after: datetime = Query(None, description="Filter messages after this time"),
+    before: datetime = Query(None, description="Filter messages before this time"),
     skip: int = Query(0, description="Skip N records"),
     limit: int = Query(100, description="Limit the number of records"),
     db: Session = Depends(get_db)
 ):
-    total = crud.count_search_messages(db, query, room_id, user_id)
-    messages = crud.search_messages(db, query, room_id, user_id, skip=skip, limit=limit)
+    total = crud.count_search_messages(db, query, room_id, user_id, after, before)
+    messages = crud.search_messages(db, query, room_id, user_id, after, before, skip=skip, limit=limit)
     messages_schema = [Message.model_validate(msg) for msg in messages]
     return MessageResponse(
         messages=messages_schema,
