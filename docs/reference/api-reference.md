@@ -370,6 +370,48 @@ All endpoints are prefixed with `/api/v1`.
   - Values represent message counts for that weekday-hour combination
   - Weekdays are in Chinese by default: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
+### GET /api/v1/analytics/user-hourly-activity
+- Description: Get per-user hourly activity statistics. Returns message counts for each user across 24 hours, allowing analysis of individual user activity patterns.
+- Parameters:
+  - days (optional): Number of days to analyze. Default: 7
+  - room_id (optional): Filter by room ID
+  - limit (optional): Maximum number of users to return (sorted by total message count). Default: 50
+- Request Example:
+  ```
+  /api/v1/analytics/user-hourly-activity?days=7&room_id=!roomid:matrix.org&limit=10
+  ```
+- Response Example:
+  ```json
+  {
+    "users": [
+      {
+        "user_id": "@alice:matrix.org",
+        "display_name": "Alice",
+        "hourly_activity": [0, 0, 0, 0, 0, 0, 1, 5, 10, 15, 12, 8, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "user_id": "@bob:matrix.org",
+        "display_name": "Bob",
+        "hourly_activity": [0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 8, 12, 15, 10, 8, 6, 4, 3, 2, 1, 0, 0, 0, 0]
+      },
+      {
+        "user_id": "@charlie:matrix.org",
+        "display_name": "Charlie",
+        "hourly_activity": [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 8, 6, 4, 3]
+      }
+    ],
+    "hours": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "days": 7,
+    "room_id": "!roomid:matrix.org",
+    "user_count": 3
+  }
+  ```
+- Notes:
+  - Each user's `hourly_activity` is an array of 24 integers representing message counts for each hour (0-23)
+  - Users are sorted by total message count (descending)
+  - Useful for identifying individual user activity patterns and comparing activity across users
+  - Can be visualized as multi-line charts, stacked bar charts, or user-hour heatmaps
+
 ### GET /api/v1/analytics/topic-evolution
 - Description: Analyze topic evolution over time. This endpoint identifies main topics in conversations and tracks how they change over the specified period.
 - Parameters:

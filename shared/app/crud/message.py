@@ -349,3 +349,62 @@ def get_activity_heatmap(db: Session, days: int = 7, room_id: Optional[str] = No
         'weekday',
         'hour'
     ).order_by('weekday', 'hour').all()]
+
+def get_user_hourly_activity(db: Session, days: int = 7, room_id: Optional[str] = None, limit: int = 50) -> List[Tuple]:
+    """
+    获取基于用户的每小时活动数据
+    
+    参数:
+        db: 数据库会话
+        days: 分析天数
+        room_id: 可选的房间ID过滤
+        limit: 返回的用户数量限制
+    """
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+    
+    # 首先获取最活跃的用户
+    top_users_query = db.query(
+        Message.sender_id,
+        func.count(Message.event_id).label('total_messages')
+    ).filter(
+        Message.timestamp.between(start_date, end_date)
+    )
+    
+    if room_id:
+        top_users_query = top_users_query.filter(Message.room_id == room_id)
+    
+    top_users = top_users_query.group_by(
+        Message.sender_id
+    ).order_by(
+        func.count(Message.event_id).desc()
+    ).limit(limit).all()
+    
+    user_ids = [user[0] for user in top_users]
+    
+    if not user_ids:
+        return []
+    
+    # 获取每个用户的每小时消息统计
+    query = db.query(
+        Message.sender_id,
+        func.extract('hour', Message.timestamp).label('hour'),
+        func.count('*').label('count')
+    ).filter(
+        Message.timestamp.between(start_date, end_date),
+        Message.sender_id.in_(user_ids)
+    )
+    
+    if room_id:
+        query = query.filter(Message.room_id == room_id)
+    
+    results = query.group_by(
+        Message.sender_id,
+        func.extract('hour', Message.timestamp)
+    ).order_by(
+        Message.sender_id,
+        func.extract('hour', Message.timestamp)
+    ).all()
+    
+    # 转换为 tuple 列表
+    return [tuple(row) for row in results]
