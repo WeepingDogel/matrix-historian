@@ -270,6 +270,59 @@
 		</div>
 	</div>
 
+	<!-- User Hourly Activity -->
+	<div id="user-hourly" class="card bg-base-200 shadow lg:col-span-2">
+		<div class="card-body">
+			<h3 class="card-title text-lg">User Hourly Activity</h3>
+			<p class="text-xs opacity-60 mb-2">Messages per user by hour (top 10 users)</p>
+			{#if data.userHourlyActivity && data.userHourlyActivity.users && data.userHourlyActivity.users.length > 0}
+				<div class="overflow-x-auto">
+					<table class="table table-xs">
+						<thead>
+							<tr>
+								<th class="text-xs w-32">User</th>
+								{#each data.userHourlyActivity.hours as hour}
+									<th class="text-xs text-center p-1">{String(hour).padStart(2, '0')}</th>
+								{/each}
+								<th class="text-xs text-center p-1">Total</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each data.userHourlyActivity.users as user}
+								{@const total = user.hourly_activity.reduce((a, b) => a + b, 0)}
+								<tr>
+									<td class="text-xs font-medium truncate max-w-[8rem]" title="{user.display_name || user.user_id}">
+										{user.display_name || user.user_id}
+									</td>
+									{#each user.hourly_activity as count, hourIdx}
+										<td class="p-0">
+											<div
+												class="w-full h-6 flex items-center justify-center text-[10px] rounded-sm {count > 0 ? 'bg-primary/20' : 'bg-base-300 opacity-30'}"
+												title="{user.display_name || user.user_id} at {String(hourIdx).padStart(2, '0')}:00: {count} messages"
+											>
+												{#if count > 0}{count}{/if}
+											</div>
+										</td>
+									{/each}
+									<td class="text-xs text-center font-bold">{total}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+				<div class="mt-4 text-xs opacity-60">
+					<p>Showing {data.userHourlyActivity.user_count} users over {data.userHourlyActivity.days} days</p>
+					{#if data.userHourlyActivity.room_id}
+						<p>Filtered by room: {data.userHourlyActivity.room_id}</p>
+					{/if}
+				</div>
+			{:else}
+				<p class="opacity-60">No user hourly activity data available.</p>
+				<p class="text-xs opacity-60 mt-2">This feature shows message counts for each user across 24 hours.</p>
+			{/if}
+		</div>
+	</div>
+
 	<!-- Word Cloud -->
 	<div class="card bg-base-200 shadow lg:col-span-2">
 		<div class="card-body">

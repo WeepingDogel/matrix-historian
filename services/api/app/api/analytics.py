@@ -373,6 +373,55 @@ async def get_ai_analysis(
             detail=f"AI分析失败: {str(e)}"
         )
 
+@router.get("/user-hourly-activity")
+async def get_user_hourly_activity(
+    days: int = Query(7, description="分析天数"),
+    room_id: str = Query(None, description="房间ID"),
+    limit: int = Query(50, description="返回用户数量限制"),
+    db: Session = Depends(get_db)
+):
+    """获取基于用户的每小时活动数据"""
+    try:
+        # 获取原始数据
+        results = crud.get_user_hourly_activity(db, days, room_id, limit)
+        
+        # 组织数据格式
+        user_data = {}
+        for user_id, hour, count in results:
+            if user_id not in user_data:
+                user_data[user_id] = {
+                    "user_id": user_id,
+                    "hourly_activity": [0] * 24
+                }
+            user_data[user_id]["hourly_activity"][int(hour)] = int(count)
+        
+        # 获取用户显示名称
+        users = []
+        for user_id, data in user_data.items():
+            user = crud.get_user(db, user_id)
+            display_name = user.display_name if user else user_id
+            users.append({
+                "user_id": user_id,
+                "display_name": display_name,
+                "hourly_activity": data["hourly_activity"]
+            })
+        
+        # 按总消息数排序
+        users.sort(key=lambda x: sum(x["hourly_activity"]), reverse=True)
+        
+        return {
+            "users": users,
+            "hours": list(range(24)),
+            "days": days,
+            "room_id": room_id,
+            "user_count": len(users)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"获取用户每小时活动数据失败: {str(e)}"
+        )
+
 @router.get("/analytics-health")
 async def check_analytics_health():
     """检查分析服务健康状态"""
@@ -381,7 +430,8 @@ async def check_analytics_health():
         "features": [
             "sentiment_analysis",
             "topic_analysis",
-            "pattern_analysis"
+            "pattern_analysis",
+            "user_hourly_activity"
         ],
         "cache_info": {
             "enabled": True,

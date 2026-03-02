@@ -1,14 +1,15 @@
 import {
 	getMessageStats, getUserActivity, getRoomActivity,
 	getAnalyticsOverview, getWordcloud, getActivityHeatmap,
-	getTrends, getInteractions, getMessagesCount, getRooms, getUsers
+	getTrends, getInteractions, getMessagesCount, getRooms, getUsers,
+	getUserHourlyActivity
 } from '$lib/api.js';
 
 export async function load({ fetch, url }) {
 	const interval = url.searchParams.get('interval') || 'day';
 
 	try {
-		const [msgStats, userActivity, roomActivity, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users] = await Promise.all([
+		const [msgStats, userActivity, roomActivity, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users, userHourly] = await Promise.all([
 			getMessageStats(14, fetch).catch(() => ({ stats: [] })),
 			getUserActivity(10, fetch).catch(() => ({ users: [] })),
 			getRoomActivity(10, fetch).catch(() => ({ rooms: [] })),
@@ -19,7 +20,8 @@ export async function load({ fetch, url }) {
 			getInteractions(fetch).catch(() => ({ interactions: [] })),
 			getMessagesCount({}, fetch).catch(() => ({ total: 0 })),
 			getRooms({ limit: 1000 }, fetch).catch(() => []),
-			getUsers({ limit: 1000 }, fetch).catch(() => [])
+			getUsers({ limit: 1000 }, fetch).catch(() => []),
+			getUserHourlyActivity({ days: 7, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 }))
 		]);
 
 		// Compute totals from count endpoint and list lengths
@@ -51,7 +53,8 @@ export async function load({ fetch, url }) {
 			heatmapHours: heatmap.hours ?? Array.from({ length: 24 }, (_, i) => i),
 			trends: trends.trends ?? [],
 			interval,
-			interactions: interactions.interactions ?? []
+			interactions: interactions.interactions ?? [],
+			userHourlyActivity: userHourly
 		};
 	} catch (e) {
 		console.error('Analytics load error:', e);
@@ -62,6 +65,7 @@ export async function load({ fetch, url }) {
 			wordcloud: [], heatmap: [],
 			heatmapWeekdays: [], heatmapHours: [],
 			trends: [], interval, interactions: [],
+			userHourlyActivity: { users: [], hours: [], days: 7, user_count: 0 },
 			error: e.message
 		};
 	}
