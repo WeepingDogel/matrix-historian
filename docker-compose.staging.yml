@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: matrix-historian-db-staging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-historian_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-historian_staging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-historian_staging}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-historian_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - historian-network-staging
+
+  minio:
+    image: minio/minio
+    container_name: matrix-historian-minio-staging
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-historian_staging}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-historian_staging123}
+    volumes:
+      - minio_data_staging:/data
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - historian-network-staging
+
+  bot:
+    image: ${BOT_IMAGE:-ghcr.io/username/matrix-historian/bot:latest}
+    container_name: matrix-historian-bot-staging
+    environment:
+      - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
+      - MATRIX_USER=${MATRIX_USER_STAGING}
+      - MATRIX_PASSWORD=${MATRIX_PASSWORD_STAGING}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-historian_staging}:${POSTGRES_PASSWORD:-historian_staging}@db:5432/${POSTGRES_DB:-historian_staging}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian_staging}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-historian_staging123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-matrix-media-staging}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "find /app/data/healthcheck -mmin -2 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+    restart: unless-stopped
+    networks:
+      - historian-network-staging
+    volumes:
+      - bot_data_staging:/app/data
+
+  api:
+    image: ${API_IMAGE:-ghcr.io/username/matrix-historian/api:latest}
+    container_name: matrix-historian-api-staging
+    ports:
+      - "${API_PORT:-8501}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-historian_staging}:${POSTGRES_PASSWORD:-historian_staging}@db:5432/${POSTGRES_DB:-historian_staging}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian_staging}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-historian_staging123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-matrix-media-staging}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - historian-network-staging
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/username/matrix-historian/web:latest}
+    container_name: matrix-historian-web-staging
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - historian-network-staging
+
+volumes:
+  postgres_data_staging:
+    driver: local
+  bot_data_staging:
+    driver: local
+  minio_data_staging:
+    driver: local
+
+networks:
+  historian-network-staging:
+    driver: bridge

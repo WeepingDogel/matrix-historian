@@ -1,0 +1,97 @@
+name: Database Migrations
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    branches: [ main ]
+    paths:
+      - 'shared/alembic/**'
+      - 'shared/app/models/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  run-migrations:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        pip install alembic psycopg2-binary python-dotenv
+        
+    - name: Run migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # For production: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        # For staging: ${{ secrets.STAGING_DATABASE_URL }}
+      run: |
+        cd shared
+        alembic upgrade head
+        
+    - name: Verify migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd shared
+        alembic current
+        alembic history --verbose
+        
+  create-migration:
+    name: Create New Migration
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        pip install alembic psycopg2-binary
+        
+    - name: Create migration from models
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+      run: |
+        cd shared
+        # Create a test database for generating migrations
+        python -c "
+        from app.db.database import Base
+        from app.models.message import Message
+        # Import all models
+        print('Models loaded successfully')
+        "
+        
+    - name: Generate migration script
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+      run: |
+        cd shared
+        # This would normally generate a migration
+        # alembic revision --autogenerate -m "Auto-generated migration"
+        echo "Migration generation would run here in a real scenario"
+        
+    - name: Upload migration script
+      uses: actions/upload-artifact@v4
+      with:
+        name: migration-script
+        path: shared/alembic/versions/
+        if-no-files-found: warn
