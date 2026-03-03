@@ -1,9 +1,10 @@
 # analytics.py
 # This module defines Pydantic models for analytics data in a chat application.
 
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
 
 
 class MessageStat(BaseModel):

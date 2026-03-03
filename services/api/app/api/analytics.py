@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
-from typing import List, Dict
-from functools import lru_cache
-from datetime import datetime, timedelta
 import sys
+from datetime import datetime, timedelta
+from functools import lru_cache
+from typing import Dict, List
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
 sys.path.insert(0, "/app/shared")
 
-from app.db.database import get_db
 from app.crud import message as crud
+from app.db.database import get_db
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -76,6 +77,7 @@ def get_wordcloud_data(
 
         # 使用jieba.posseg分词并统计名词词频
         from collections import Counter
+
         import jieba.posseg as pseg
 
         # 扩展停用词列表

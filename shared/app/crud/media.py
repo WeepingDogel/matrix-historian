@@ -1,11 +1,12 @@
 """CRUD operations for media"""
 
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from app.models.message import Media
-from typing import Optional, List
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import List, Optional
+
+from app.models.message import Media
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 
 def create_media(

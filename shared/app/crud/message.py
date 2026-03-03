@@ -1,10 +1,10 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import select, func
-from app.models.message import Message, User, Room
-from sqlalchemy import extract
-from datetime import datetime, timedelta
 from collections import Counter
-from typing import List, Tuple, Optional
+from datetime import datetime, timedelta
+from typing import List, Optional, Tuple
+
+from app.models.message import Message, Room, User
+from sqlalchemy import extract, func, select
+from sqlalchemy.orm import Session
 
 
 def get_messages(

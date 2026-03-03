@@ -1,12 +1,13 @@
 """MinIO client for media storage"""
 
+import io
+import logging
+import os
+import uuid
+from datetime import timedelta
+
 from minio import Minio
 from minio.error import S3Error
-import os
-import io
-import uuid
-import logging
-from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,9 @@
 """Tests for shared models and schemas."""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from shared.app.models.message import Message
 from shared.app.schemas.message import MessageCreate, MessageResponse
 

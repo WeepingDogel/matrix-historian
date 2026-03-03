@@ -3,6 +3,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from shared.app.db.database import Base
 from shared.app.models.message import Message
 
@@ -78,6 +79,7 @@ def test_message_crud_operations(test_session):
 def test_database_constraints(test_session):
     """Test database constraints."""
     from datetime import datetime
+
     from sqlalchemy.exc import IntegrityError
 
     # Test required fields

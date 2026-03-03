@@ -3,8 +3,9 @@
 Validate GitHub Actions workflow structure
 """
 
-import yaml
 import sys
+
+import yaml
 
 
 def main():

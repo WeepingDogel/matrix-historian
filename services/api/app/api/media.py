@@ -1,21 +1,22 @@
 """API routes for media"""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse, RedirectResponse
-from sqlalchemy.orm import Session
-import sys
 import io
 import logging
+import sys
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import RedirectResponse, StreamingResponse
+from sqlalchemy.orm import Session
 
 sys.path.insert(0, "/app/shared")
 
-from app.db.database import get_db
 from app.crud import media as crud_media
+from app.db.database import get_db
 from app.schemas.media import (
-    MediaResponse,
-    MediaWithUrl,
     MediaListResponse,
+    MediaResponse,
     MediaStatsResponse,
+    MediaWithUrl,
 )
 from app.storage.minio_client import MediaStorage
 

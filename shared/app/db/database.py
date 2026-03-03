@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Get DATABASE_URL from environment variable
 DATABASE_URL = os.getenv(

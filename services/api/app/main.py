@@ -1,14 +1,14 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 import sys
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Add shared package to path
 sys.path.insert(0, "/app/shared")
 
+from api import analytics, media
 from api.routes import router
-from api import analytics
-from api import media
 from app.db.database import init_db
 from app.utils.logging_config import setup_logging
 
