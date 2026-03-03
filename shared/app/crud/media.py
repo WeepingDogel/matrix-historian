@@ -1,4 +1,5 @@
 """CRUD operations for media"""
+
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.message import Media
@@ -18,11 +19,11 @@ def create_media(
     size: Optional[int] = None,
     width: Optional[int] = None,
     height: Optional[int] = None,
-    minio_bucket: str = "matrix-media"
+    minio_bucket: str = "matrix-media",
 ) -> Media:
     """
     Create a new media record
-    
+
     Args:
         db: Database session
         event_id: Matrix event ID (nullable for standalone media)
@@ -35,12 +36,12 @@ def create_media(
         width: Image width (for images)
         height: Image height (for images)
         minio_bucket: MinIO bucket name
-        
+
     Returns:
         Created Media object
     """
     media_id = str(uuid.uuid4())
-    
+
     db_media = Media(
         media_id=media_id,
         event_id=event_id,
@@ -53,9 +54,9 @@ def create_media(
         size=size,
         width=width,
         height=height,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
     )
-    
+
     db.add(db_media)
     db.commit()
     db.refresh(db_media)
@@ -77,26 +78,26 @@ def get_media_by_room(
     room_id: str,
     skip: int = 0,
     limit: int = 100,
-    mime_type_filter: Optional[str] = None
+    mime_type_filter: Optional[str] = None,
 ) -> List[Media]:
     """
     Get media from a specific room
-    
+
     Args:
         db: Database session
         room_id: Room ID
         skip: Number of records to skip
         limit: Maximum number of records to return
         mime_type_filter: Filter by MIME type prefix (e.g., "image/")
-        
+
     Returns:
         List of Media objects
     """
     query = db.query(Media).filter(Media.room_id == room_id)
-    
+
     if mime_type_filter:
         query = query.filter(Media.mime_type.like(f"{mime_type_filter}%"))
-    
+
     return query.order_by(Media.timestamp.desc()).offset(skip).limit(limit).all()
 
 
@@ -105,26 +106,26 @@ def get_media_by_user(
     user_id: str,
     skip: int = 0,
     limit: int = 100,
-    mime_type_filter: Optional[str] = None
+    mime_type_filter: Optional[str] = None,
 ) -> List[Media]:
     """
     Get media sent by a specific user
-    
+
     Args:
         db: Database session
         user_id: User ID
         skip: Number of records to skip
         limit: Maximum number of records to return
         mime_type_filter: Filter by MIME type prefix (e.g., "image/")
-        
+
     Returns:
         List of Media objects
     """
     query = db.query(Media).filter(Media.sender_id == user_id)
-    
+
     if mime_type_filter:
         query = query.filter(Media.mime_type.like(f"{mime_type_filter}%"))
-    
+
     return query.order_by(Media.timestamp.desc()).offset(skip).limit(limit).all()
 
 
@@ -133,29 +134,29 @@ def get_all_media(
     skip: int = 0,
     limit: int = 100,
     mime_type_filter: Optional[str] = None,
-    after: Optional[datetime] = None
+    after: Optional[datetime] = None,
 ) -> List[Media]:
     """
     Get all media with optional filters
-    
+
     Args:
         db: Database session
         skip: Number of records to skip
         limit: Maximum number of records to return
         mime_type_filter: Filter by MIME type prefix (e.g., "image/")
         after: Filter media after this timestamp
-        
+
     Returns:
         List of Media objects
     """
     query = db.query(Media)
-    
+
     if mime_type_filter:
         query = query.filter(Media.mime_type.like(f"{mime_type_filter}%"))
-    
+
     if after:
         query = query.filter(Media.timestamp >= after)
-    
+
     return query.order_by(Media.timestamp.desc()).offset(skip).limit(limit).all()
 
 
@@ -164,42 +165,42 @@ def count_media(
     room_id: Optional[str] = None,
     user_id: Optional[str] = None,
     mime_type_filter: Optional[str] = None,
-    after: Optional[datetime] = None
+    after: Optional[datetime] = None,
 ) -> int:
     """
     Count media with optional filters
-    
+
     Args:
         db: Database session
         room_id: Filter by room
         user_id: Filter by user
         mime_type_filter: Filter by MIME type prefix
         after: Filter media after this timestamp
-        
+
     Returns:
         Total count of media matching filters
     """
     query = db.query(func.count(Media.media_id))
-    
+
     if room_id:
         query = query.filter(Media.room_id == room_id)
-    
+
     if user_id:
         query = query.filter(Media.sender_id == user_id)
-    
+
     if mime_type_filter:
         query = query.filter(Media.mime_type.like(f"{mime_type_filter}%"))
-    
+
     if after:
         query = query.filter(Media.timestamp >= after)
-    
+
     return query.scalar()
 
 
 def get_media_stats(db: Session) -> dict:
     """
     Get media statistics
-    
+
     Returns:
         Dictionary with statistics:
         - total_count: Total number of media files
@@ -208,39 +209,39 @@ def get_media_stats(db: Session) -> dict:
     """
     total_count = db.query(func.count(Media.media_id)).scalar()
     total_size = db.query(func.sum(Media.size)).scalar() or 0
-    
+
     # Get stats by type (image, video, audio, file)
-    type_stats = db.query(
-        Media.mime_type,
-        func.count(Media.media_id).label('count'),
-        func.sum(Media.size).label('total_size')
-    ).group_by(Media.mime_type).all()
-    
+    type_stats = (
+        db.query(
+            Media.mime_type,
+            func.count(Media.media_id).label("count"),
+            func.sum(Media.size).label("total_size"),
+        )
+        .group_by(Media.mime_type)
+        .all()
+    )
+
     # Group by prefix (image/, video/, audio/, etc.)
     by_type = {}
     for mime_type, count, size in type_stats:
         if mime_type:
-            prefix = mime_type.split('/')[0]
+            prefix = mime_type.split("/")[0]
             if prefix not in by_type:
-                by_type[prefix] = {'count': 0, 'total_size': 0}
-            by_type[prefix]['count'] += count
-            by_type[prefix]['total_size'] += (size or 0)
-    
-    return {
-        'total_count': total_count,
-        'total_size': total_size,
-        'by_type': by_type
-    }
+                by_type[prefix] = {"count": 0, "total_size": 0}
+            by_type[prefix]["count"] += count
+            by_type[prefix]["total_size"] += size or 0
+
+    return {"total_count": total_count, "total_size": total_size, "by_type": by_type}
 
 
 def delete_media(db: Session, media_id: str) -> bool:
     """
     Delete a media record
-    
+
     Args:
         db: Database session
         media_id: Media ID to delete
-        
+
     Returns:
         True if deleted, False if not found
     """

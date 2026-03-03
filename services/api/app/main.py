@@ -4,7 +4,7 @@ import logging
 import sys
 
 # Add shared package to path
-sys.path.insert(0, '/app/shared')
+sys.path.insert(0, "/app/shared")
 
 from api.routes import router
 from api import analytics
@@ -51,4 +51,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

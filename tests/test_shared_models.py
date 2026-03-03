@@ -22,7 +22,7 @@ def test_message_model():
         media_width=800,
         media_height=600,
     )
-    
+
     assert message.room_id == "!test:example.com"
     assert message.sender == "@user:example.com"
     assert message.content == "Hello, world!"
@@ -39,7 +39,7 @@ def test_message_create_schema():
         "timestamp": "2024-01-01T12:00:00Z",
         "message_type": "m.text",
     }
-    
+
     message_create = MessageCreate(**data)
     assert message_create.room_id == data["room_id"]
     assert message_create.sender == data["sender"]
@@ -58,7 +58,7 @@ def test_message_response_schema():
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
     }
-    
+
     message_response = MessageResponse(**data)
     assert message_response.id == 1
     assert message_response.room_id == "!test:example.com"
