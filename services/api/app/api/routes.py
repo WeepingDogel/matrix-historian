@@ -5,7 +5,7 @@ sys.path.insert(
 )  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from datetime import datetime  # noqa: E402
-from typing import Any, Dict, List, Optional  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
 
 from base_app.crud import message as crud  # noqa: E402
 from base_app.db.database import get_db  # noqa: E402
