@@ -40,8 +40,13 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
-# No need for exclude anymore since we renamed shared/app to shared/base_app
-# This resolves the duplicate module named 'app' conflict
+# Exclude services/bot/app to resolve duplicate module named 'app' conflict
+# services/bot/app/__init__.py and services/api/app/__init__.py both create 'app' module
+exclude = [
+  "services/bot/app/",
+  "services/bot/app/__init__.py",
+  "services/bot/app/.*\\.py"
+]
 
 [[tool.mypy.overrides]]
 module = [

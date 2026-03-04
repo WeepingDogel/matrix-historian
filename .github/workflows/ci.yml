@@ -45,7 +45,7 @@ jobs:
         
     - name: Run mypy (type checking)
       run: |
-        mypy .
+        mypy . --exclude 'services/bot/app'
         
     - name: Run bandit (security scanning)
       run: |
