@@ -89,7 +89,7 @@ jobs:
           --health-interval 30s
           --health-timeout 10s
           --health-retries 3
-        cmd: "server /data --console-address ':9001'"
+          server /data --console-address ':9001'
         ports:
           - 9000:9000
           - 9001:9001
