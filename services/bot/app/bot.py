@@ -1,12 +1,15 @@
 import asyncio
 import logging
 import os
+import sys
 from pathlib import Path
 
-import backoff
-import simplematrixbotlib as botlib
-from dotenv import load_dotenv
-from nio import (
+sys.path.insert(0, "/app/shared")
+
+import backoff  # noqa: E402
+import simplematrixbotlib as botlib  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+from nio import (  # noqa: E402
     DownloadResponse,
     RoomMessageAudio,
     RoomMessageFile,
@@ -14,16 +17,12 @@ from nio import (
     RoomMessageVideo,
 )
 
+from app.crud import media as crud_media  # noqa: E402
+from app.crud import message as crud  # noqa: E402
+from app.db.database import SessionLocal  # noqa: E402
+from app.storage.minio_client import MediaStorage  # noqa: E402
+
 HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/data/healthcheck"))
-
-# Import from shared package
-import sys
-
-sys.path.insert(0, "/app/shared")
-from app.crud import media as crud_media
-from app.crud import message as crud
-from app.db.database import SessionLocal
-from app.storage.minio_client import MediaStorage
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -168,7 +167,8 @@ class MatrixBot:
                                         height=height,
                                     )
                                     logger.info(
-                                        f"Saved media {filename} ({mime_type}, {size} bytes) to MinIO"
+                                        f"Saved media {filename} "
+                                        f"({mime_type}, {size} bytes) to MinIO"
                                     )
                                 except Exception as e:
                                     logger.error(

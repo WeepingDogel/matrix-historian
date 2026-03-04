@@ -44,7 +44,7 @@ def main():
     if missing:
         print(f"\n⚠️  Missing critical jobs: {missing}")
     else:
-        print(f"\n✅ All critical jobs present")
+        print("\n✅ All critical jobs present")
 
     print("\n=== Validation Complete ===")
     return 0

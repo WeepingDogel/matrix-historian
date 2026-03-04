@@ -1,15 +1,12 @@
 import sys
-from datetime import datetime, timedelta
-from functools import lru_cache
-from typing import Dict, List
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-
 sys.path.insert(0, "/app/shared")
-
-from app.crud import message as crud
-from app.db.database import get_db
+from datetime import datetime  # noqa: E402
+from functools import lru_cache  # noqa: E402
+from typing import Dict, List  # noqa: E402
+from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+from app.crud import message as crud  # noqa: E402
+from app.db.database import get_db  # noqa: E402
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -76,9 +73,9 @@ def get_wordcloud_data(
         messages = crud.get_messages(db, room_id=room_id, limit=1000)  # 获取原始消息
 
         # 使用jieba.posseg分词并统计名词词频
-        from collections import Counter
+        from collections import Counter  # noqa: E402
 
-        import jieba.posseg as pseg
+        import jieba.posseg as pseg  # noqa: E402
 
         # 扩展停用词列表
         stop_words = set(
@@ -387,7 +384,7 @@ def analyze_content(
     db: Session = Depends(get_db),
 ):
     """获取内容分析"""
-    from ai.analyzer import MessageAnalyzer
+    from ai.analyzer import MessageAnalyzer  # noqa: E402
 
     analyzer = MessageAnalyzer()
 
@@ -406,7 +403,7 @@ def get_user_network(
 ):
     """获取用户互动网络"""
     try:
-        from ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer  # noqa: E402
 
         analyzer = MessageAnalyzer()
 
@@ -443,7 +440,7 @@ async def analyze_sentiment(
 ):
     """获取情感分析数据"""
     try:
-        from ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer  # noqa: E402
 
         analyzer = MessageAnalyzer()
 
@@ -563,7 +560,7 @@ async def get_ai_analysis(
 ):
     """AI分析统一接口"""
     try:
-        from ai.analyzer import MessageAnalyzer
+        from ai.analyzer import MessageAnalyzer  # noqa: E402
 
         analyzer = MessageAnalyzer()
 

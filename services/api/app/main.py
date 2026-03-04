@@ -1,16 +1,15 @@
 import logging
 import sys
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-# Add shared package to path
 sys.path.insert(0, "/app/shared")
 
-from api import analytics, media
-from api.routes import router
-from app.db.database import init_db
-from app.utils.logging_config import setup_logging
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+from api import analytics, media  # noqa: E402
+from api.routes import router  # noqa: E402
+from app.db.database import init_db  # noqa: E402
+from app.utils.logging_config import setup_logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +49,6 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn  # noqa: E402
 
     uvicorn.run(app, host="0.0.0.0", port=8000)

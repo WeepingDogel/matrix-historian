@@ -1,8 +1,7 @@
 # analytics.py
 # This module defines Pydantic models for analytics data in a chat application.
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import BaseModel
 

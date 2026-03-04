@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
 from app.models.message import Message, Room, User
-from sqlalchemy import extract, func, select
+from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
 

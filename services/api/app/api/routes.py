@@ -1,15 +1,18 @@
 import sys
-from datetime import datetime
-from typing import Any, Dict, List
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 
 sys.path.insert(0, "/app/shared")
 
-from app.crud import message as crud
-from app.db.database import get_db
-from app.schemas.message import Message, MessageResponse, RoomBase, UserBase
+from datetime import datetime  # noqa: E402
+from typing import List  # noqa: E402
+
+from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+
+from app.crud import message as crud  # noqa: E402
+from app.db.database import get_db  # noqa: E402
+from app.schemas.message import (  # noqa: E402
+    Message, MessageResponse, RoomBase, UserBase
+)
 
 router = APIRouter()
 

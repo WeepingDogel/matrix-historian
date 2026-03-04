@@ -2,12 +2,11 @@ import asyncio
 import logging
 import sys
 
-# Add shared package to path
 sys.path.insert(0, "/app/shared")
 
-from app.db.database import init_db
-from app.utils.logging_config import setup_logging
-from bot import MatrixBot
+from app.db.database import init_db  # noqa: E402
+from app.utils.logging_config import setup_logging  # noqa: E402
+from bot import MatrixBot  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

@@ -2,11 +2,11 @@ import os
 import sys
 from logging.config import fileConfig
 
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from alembic import context  # noqa: E402
+from sqlalchemy import engine_from_config, pool  # noqa: E402
 
 # this is the Alembic Config object
 config = context.config
@@ -16,8 +16,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import your models' Base here
-from app.db.database import Base
-from app.models import message  # Import all models
+from app.db.database import Base  # noqa: E402
 
 # Set target metadata for autogenerate
 target_metadata = Base.metadata
