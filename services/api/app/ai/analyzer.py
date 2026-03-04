@@ -149,7 +149,7 @@ class MessageAnalyzer:
 
     def analyze_word_frequency(self, messages: List[str]) -> List[Tuple[str, int]]:
         """分析词频"""
-        words = []
+        words: List[str] = []
         for message in messages:
             words.extend(
                 w for w in jieba.cut(message) if len(w) > 1 and w not in self.stop_words
@@ -158,7 +158,7 @@ class MessageAnalyzer:
 
     def analyze_user_interactions(self, messages: List[Dict]) -> nx.Graph:
         """分析用户互动网络"""
-        G = nx.Graph()
+        G: nx.Graph = nx.Graph()
 
         # 构建用户互动图
         for i in range(len(messages) - 1):

@@ -42,6 +42,3 @@ class MessageResponse(BaseModel):
     total: int
     has_more: bool
     next_skip: Optional[int] = None
-    total: int
-    has_more: bool
-    next_skip: Optional[int] = None
