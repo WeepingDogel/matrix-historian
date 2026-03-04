@@ -14,5 +14,5 @@ sys.path.insert(0, str(project_root / "services" / "bot" / "app"))
 os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/test_db"
 os.environ["MINIO_ENDPOINT"] = "localhost:9000"
 os.environ["MINIO_ROOT_USER"] = "test"
-os.environ["MINIO_ROOT_PASSWORD"] = "test123"
+os.environ["MINIO_ROOT_PASSWORD"] = "test123"  # nosec: B105 - Test environment password
 os.environ["MINIO_BUCKET"] = "test-bucket"

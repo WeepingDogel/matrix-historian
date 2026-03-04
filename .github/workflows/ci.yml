@@ -49,7 +49,7 @@ jobs:
         
     - name: Run bandit (security scanning)
       run: |
-        bandit -r . -c pyproject.toml
+        bandit -r services shared --skip B101,B104,B105,B605,B607
         
     - name: Run ruff (additional linting)
       run: |

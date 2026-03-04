@@ -4,6 +4,7 @@ Script to fix E402 import errors by adding # noqa: E402 comments
 """
 
 import os
+import subprocess
 
 
 def fix_file(filepath):
@@ -70,7 +71,26 @@ def main():
 
     # Run flake8 to check
     print("\nRunning flake8 check...")
-    os.system("python3 -m flake8 --max-line-length=88 --extend-ignore=E203,W503")
+    try:
+        result = subprocess.run(
+            [
+                "python3",
+                "-m",
+                "flake8",
+                "--max-line-length=88",
+                "--extend-ignore=E203,W503",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            print("flake8 check passed!")
+        else:
+            print(f"flake8 check failed:\n{result.stdout}")
+            if result.stderr:
+                print(f"Errors:\n{result.stderr}")
+    except Exception as e:
+        print(f"Error running flake8: {e}")
 
 
 if __name__ == "__main__":
