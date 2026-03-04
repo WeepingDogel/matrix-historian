@@ -85,11 +85,10 @@ jobs:
           MINIO_ROOT_USER: test
           MINIO_ROOT_PASSWORD: test123
         options: >-
-          --health-cmd "mc ready local"
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
           --health-interval 30s
           --health-timeout 10s
           --health-retries 3
-          server /data --console-address ':9001'
         ports:
           - 9000:9000
           - 9001:9001
@@ -104,17 +103,13 @@ jobs:
         python-version: '3.12'
         cache: 'pip'
 
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
     - name: Install dependencies
       run: |
-        uv pip install pytest pytest-cov pytest-asyncio
-        uv pip install -e ./shared
-        uv pip install -r ./services/api/requirements.txt
-        uv pip install -r ./services/bot/requirements.txt
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-asyncio
+        pip install -e ./shared
+        pip install -r ./services/api/requirements.txt
+        pip install -r ./services/bot/requirements.txt
 
     - name: Wait for services
       run: |

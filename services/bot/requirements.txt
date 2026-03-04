@@ -1,7 +1,6 @@
 # Matrix Bot Service dependencies
 matrix-nio==0.25.2
-simplematrixbotlib @ git+https://codeberg.org/imbev/simplematrixbotlib.git
-matrix-nio>=0.25.2
+simplematrixbotlib==3.7.1
 h11==0.14.0
 httpcore==0.17.3
 backoff==2.2.1
