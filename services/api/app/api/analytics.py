@@ -1,12 +1,14 @@
 import sys
+
 sys.path.insert(0, "/app/shared")
 from datetime import datetime  # noqa: E402
 from functools import lru_cache  # noqa: E402
 from typing import Dict, List  # noqa: E402
-from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
+
 from app.crud import message as crud  # noqa: E402
 from app.db.database import get_db  # noqa: E402
+from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

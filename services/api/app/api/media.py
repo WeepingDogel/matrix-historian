@@ -6,10 +6,6 @@ import sys
 
 sys.path.insert(0, "/app/shared")
 
-from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import RedirectResponse, StreamingResponse  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
-
 from app.crud import media as crud_media  # noqa: E402
 from app.db.database import get_db  # noqa: E402
 from app.schemas.media import (  # noqa: E402
@@ -19,6 +15,9 @@ from app.schemas.media import (  # noqa: E402
     MediaWithUrl,
 )
 from app.storage.minio_client import MediaStorage  # noqa: E402
+from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from fastapi.responses import RedirectResponse, StreamingResponse  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

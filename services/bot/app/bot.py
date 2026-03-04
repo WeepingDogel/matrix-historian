@@ -8,6 +8,10 @@ sys.path.insert(0, "/app/shared")
 
 import backoff  # noqa: E402
 import simplematrixbotlib as botlib  # noqa: E402
+from app.crud import media as crud_media  # noqa: E402
+from app.crud import message as crud  # noqa: E402
+from app.db.database import SessionLocal  # noqa: E402
+from app.storage.minio_client import MediaStorage  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 from nio import (  # noqa: E402
     DownloadResponse,
@@ -16,11 +20,6 @@ from nio import (  # noqa: E402
     RoomMessageImage,
     RoomMessageVideo,
 )
-
-from app.crud import media as crud_media  # noqa: E402
-from app.crud import message as crud  # noqa: E402
-from app.db.database import SessionLocal  # noqa: E402
-from app.storage.minio_client import MediaStorage  # noqa: E402
 
 HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/data/healthcheck"))
 
