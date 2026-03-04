@@ -6,6 +6,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "shared"))
+sys.path.insert(0, str(project_root / "shared/base_app"))
 sys.path.insert(0, str(project_root / "services" / "api" / "app"))
 sys.path.insert(0, str(project_root / "services" / "bot" / "app"))
 

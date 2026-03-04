@@ -6,7 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'shared/alembic/**'
-      - 'shared/app/models/**'
+      - 'shared/base_app/models/**'
 
 env:
   REGISTRY: ghcr.io
@@ -74,8 +74,8 @@ jobs:
         cd shared
         # Create a test database for generating migrations
         python -c "
-        from app.db.database import Base
-        from app.models.message import Message
+        from base_app.db.database import Base
+        from base_app.models.message import Message
         # Import all models
         print('Models loaded successfully')
         "

@@ -1,12 +1,12 @@
 import logging
 import sys
 
-sys.path.insert(0, "/app/shared")
+sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from api import analytics, media  # noqa: E402
 from api.routes import router  # noqa: E402
-from app.db.database import init_db  # noqa: E402
-from app.utils.logging_config import setup_logging  # noqa: E402
+from base_app.db.database import init_db  # noqa: E402
+from base_app.utils.logging_config import setup_logging  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 

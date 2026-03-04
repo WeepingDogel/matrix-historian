@@ -16,7 +16,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import your models' Base here
-from app.db.database import Base  # noqa: E402
+from base_app.db.database import Base  # noqa: E402
 
 # Set target metadata for autogenerate
 target_metadata = Base.metadata

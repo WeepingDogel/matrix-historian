@@ -4,17 +4,17 @@ import io
 import logging
 import sys
 
-sys.path.insert(0, "/app/shared")
+sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
-from app.crud import media as crud_media  # noqa: E402
-from app.db.database import get_db  # noqa: E402
-from app.schemas.media import (  # noqa: E402
+from base_app.crud import media as crud_media  # noqa: E402
+from base_app.db.database import get_db  # noqa: E402
+from base_app.schemas.media import (  # noqa: E402
     MediaListResponse,
     MediaResponse,
     MediaStatsResponse,
     MediaWithUrl,
 )
-from app.storage.minio_client import MediaStorage  # noqa: E402
+from base_app.storage.minio_client import MediaStorage  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
 from fastapi.responses import RedirectResponse, StreamingResponse  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402

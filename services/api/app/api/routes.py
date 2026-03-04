@@ -1,13 +1,13 @@
 import sys
 
-sys.path.insert(0, "/app/shared")
+sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from datetime import datetime  # noqa: E402
 from typing import List  # noqa: E402
 
-from app.crud import message as crud  # noqa: E402
-from app.db.database import get_db  # noqa: E402
-from app.schemas.message import (  # noqa: E402
+from base_app.crud import message as crud  # noqa: E402
+from base_app.db.database import get_db  # noqa: E402
+from base_app.schemas.message import (  # noqa: E402
     Message,
     MessageResponse,
     RoomBase,

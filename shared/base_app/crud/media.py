@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from app.models.message import Media
+from base_app.models.message import Media
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 

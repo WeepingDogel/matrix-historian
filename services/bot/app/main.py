@@ -2,10 +2,10 @@ import asyncio
 import logging
 import sys
 
-sys.path.insert(0, "/app/shared")
+sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
-from app.db.database import init_db  # noqa: E402
-from app.utils.logging_config import setup_logging  # noqa: E402
+from base_app.db.database import init_db  # noqa: E402
+from base_app.utils.logging_config import setup_logging  # noqa: E402
 from bot import MatrixBot  # noqa: E402
 
 logger = logging.getLogger(__name__)
