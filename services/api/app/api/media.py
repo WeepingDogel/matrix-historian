@@ -4,7 +4,9 @@ import io
 import logging
 import sys
 
-sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(
+    0, "/app/shared"
+)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from base_app.crud import media as crud_media  # noqa: E402
 from base_app.db.database import get_db  # noqa: E402

@@ -1,6 +1,8 @@
 import sys
 
-sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(
+    0, "/app/shared"
+)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from datetime import datetime  # noqa: E402
 from typing import List  # noqa: E402

@@ -4,7 +4,9 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(
+    0, "/app/shared"
+)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 import backoff  # noqa: E402
 import simplematrixbotlib as botlib  # noqa: E402

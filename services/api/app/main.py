@@ -1,7 +1,9 @@
 import logging
 import sys
 
-sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(
+    0, "/app/shared"
+)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from api import analytics, media  # noqa: E402
 from api.routes import router  # noqa: E402
