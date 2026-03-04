@@ -45,7 +45,7 @@ jobs:
         
     - name: Run mypy (type checking)
       run: |
-        mypy --ignore-missing-imports .
+        mypy .
         
     - name: Run bandit (security scanning)
       run: |
