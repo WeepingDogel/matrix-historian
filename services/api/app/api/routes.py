@@ -5,7 +5,7 @@ sys.path.insert(
 )  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
 from datetime import datetime  # noqa: E402
-from typing import List  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
 
 from base_app.crud import message as crud  # noqa: E402
 from base_app.db.database import get_db  # noqa: E402
@@ -48,15 +48,15 @@ def read_messages(
     limit: int = Query(100, description="Limit the number of records"),
     db: Session = Depends(get_db),
 ):
-    query_params = {}
+    query_params: Dict[str, Any] = {}
     if room_id:
         query_params["room_id"] = room_id
     if user_id:
         query_params["user_id"] = user_id
     if after:
-        query_params["after"] = after
+        query_params["after"] = after.isoformat() if after else None
     if before:
-        query_params["before"] = before
+        query_params["before"] = before.isoformat() if before else None
 
     total = crud.count_messages(db, **query_params)
     messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)
