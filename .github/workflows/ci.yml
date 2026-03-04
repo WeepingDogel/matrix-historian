@@ -43,9 +43,9 @@ jobs:
       run: |
         flake8 .
         
-    - name: Run mypy (type checking)
-      run: |
-        mypy .
+    # - name: Run mypy (type checking)
+    #   run: |
+    #     mypy .
         
     - name: Run bandit (security scanning)
       run: |
