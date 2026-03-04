@@ -25,10 +25,10 @@ def test_message_model():
         media_height=600,
     )
 
-    assert message.room_id == "!test:example.com"
-    assert message.sender == "@user:example.com"
-    assert message.content == "Hello, world!"
-    assert message.message_type == "m.text"
+    assert message.room_id == "!test:example.com"  # nosec
+    assert message.sender == "@user:example.com"  # nosec
+    assert message.content == "Hello, world!"  # nosec
+    assert message.message_type == "m.text"  # nosec
 
 
 def test_message_create_schema():
@@ -43,8 +43,8 @@ def test_message_create_schema():
     }
 
     message_create = MessageCreate(**data)
-    assert message_create.room_id == data["room_id"]
-    assert message_create.sender == data["sender"]
+    assert message_create.room_id == data["room_id"]  # nosec
+    assert message_create.sender == data["sender"]  # nosec
 
 
 def test_message_response_schema():
@@ -62,8 +62,8 @@ def test_message_response_schema():
     }
 
     message_response = MessageResponse(**data)
-    assert message_response.id == 1
-    assert message_response.room_id == "!test:example.com"
+    assert message_response.id == 1  # nosec
+    assert message_response.room_id == "!test:example.com"  # nosec
 
 
 def test_message_schema_validation():

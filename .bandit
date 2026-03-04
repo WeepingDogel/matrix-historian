@@ -1,3 +1,17 @@
-exclude_dirs: .git,.mypy_cache,.pytest_cache,.ruff_cache,venv,__pycache__
-skips: B101,B104,B105,B605,B607
-targets: services,shared
+exclude_dirs:
+  - .git
+  - .mypy_cache
+  - .pytest_cache
+  - .ruff_cache
+  - venv
+  - __pycache__
+skips:
+  - B101  # assert used
+  - B104  # hardcoded_bind_all_interfaces
+  - B105  # hardcoded_password_string
+  - B605  # start_process_with_a_shell
+  - B607  # start_process_with_partial_path
+targets:
+  - services
+  - shared
+  - tests

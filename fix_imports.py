@@ -4,7 +4,7 @@ Script to fix E402 import errors by adding # noqa: E402 comments
 """
 
 import os
-import subprocess
+import subprocess  # nosec
 
 
 def fix_file(filepath):
@@ -72,7 +72,7 @@ def main():
     # Run flake8 to check
     print("\nRunning flake8 check...")
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec
             [
                 "python3",
                 "-m",

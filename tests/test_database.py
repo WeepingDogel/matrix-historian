@@ -31,7 +31,7 @@ def test_database_connection(test_engine):
     """Test database connection."""
     with test_engine.connect() as conn:
         result = conn.execute("SELECT 1")
-        assert result.scalar() == 1
+        assert result.scalar() == 1  # nosec
 
 
 def test_message_crud_operations(test_session):
@@ -52,28 +52,28 @@ def test_message_crud_operations(test_session):
     test_session.commit()
     test_session.refresh(message)
 
-    assert message.id is not None
-    assert message.room_id == "!test:example.com"
+    assert message.id is not None  # nosec
+    assert message.room_id == "!test:example.com"  # nosec
 
     # Read
     retrieved = (
         test_session.query(Message).filter_by(room_id="!test:example.com").first()
     )
-    assert retrieved is not None
-    assert retrieved.content == "Test message"
+    assert retrieved is not None  # nosec
+    assert retrieved.content == "Test message"  # nosec
 
     # Update
     retrieved.content = "Updated message"
     test_session.commit()
     test_session.refresh(retrieved)
-    assert retrieved.content == "Updated message"
+    assert retrieved.content == "Updated message"  # nosec
 
     # Delete
     test_session.delete(retrieved)
     test_session.commit()
 
     deleted = test_session.query(Message).filter_by(id=message.id).first()
-    assert deleted is None
+    assert deleted is None  # nosec
 
 
 def test_database_constraints(test_session):
