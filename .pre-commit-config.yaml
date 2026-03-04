@@ -52,4 +52,8 @@ repos:
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-        exclude: ^$  # 空模式，实际排除所有文件，因为我们已经有了基线文件
+        exclude: |
+          (?x)^(
+            services/web/package-lock\.json|
+            .*\.lock$
+          )

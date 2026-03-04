@@ -11,12 +11,12 @@ graph TB
     E -->|Query| C
     C -->|Results| E
     E -->|Response| D
-    
+
     F[分析引擎] -->|处理数据| C
     E -->|请求分析| F
     F -->|分析结果| E
     G[AI 模型] -->|情感/话题分析| F
-    
+
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333

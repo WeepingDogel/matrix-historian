@@ -311,7 +311,7 @@ from .base import Base
 
 class YourModel(Base):
     __tablename__ = "your_models"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -333,7 +333,7 @@ class YourSchemaCreate(YourSchemaBase):
 class YourSchema(YourSchemaBase):
     id: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 ```
@@ -356,7 +356,7 @@ async def handle_your_event(room, event):
     if isinstance(event, RoomMessageText):
         message = event.body
         logger.info(f"Received message: {message}")
-        
+
         # Your handler logic here
         if "hello" in message.lower():
             await room.send_text("Hello there!")
@@ -385,10 +385,10 @@ async def test_handle_your_event():
     room = AsyncMock()
     event = MagicMock()
     event.body = "Hello world"
-    
+
     # Test handler
     await handle_your_event(room, event)
-    
+
     # Verify behavior
     room.send_text.assert_called_once_with("Hello there!")
 ```
@@ -519,7 +519,7 @@ async def get_messages():
 async def process_messages_batch(messages: list):
     # Process multiple messages at once
     await database.bulk_insert(messages)
-    
+
 # Use connection pooling
 from nio import AsyncClient
 client = AsyncClient(
@@ -558,14 +558,14 @@ class TestYourService:
     @pytest.fixture
     def service(self):
         return YourService(Mock())
-    
+
     def test_something(self, service):
         # Arrange
         service.repository.get.return_value = expected
-        
+
         # Act
         result = service.get_something(1)
-        
+
         # Assert
         assert result == expected
 ```
@@ -617,24 +617,24 @@ def docker_services():
 def process_message(message: str, options: dict = None) -> dict:
     """
     Process a Matrix message with given options.
-    
+
     Args:
         message: The message text to process
         options: Optional processing options
-        
+
     Returns:
         dict: Processed message data
-        
+
     Raises:
         ValueError: If message is empty
-        
+
     Examples:
         >>> process_message("Hello", {"lang": "en"})
         {'text': 'Hello', 'language': 'en'}
     """
     if not message:
         raise ValueError("Message cannot be empty")
-    
+
     # Implementation
     return {"text": message, "language": options.get("lang") if options else None}
 ```
@@ -653,10 +653,10 @@ async def search_messages(
 ):
     """
     Search messages across all archived rooms.
-    
+
     This endpoint allows full-text search of archived messages with
     optional filtering by room.
-    
+
     Returns up to 1000 messages matching the search criteria.
     """
     return await search_service.search(q, room_id, limit)
