@@ -19,9 +19,7 @@ def test_engine():
 @pytest.fixture
 def test_session(test_engine):
     """Create a test database session."""
-    SessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=test_engine
-    )
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
     session = SessionLocal()
     try:
         yield session
@@ -59,9 +57,7 @@ def test_message_crud_operations(test_session):
 
     # Read
     retrieved = (
-        test_session.query(Message)
-        .filter_by(room_id="!test:example.com")
-        .first()
+        test_session.query(Message).filter_by(room_id="!test:example.com").first()
     )
     assert retrieved is not None  # nosec
     assert retrieved.content == "Test message"  # nosec
@@ -76,11 +72,7 @@ def test_message_crud_operations(test_session):
     test_session.delete(retrieved)
     test_session.commit()
 
-    deleted = (
-        test_session.query(Message)
-        .filter_by(event_id="$test123")
-        .first()
-    )
+    deleted = test_session.query(Message).filter_by(event_id="$test123").first()
     assert deleted is None  # nosec
 
 
