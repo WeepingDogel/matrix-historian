@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import pytest
+from pydantic import ValidationError
 
 from shared.base_app.schemas.message import (
     Message,
@@ -69,7 +70,7 @@ def test_message_response_schema():
 
 def test_message_schema_validation():
     """Test schema validation with missing required fields."""
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         Message(
             content="Test",
             # Missing required fields
