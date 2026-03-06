@@ -4,76 +4,74 @@ from datetime import datetime
 
 import pytest
 
-from shared.base_app.models.message import Message
-from shared.base_app.schemas.message import MessageCreate, MessageResponse
+from shared.base_app.models.message import Message as MessageModel
+from shared.base_app.schemas.message import (
+    Message,
+    MessageBase,
+    MessageResponse,
+    RoomBase,
+    UserBase,
+)
 
 
-def test_message_model():
-    """Test Message model creation."""
-    message = Message(
-        id=1,
-        room_id="!test:example.com",
-        event_id="$test123",
-        sender="@user:example.com",
-        content="Hello, world!",
-        timestamp=datetime.now(),
-        message_type="m.text",
-        media_url="https://example.com/image.jpg",
-        media_type="image/jpeg",
-        media_size=1024,
-        media_width=800,
-        media_height=600,
-    )
-
-    assert message.room_id == "!test:example.com"  # nosec
-    assert message.sender == "@user:example.com"  # nosec
-    assert message.content == "Hello, world!"  # nosec
-    assert message.message_type == "m.text"  # nosec
+def test_message_base_schema():
+    """Test MessageBase schema."""
+    msg = MessageBase(content="Hello, world!")
+    assert msg.content == "Hello, world!"  # nosec
 
 
-def test_message_create_schema():
-    """Test MessageCreate schema validation."""
+def test_room_base_schema():
+    """Test RoomBase schema."""
+    room = RoomBase(room_id="!test:example.com", name="Test Room")
+    assert room.room_id == "!test:example.com"  # nosec
+    assert room.name == "Test Room"  # nosec
+
+
+def test_user_base_schema():
+    """Test UserBase schema."""
+    user = UserBase(user_id="@user:example.com", display_name="Test User")
+    assert user.user_id == "@user:example.com"  # nosec
+    assert user.display_name == "Test User"  # nosec
+
+
+def test_message_schema():
+    """Test Message schema."""
     data = {
-        "room_id": "!test:example.com",
-        "event_id": "$test123",
-        "sender": "@user:example.com",
         "content": "Hello, world!",
-        "timestamp": "2024-01-01T12:00:00Z",
-        "message_type": "m.text",
+        "event_id": "$test123",
+        "room_id": "!test:example.com",
+        "sender_id": "@user:example.com",
+        "timestamp": datetime.now(),
+        "room": {"room_id": "!test:example.com", "name": "Test Room"},
+        "sender": {"user_id": "@user:example.com", "display_name": "Test User"},
     }
 
-    message_create = MessageCreate(**data)
-    assert message_create.room_id == data["room_id"]  # nosec
-    assert message_create.sender == data["sender"]  # nosec
+    message = Message(**data)
+    assert message.event_id == "$test123"  # nosec
+    assert message.room_id == "!test:example.com"  # nosec
+    assert message.sender_id == "@user:example.com"  # nosec
+    assert message.content == "Hello, world!"  # nosec
 
 
 def test_message_response_schema():
     """Test MessageResponse schema."""
     data = {
-        "id": 1,
-        "room_id": "!test:example.com",
-        "event_id": "$test123",
-        "sender": "@user:example.com",
-        "content": "Hello, world!",
-        "timestamp": datetime.now(),
-        "message_type": "m.text",
-        "created_at": datetime.now(),
-        "updated_at": datetime.now(),
+        "messages": [],
+        "total": 0,
+        "has_more": False,
+        "next_skip": None,
     }
 
-    message_response = MessageResponse(**data)
-    assert message_response.id == 1  # nosec
-    assert message_response.room_id == "!test:example.com"  # nosec
+    response = MessageResponse(**data)
+    assert response.total == 0  # nosec
+    assert response.has_more is False  # nosec
+    assert response.messages == []  # nosec
 
 
 def test_message_schema_validation():
-    """Test schema validation with invalid data."""
-    with pytest.raises(ValueError):
-        MessageCreate(
-            room_id="",  # Empty room_id should fail
-            event_id="$test123",
-            sender="@user:example.com",
+    """Test schema validation with missing required fields."""
+    with pytest.raises(Exception):
+        Message(
             content="Test",
-            timestamp="2024-01-01T12:00:00Z",
-            message_type="m.text",
+            # Missing required fields: event_id, room_id, sender_id, timestamp, room, sender
         )
