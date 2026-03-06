@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from shared.base_app.db.database import Base
-from shared.base_app.models.message import Message, Room, User
+from base_app.db.database import Base
+from base_app.models.message import Message, Room, User
 
 
 @pytest.fixture
