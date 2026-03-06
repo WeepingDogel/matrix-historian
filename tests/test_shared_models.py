@@ -4,7 +4,6 @@ from datetime import datetime
 
 import pytest
 
-from shared.base_app.models.message import Message as MessageModel
 from shared.base_app.schemas.message import (
     Message,
     MessageBase,
@@ -73,5 +72,5 @@ def test_message_schema_validation():
     with pytest.raises(Exception):
         Message(
             content="Test",
-            # Missing required fields: event_id, room_id, sender_id, timestamp, room, sender
+            # Missing required fields
         )
