@@ -1,11 +1,10 @@
 """Tests for database operations."""
 
 import pytest
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from base_app.db.database import Base
 from base_app.models.message import Message, Room, User
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture
