@@ -68,7 +68,7 @@ graph TB
     C -->|Results| E
     E -->|Download Media| H
     E -->|Response| D
-    
+
     F[Analysis Engine] -->|Process Data| C
     E -->|Request Analysis| F
     F -->|Analysis Results| E
@@ -131,5 +131,5 @@ Matrix Historian is open source software licensed under the [MIT License](https:
 
 ---
 
-*Last Updated: February 2026*  
+*Last Updated: February 2026*
 *Documentation Version: 1.0.0*

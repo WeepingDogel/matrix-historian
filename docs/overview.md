@@ -16,12 +16,12 @@ graph TB
     C -->|Results| E
     E -->|Download Media| H
     E -->|Response| D
-    
+
     F[Analysis Engine] -->|Process Data| C
     E -->|Request Analysis| F
     F -->|Analysis Results| E
     G[AI Models] -->|Sentiment/Topic Analysis| F
-    
+
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333
@@ -124,12 +124,12 @@ graph TB
 
 ## Project Status
 
-✅ **Stable**: Core archiving functionality  
-✅ **Stable**: REST API with comprehensive endpoints  
-✅ **Stable**: Media storage and retrieval  
-🔄 **In Development**: Advanced analytics features  
-📋 **Planned**: Web interface for browsing archives  
-📋 **Planned**: Real-time search indexing  
+✅ **Stable**: Core archiving functionality
+✅ **Stable**: REST API with comprehensive endpoints
+✅ **Stable**: Media storage and retrieval
+🔄 **In Development**: Advanced analytics features
+📋 **Planned**: Web interface for browsing archives
+📋 **Planned**: Real-time search indexing
 
 ## Getting Started
 

@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 def setup_logging():
     # Create the root logger
     root_logger = logging.getLogger()
@@ -12,8 +13,8 @@ def setup_logging():
 
     # Set formatter
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     console_handler.setFormatter(formatter)
 

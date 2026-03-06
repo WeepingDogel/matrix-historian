@@ -12,12 +12,12 @@ graph TB
     C -->|Results| E
     E -->|Download Media| H
     E -->|Response| D
-    
+
     F[Analysis Engine] -->|Process Data| C
     E -->|Request Analysis| F
     F -->|Analysis Results| E
     G[AI Models] -->|Sentiment/Topic Analysis| F
-    
+
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333

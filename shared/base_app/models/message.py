@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Index, Integer
-from sqlalchemy.orm import relationship
-from app.db.database import Base
 import datetime
+
+from base_app.db.database import Base
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.orm import relationship
+
 
 class User(Base):
     __tablename__ = "users"
@@ -10,12 +12,14 @@ class User(Base):
     messages = relationship("Message", back_populates="sender")
     media = relationship("Media", back_populates="sender")
 
+
 class Room(Base):
     __tablename__ = "rooms"
     room_id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=True)
     messages = relationship("Message", back_populates="room")
     media = relationship("Media", back_populates="room")
+
 
 class Message(Base):
     __tablename__ = "messages"
@@ -30,10 +34,11 @@ class Message(Base):
     media = relationship("Media", back_populates="message")
 
     __table_args__ = (
-        Index('ix_messages_room_id', 'room_id'),
-        Index('ix_messages_sender_id', 'sender_id'),
-        Index('ix_messages_timestamp', 'timestamp')
+        Index("ix_messages_room_id", "room_id"),
+        Index("ix_messages_sender_id", "sender_id"),
+        Index("ix_messages_timestamp", "timestamp"),
     )
+
 
 class Media(Base):
     __tablename__ = "media"
@@ -49,16 +54,15 @@ class Media(Base):
     width = Column(Integer, nullable=True)  # for images
     height = Column(Integer, nullable=True)  # for images
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    
+
     room = relationship("Room", back_populates="media")
     sender = relationship("User", back_populates="media")
     message = relationship("Message", back_populates="media")
 
     __table_args__ = (
-        Index('ix_media_room_id', 'room_id'),
-        Index('ix_media_sender_id', 'sender_id'),
-        Index('ix_media_timestamp', 'timestamp'),
-        Index('ix_media_event_id', 'event_id'),
-        Index('ix_media_mime_type', 'mime_type')
+        Index("ix_media_room_id", "room_id"),
+        Index("ix_media_sender_id", "sender_id"),
+        Index("ix_media_timestamp", "timestamp"),
+        Index("ix_media_event_id", "event_id"),
+        Index("ix_media_mime_type", "mime_type"),
     )
-
