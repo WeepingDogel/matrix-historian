@@ -100,7 +100,7 @@ jobs:
     - name: Start MinIO
       run: |
         docker run -d --name minio -p 9000:9000 -p 9001:9001 \
-          -e MINIO_ROOT_USER=test -e MINIO_ROOT_PASSWORD=test123 \  # pragma: allowlist secret
+          -e MINIO_ROOT_USER=test -e MINIO_ROOT_PASSWORD=test123 \
           minio/minio server /data --console-address ":9001"
         # Wait for MinIO to be healthy
         for i in $(seq 1 30); do
