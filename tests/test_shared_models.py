@@ -4,8 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from shared.app.models.message import Message
-from shared.app.schemas.message import MessageCreate, MessageResponse
+from shared.base_app.models.message import Message
+from shared.base_app.schemas.message import MessageCreate, MessageResponse
 
 
 def test_message_model():
