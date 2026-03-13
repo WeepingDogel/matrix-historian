@@ -1,5 +1,7 @@
 <script>
 	import Chart from '$lib/Chart.svelte';
+	import { t } from '$lib/i18n';
+	import { formatTime } from '$lib/timezone';
 
 	let { data } = $props();
 
@@ -10,14 +12,14 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard – Matrix Historian</title>
+	<title>{$t('dashboard.title')} – {$t('app.title')}</title>
 </svelte:head>
 
-<h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+<h2 class="text-2xl font-bold mb-6">{$t('dashboard.title')}</h2>
 
 {#if data.error}
 	<div class="alert alert-warning mb-4">
-		<span>⚠️ Could not reach API: {data.error}</span>
+		<span>{$t('common.apiError', { error: data.error })}</span>
 	</div>
 {/if}
 
@@ -25,21 +27,21 @@
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
 	<a href="/messages" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-primary text-3xl">💬</div>
-		<div class="stat-title">Total Messages</div>
+		<div class="stat-title">{$t('dashboard.totalMessages')}</div>
 		<div class="stat-value text-primary">{data.messageCount.toLocaleString()}</div>
-		<div class="stat-desc">View all messages →</div>
+		<div class="stat-desc">{$t('dashboard.viewMessages')}</div>
 	</a>
 	<a href="/rooms" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-secondary text-3xl">🏠</div>
-		<div class="stat-title">Rooms</div>
+		<div class="stat-title">{$t('dashboard.rooms')}</div>
 		<div class="stat-value text-secondary">{data.roomCount}</div>
-		<div class="stat-desc">Browse rooms →</div>
+		<div class="stat-desc">{$t('dashboard.browseRooms')}</div>
 	</a>
 	<a href="/users" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-accent text-3xl">👥</div>
-		<div class="stat-title">Users</div>
+		<div class="stat-title">{$t('dashboard.users')}</div>
 		<div class="stat-value text-accent">{data.userCount}</div>
-		<div class="stat-desc">View users →</div>
+		<div class="stat-desc">{$t('dashboard.viewUsers')}</div>
 	</a>
 </div>
 
@@ -47,26 +49,26 @@
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
 	<a href="/analytics" class="card bg-base-200 shadow hover:bg-base-300 transition-colors">
 		<div class="card-body p-4">
-			<h3 class="card-title text-sm">📈 Analytics</h3>
-			<p class="text-xs opacity-60">Charts, trends & insights</p>
+			<h3 class="card-title text-sm">📈 {$t('dashboard.analytics')}</h3>
+			<p class="text-xs opacity-60">{$t('dashboard.analyticsDesc')}</p>
 		</div>
 	</a>
 	<a href="/media" class="card bg-base-200 shadow hover:bg-base-300 transition-colors">
 		<div class="card-body p-4">
-			<h3 class="card-title text-sm">🖼️ Media Gallery</h3>
-			<p class="text-xs opacity-60">Browse shared files</p>
+			<h3 class="card-title text-sm">🖼️ {$t('dashboard.mediaGallery')}</h3>
+			<p class="text-xs opacity-60">{$t('dashboard.mediaGalleryDesc')}</p>
 		</div>
 	</a>
 	<a href="/messages?q=" class="card bg-base-200 shadow hover:bg-base-300 transition-colors">
 		<div class="card-body p-4">
-			<h3 class="card-title text-sm">🔍 Search Messages</h3>
-			<p class="text-xs opacity-60">Full-text search</p>
+			<h3 class="card-title text-sm">🔍 {$t('dashboard.searchMessages')}</h3>
+			<p class="text-xs opacity-60">{$t('dashboard.searchMessagesDesc')}</p>
 		</div>
 	</a>
 	<a href="/analytics#heatmap" class="card bg-base-200 shadow hover:bg-base-300 transition-colors">
 		<div class="card-body p-4">
-			<h3 class="card-title text-sm">🗓️ Activity Heatmap</h3>
-			<p class="text-xs opacity-60">When is the server active?</p>
+			<h3 class="card-title text-sm">🗓️ {$t('dashboard.activityHeatmap')}</h3>
+			<p class="text-xs opacity-60">{$t('dashboard.activityHeatmapDesc')}</p>
 		</div>
 	</a>
 </div>
@@ -76,12 +78,12 @@
 	<div class="card bg-base-200 shadow">
 		<div class="card-body">
 			<div class="flex justify-between items-center mb-2">
-				<h3 class="card-title text-lg">Recent Messages</h3>
-				<a href="/messages" class="btn btn-ghost btn-xs">View all →</a>
+				<h3 class="card-title text-lg">{$t('dashboard.recentMessages')}</h3>
+				<a href="/messages" class="btn btn-ghost btn-xs">{$t('common.viewAll')}</a>
 			</div>
 
 			{#if data.recentMessages.length === 0}
-				<p class="opacity-60">No messages yet.</p>
+				<p class="opacity-60">{$t('dashboard.noMessages')}</p>
 			{:else}
 				<div class="space-y-2 max-h-96 overflow-y-auto">
 					{#each data.recentMessages as msg}
@@ -91,7 +93,7 @@
 									{msg.sender?.display_name || msg.sender_id}
 								</a>
 								<time class="text-xs opacity-50 ml-2">
-									{new Date(msg.timestamp).toLocaleString()}
+									{$formatTime(msg.timestamp)}
 								</time>
 							</div>
 							<div class="chat-bubble chat-bubble-primary text-sm">{msg.content}</div>
@@ -111,8 +113,8 @@
 	<div class="card bg-base-200 shadow">
 		<div class="card-body">
 			<div class="flex justify-between items-center mb-2">
-				<h3 class="card-title text-lg">Hourly Activity</h3>
-				<a href="/analytics" class="btn btn-ghost btn-xs">Analytics →</a>
+				<h3 class="card-title text-lg">{$t('dashboard.hourlyActivity')}</h3>
+				<a href="/analytics" class="btn btn-ghost btn-xs">{$t('nav.analytics')} →</a>
 			</div>
 			{#if hourlyLabels.length > 0}
 				<Chart
@@ -120,7 +122,7 @@
 					labels={hourlyLabels}
 					datasets={[
 						{
-							label: 'Messages',
+							label: $t('analytics.messages'),
 							data: hourlyCounts,
 							backgroundColor: 'rgba(102,26,230,0.6)',
 							borderRadius: 4
@@ -131,7 +133,7 @@
 					}}
 				/>
 			{:else}
-				<p class="opacity-60">No hourly data available.</p>
+				<p class="opacity-60">{$t('common.noData')}</p>
 			{/if}
 		</div>
 	</div>
@@ -144,8 +146,8 @@
 		<div class="card bg-base-200 shadow">
 			<div class="card-body">
 				<div class="flex justify-between items-center mb-2">
-					<h3 class="card-title text-lg">Rooms</h3>
-					<a href="/rooms" class="btn btn-ghost btn-xs">View all →</a>
+					<h3 class="card-title text-lg">{$t('dashboard.rooms')}</h3>
+					<a href="/rooms" class="btn btn-ghost btn-xs">{$t('common.viewAll')}</a>
 				</div>
 				<ul class="space-y-1">
 					{#each data.rooms as room}
@@ -166,8 +168,8 @@
 		<div class="card bg-base-200 shadow">
 			<div class="card-body">
 				<div class="flex justify-between items-center mb-2">
-					<h3 class="card-title text-lg">Users</h3>
-					<a href="/users" class="btn btn-ghost btn-xs">View all →</a>
+					<h3 class="card-title text-lg">{$t('dashboard.users')}</h3>
+					<a href="/users" class="btn btn-ghost btn-xs">{$t('common.viewAll')}</a>
 				</div>
 				<ul class="space-y-1">
 					{#each data.users as user}
