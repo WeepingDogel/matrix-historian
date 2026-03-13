@@ -1,16 +1,18 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+	import LocalePicker from '$lib/LocalePicker.svelte';
 
 	let { children } = $props();
 
 	const navItems = [
-		{ href: '/', label: 'Dashboard', icon: '📊' },
-		{ href: '/messages', label: 'Messages', icon: '💬' },
-		{ href: '/rooms', label: 'Rooms', icon: '🏠' },
-		{ href: '/users', label: 'Users', icon: '👥' },
-		{ href: '/media', label: 'Media', icon: '🖼️' },
-		{ href: '/analytics', label: 'Analytics', icon: '📈' }
+		{ href: '/', labelKey: 'nav.dashboard', icon: '📊' },
+		{ href: '/messages', labelKey: 'nav.messages', icon: '💬' },
+		{ href: '/rooms', labelKey: 'nav.rooms', icon: '🏠' },
+		{ href: '/users', labelKey: 'nav.users', icon: '👥' },
+		{ href: '/media', labelKey: 'nav.media', icon: '🖼️' },
+		{ href: '/analytics', labelKey: 'nav.analytics', icon: '📈' }
 	];
 
 	function isActive(href) {
@@ -37,7 +39,7 @@
 				</label>
 			</div>
 			<div class="flex-1">
-				<span class="text-xl font-bold">Matrix Historian</span>
+				<span class="text-xl font-bold">{$t('app.title')}</span>
 			</div>
 		</div>
 
@@ -48,18 +50,18 @@
 
 		<!-- Footer -->
 		<footer class="footer footer-center p-4 text-base-content/50 text-xs">
-			<p>Matrix Historian — Message Archive Browser</p>
+			<p>{$t('app.footer')}</p>
 		</footer>
 	</div>
 
 	<!-- Sidebar -->
 	<div class="drawer-side z-40">
 		<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-		<aside class="bg-base-200 min-h-full w-64 p-4">
+		<aside class="bg-base-200 min-h-full w-64 p-4 flex flex-col">
 			<div class="mb-8 px-2">
 				<a href="/" class="block">
-					<h1 class="text-xl font-bold">📜 Matrix Historian</h1>
-					<p class="text-xs opacity-60 mt-1">Message Archive Browser</p>
+					<h1 class="text-xl font-bold">📜 {$t('app.title')}</h1>
+					<p class="text-xs opacity-60 mt-1">{$t('app.subtitle')}</p>
 				</a>
 			</div>
 			<ul class="menu gap-1">
@@ -67,7 +69,7 @@
 					<li>
 						<a href={item.href} class="text-base" class:active={isActive(item.href)}>
 							<span>{item.icon}</span>
-							{item.label}
+							{$t(item.labelKey)}
 						</a>
 					</li>
 				{/each}
@@ -75,11 +77,15 @@
 
 			<!-- Sidebar stats summary -->
 			<div class="mt-auto pt-8 px-2">
-				<div class="divider text-xs opacity-40">Quick Links</div>
+				<div class="divider text-xs opacity-40">{$t('nav.quickLinks')}</div>
 				<ul class="menu menu-xs gap-0.5 opacity-70">
-					<li><a href="/analytics">📊 View Analytics</a></li>
-					<li><a href="/media">🖼️ Media Gallery</a></li>
+					<li><a href="/analytics">📊 {$t('nav.viewAnalytics')}</a></li>
+					<li><a href="/media">🖼️ {$t('nav.mediaGallery')}</a></li>
 				</ul>
+
+				<!-- Locale & timezone picker -->
+				<div class="divider text-xs opacity-40">🌐</div>
+				<LocalePicker />
 			</div>
 		</aside>
 	</div>

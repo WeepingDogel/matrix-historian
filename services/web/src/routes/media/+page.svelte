@@ -1,12 +1,7 @@
 <script>
-	let { data } = $props();
+	import { t } from '$lib/i18n';
 
-	const filters = [
-		{ label: 'All', value: '', icon: '📁' },
-		{ label: 'Images', value: 'image/', icon: '🖼️' },
-		{ label: 'Videos', value: 'video/', icon: '🎬' },
-		{ label: 'Audio', value: 'audio/', icon: '🎵' }
-	];
+	let { data } = $props();
 
 	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
 	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
@@ -39,27 +34,34 @@
 		if (mime.includes('pdf')) return '📕';
 		return '📄';
 	}
+
+	let filterItems = $derived([
+		{ label: $t('media.all'), value: '', icon: '📁' },
+		{ label: $t('media.images'), value: 'image/', icon: '🖼️' },
+		{ label: $t('media.videos'), value: 'video/', icon: '🎬' },
+		{ label: $t('media.audio'), value: 'audio/', icon: '🎵' }
+	]);
 </script>
 
 <svelte:head>
-	<title>Media – Matrix Historian</title>
+	<title>{$t('media.title')} – {$t('app.title')}</title>
 </svelte:head>
 
-<h2 class="text-2xl font-bold mb-4">Media Gallery</h2>
+<h2 class="text-2xl font-bold mb-4">{$t('media.title')}</h2>
 
 {#if data.error}
-	<div class="alert alert-warning mb-4"><span>⚠️ {data.error}</span></div>
+	<div class="alert alert-warning mb-4"><span>{$t('common.error', { error: data.error })}</span></div>
 {/if}
 
 <!-- Media stats -->
 {#if data.stats}
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
 		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Total Files</div>
+			<div class="stat-title text-xs">{$t('media.totalFiles')}</div>
 			<div class="stat-value text-lg">{(data.stats.total_count ?? data.stats.total ?? 0).toLocaleString()}</div>
 		</div>
 		<div class="stat bg-base-200 rounded-box shadow p-3">
-			<div class="stat-title text-xs">Total Size</div>
+			<div class="stat-title text-xs">{$t('media.totalSize')}</div>
 			<div class="stat-value text-lg">{formatSize(data.stats.total_size ?? 0)}</div>
 		</div>
 		{#if data.stats.breakdown}
@@ -75,7 +77,7 @@
 
 <!-- Filter tabs -->
 <div class="tabs tabs-box mb-6">
-	{#each filters as f}
+	{#each filterItems as f}
 		<a
 			href="/media?type={f.value}"
 			class="tab"
@@ -88,12 +90,12 @@
 </div>
 
 <div class="flex justify-between items-center mb-4">
-	<p class="text-sm opacity-60">{data.total.toLocaleString()} file{data.total !== 1 ? 's' : ''}</p>
-	<p class="text-sm opacity-60">Page {currentPage} of {totalPages}</p>
+	<p class="text-sm opacity-60">{$t('media.fileCount', { count: data.total.toLocaleString() })}</p>
+	<p class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</p>
 </div>
 
 {#if data.media.length === 0}
-	<p class="opacity-60">No media found.</p>
+	<p class="opacity-60">{$t('media.noMedia')}</p>
 {:else}
 	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
 		{#each data.media as m}
@@ -120,7 +122,7 @@
 				</figure>
 				<div class="card-body p-3">
 					<p class="text-xs truncate font-medium" title={m.original_filename}>
-						{m.original_filename || 'untitled'}
+						{m.original_filename || $t('media.untitled')}
 					</p>
 					<div class="flex justify-between items-center">
 						<p class="text-xs opacity-50">{formatSize(m.size)}</p>
@@ -129,7 +131,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="btn btn-ghost btn-xs"
-							title="Download"
+							title={$t('common.download')}
 						>
 							⬇️
 						</a>
@@ -143,13 +145,13 @@
 	<div class="flex items-center gap-2 mt-6 justify-center">
 		{#if data.skip > 0}
 			<a href="/media?skip={Math.max(0, data.skip - data.limit)}&type={data.mimeFilter}" class="btn btn-outline btn-sm">
-				← Previous
+				{$t('common.previous')}
 			</a>
 		{/if}
-		<span class="text-sm opacity-60">Page {currentPage} / {totalPages}</span>
+		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
 		{#if data.hasMore}
 			<a href="/media?skip={data.nextSkip}&type={data.mimeFilter}" class="btn btn-outline btn-sm">
-				Next →
+				{$t('common.next')}
 			</a>
 		{/if}
 	</div>
