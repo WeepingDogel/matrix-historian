@@ -125,11 +125,11 @@ The default `docker-compose.yml` starts:
 | `MATRIX_HOMESERVER` | Matrix homeserver URL | - |
 | `MATRIX_USER` | Bot username / MXID | - |
 | `MATRIX_PASSWORD` | Bot password | - |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://historian:historian@db:5432/historian` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://<db_user>:<db_password>@db:5432/historian` |
 | `API_PORT` | Published API port | `8500` |
 | `WEB_PORT` | Published web port | `3000` |
-| `MINIO_ROOT_USER` | MinIO admin username | `historian` |
-| `MINIO_ROOT_PASSWORD` | MinIO admin password | `historian123` |
+| `MINIO_ROOT_USER` | MinIO admin username | `<minio_admin_user>` |
+| `MINIO_ROOT_PASSWORD` | MinIO admin password | `<minio_admin_password>` |
 | `MINIO_ENDPOINT` | Internal MinIO endpoint | `minio:9000` |
 | `MINIO_BUCKET` | MinIO bucket name | `matrix-media` |
 | `MINIO_API_PORT` | Published MinIO API port | `9000` |

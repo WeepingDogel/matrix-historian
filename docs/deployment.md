@@ -37,11 +37,11 @@ docker-compose up -d --build
 MATRIX_HOMESERVER=https://matrix.org
 MATRIX_USER=@yourbot:matrix.org
 MATRIX_PASSWORD=your_bot_password
-DATABASE_URL=postgresql://historian:historian@db:5432/historian
+DATABASE_URL=postgresql://<db_user>:<db_password>@db:5432/historian
 API_PORT=8500
 WEB_PORT=3000
-MINIO_ROOT_USER=historian
-MINIO_ROOT_PASSWORD=historian123
+MINIO_ROOT_USER=<minio_admin_user>
+MINIO_ROOT_PASSWORD=<minio_admin_password>
 MINIO_ENDPOINT=minio:9000
 MINIO_BUCKET=matrix-media
 MINIO_PUBLIC_URL=

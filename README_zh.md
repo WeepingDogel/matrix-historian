@@ -125,11 +125,11 @@ docker-compose logs -f
 | `MATRIX_HOMESERVER` | Matrix homeserver 地址 | - |
 | `MATRIX_USER` | 机器人用户名 / MXID | - |
 | `MATRIX_PASSWORD` | 机器人密码 | - |
-| `DATABASE_URL` | PostgreSQL 连接串 | `postgresql://historian:historian@db:5432/historian` |
+| `DATABASE_URL` | PostgreSQL 连接串 | `postgresql://<db_user>:<db_password>@db:5432/historian` |
 | `API_PORT` | 暴露到宿主机的 API 端口 | `8500` |
 | `WEB_PORT` | 暴露到宿主机的前端端口 | `3000` |
-| `MINIO_ROOT_USER` | MinIO 管理员用户名 | `historian` |
-| `MINIO_ROOT_PASSWORD` | MinIO 管理员密码 | `historian123` |
+| `MINIO_ROOT_USER` | MinIO 管理员用户名 | `<minio_admin_user>` |
+| `MINIO_ROOT_PASSWORD` | MinIO 管理员密码 | `<minio_admin_password>` |
 | `MINIO_ENDPOINT` | MinIO 内部地址 | `minio:9000` |
 | `MINIO_BUCKET` | MinIO bucket 名称 | `matrix-media` |
 | `MINIO_API_PORT` | MinIO API 对外端口 | `9000` |
