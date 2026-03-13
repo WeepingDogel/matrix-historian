@@ -1,149 +1,95 @@
-# Matrix Historian - Overview
+# Matrix Historian Overview
 
-## What is Matrix Historian?
+## What Matrix Historian is
 
-Matrix Historian is a powerful, microservices-based message archival and analysis tool for Matrix chat platforms. It automatically archives messages from Matrix rooms, stores media files, and provides a comprehensive REST API for querying and analyzing chat history.
+Matrix Historian is a Matrix message archival and analytics system.
 
-## Architecture Overview
+It currently consists of:
+- a **Matrix bot service** for ingestion
+- a **FastAPI service** for querying and analytics
+- a **Svelte web frontend** for browsing and visualization
+- **PostgreSQL** for archived metadata and messages
+- **MinIO** for archived media objects
+
+## Architecture
 
 ```mermaid
 graph TB
-    A[Matrix Server] -->|Events| B[Matrix Bot Service]
-    B -->|Save Messages| C[PostgreSQL DB]
-    B -->|Store Media| H[MinIO Storage]
-    D[API Clients] -->|HTTP Requests| E[FastAPI API Service]
-    E -->|Query| C
-    C -->|Results| E
-    E -->|Download Media| H
-    E -->|Response| D
+    A[Matrix Server] -->|Events| B[Bot Service]
+    B -->|Archive messages| C[PostgreSQL]
+    B -->|Store attachments| D[MinIO]
 
-    F[Analysis Engine] -->|Process Data| C
-    E -->|Request Analysis| F
-    F -->|Analysis Results| E
-    G[AI Models] -->|Sentiment/Topic Analysis| F
-
-    style A fill:#f9f,stroke:#333
-    style B fill:#bbf,stroke:#333
-    style C fill:#dfd,stroke:#333
-    style E fill:#bfb,stroke:#333
-    style F fill:#bff,stroke:#333
-    style G fill:#fbf,stroke:#333
-    style H fill:#fdb,stroke:#333
+    E[Web Frontend] -->|HTTP| F[API Service]
+    G[Other API Clients] -->|HTTP| F
+    F -->|Query| C
+    F -->|Media URLs / metadata| D
 ```
 
-## Core Components
+## Core components
 
-### 1. Bot Service (`services/bot/`)
-- **Purpose**: Connects to Matrix homeserver and listens for messages
-- **Features**:
-  - Real-time message archiving from configured rooms
-  - Media file download and storage
-  - User presence tracking
-  - Room membership management
-- **Technology**: Python, matrix-nio
+### Bot service (`services/bot/`)
+- connects to Matrix
+- archives message events
+- downloads supported media and uploads it to MinIO
 
-### 2. API Service (`services/api/`)
-- **Purpose**: Provides RESTful API for accessing archived data
-- **Features**:
-  - Message search and filtering
-  - Media file retrieval
-  - Analytics endpoints
-  - User and room statistics
-- **Technology**: FastAPI, PostgreSQL, MinIO
+### API service (`services/api/`)
+- exposes `/api/v1` endpoints
+- provides search, listing, analytics, and media metadata APIs
+- serves Swagger docs at `/docs`
 
-### 3. Shared Package (`shared/`)
-- **Purpose**: Common utilities and models used across services
-- **Features**:
-  - Database models and schemas
-  - Storage utilities (MinIO/S3 compatible)
-  - Configuration management
-  - Common helper functions
+### Web service (`services/web/`)
+- SvelteKit frontend
+- archive browsing and analytics UI
+- supports English and Simplified Chinese
+- supports Local / UTC timestamp display modes
 
-### 4. Storage Backends
-- **PostgreSQL**: Primary database for messages, users, rooms metadata
-- **MinIO**: Object storage for media files (images, videos, documents)
+### Shared package (`shared/`)
+- SQLAlchemy models
+- Pydantic schemas
+- CRUD helpers
+- DB and storage utilities
 
-## Key Features
+## Timezone model
 
-### Message Archiving
-- Automatic capture of all messages in configured rooms
-- Support for text, images, videos, files, and other media types
-- Preservation of message metadata (timestamps, sender, room, etc.)
+A key design point:
 
-### Search & Retrieval
-- Full-text search across all archived messages
-- Filter by room, user, date range, and content type
-- Pagination and sorting options
+- timestamps are persisted as **UTC** in the backend/database
+- timestamps are formatted for display in the **frontend**
+- users can switch display between **Local** and **UTC** without backend changes
 
-### Media Management
-- Automatic download and storage of media attachments
-- S3-compatible storage with MinIO
-- Media preview generation and thumbnail support
+## Internationalization model
 
-### Analytics & Insights
-- Message volume statistics
-- User activity analysis
-- Room engagement metrics
-- Sentiment analysis (planned)
+The current web UI supports:
+- `en`
+- `zh-CN`
 
-### API-First Design
-- Comprehensive REST API with OpenAPI documentation
-- Support for multiple client types (web, mobile, CLI)
-- Authentication and authorization
+Language selection is handled client-side and used only for presentation.
 
-## Use Cases
+## Key capabilities
 
-### 1. Community Archives
-- Preserve important community discussions
-- Create searchable knowledge bases
-- Archive announcements and decisions
+- automatic Matrix archiving
+- text and metadata search
+- room and user filtering
+- media archival with MinIO
+- analytics endpoints and UI views
+- Docker-based self-hosting
 
-### 2. Research & Analysis
-- Study communication patterns
-- Analyze community engagement
-- Track topic evolution over time
+## Current status
 
-### 3. Compliance & Governance
-- Maintain records for regulatory compliance
-- Audit trails for organizational communications
-- Evidence preservation
+### Stable
+- message archiving
+- API service
+- PostgreSQL + MinIO storage
+- web frontend
+- frontend i18n (`en`, `zh-CN`)
+- frontend timezone display controls
 
-### 4. Personal Archives
-- Backup personal conversations
-- Search through chat history
-- Media file organization
+### Documentation caution
 
-## Technology Stack
+Older documents or comments may still mention:
+- SQLite
+- API-only mode
+- “frontend removed”
+- outdated port mappings
 
-- **Backend**: Python 3.9+, FastAPI, SQLAlchemy
-- **Database**: PostgreSQL 14+
-- **Storage**: MinIO (S3-compatible object storage)
-- **Matrix SDK**: matrix-nio
-- **Containerization**: Docker, Docker Compose
-- **Deployment**: Kubernetes-ready microservices
-
-## Project Status
-
-✅ **Stable**: Core archiving functionality
-✅ **Stable**: REST API with comprehensive endpoints
-✅ **Stable**: Media storage and retrieval
-🔄 **In Development**: Advanced analytics features
-📋 **Planned**: Web interface for browsing archives
-📋 **Planned**: Real-time search indexing
-
-## Getting Started
-
-1. **Quick Start**: See [Get Started](./get-started.md) for a 5-minute setup
-2. **Deployment**: Follow the [Deployment Guide](./deployment.md) for production setup
-3. **Development**: Check [Development Guide](./development.md) for contributing
-4. **API Reference**: Browse the [API Documentation](./reference/api-reference.md)
-
-## Community & Support
-
-- **Issues**: Report bugs or request features on GitHub
-- **Contributions**: Pull requests welcome!
-- **Questions**: Open a discussion for help
-
----
-
-*Matrix Historian - Preserving your conversations, empowering your analysis.*
+Those descriptions do not match the current main branch.
