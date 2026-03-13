@@ -1,140 +1,105 @@
-# Category
-* [Overview](./overview.md)
-* [Get Started](./get-started.md)
-* [Deployment](./deployment.md)
-* [Development](./development.md)
-* [API Reference](./reference/api-reference.md)
-
 # Deployment Guide
 
-## Docker Deployment
+This document describes the current repository deployment shape.
 
-### Build Docker Images
+## Default deployment mode
 
-1. Navigate to the source directory:
-   ```bash
-   cd matrix-historian
-   ```
-2. Build the API image:
-   ```bash
-   docker build -f src/Dockerfile -t matrix-historian-api .
-   ```
-3. Build the Web UI image:
-   ```bash
-   docker build -f src/app/webui/Dockerfile -t matrix-historian-webui .
-   ```
+The repository is currently set up around Docker Compose and five services:
 
-### Launch with docker-compose
+- `db` — PostgreSQL
+- `minio` — S3-compatible media storage
+- `bot` — Matrix ingestion/archival service
+- `api` — FastAPI backend
+- `web` — SvelteKit frontend
 
-Start all services using the docker-compose file located under `src/`:
+## Quick deploy
+
 ```bash
-docker-compose up -d
-```
-Service configuration (as defined in `src/docker-compose.yml`):
-- API service runs on port 8000 (mapped to host port 8001).
-- Web UI service runs on port 8501 (mapped to host port 8502).
-- The database volume is mounted at `/app/app/db` inside the API container for data persistence.
-
-## Manual Deployment
-
-1. Install uv (if not already installed):
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-
-2. Install dependencies:
-   ```bash
-   # Using uv pip install with package list
-   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq pandas==2.2.3 plotly==5.20.0 jieba==0.42.1 networkx==3.2.1
-   
-   # Or create a virtual environment and install
-   uv venv
-   source .venv/bin/activate  # Linux/macOS
-   .venv\Scripts\activate     # Windows
-   pip install -r ../src/requirements.txt
-   ```
-
-3. Start the FastAPI service:
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
-
-4. Launch the Matrix Bot and Web UI separately (e.g., using Streamlit):
-   ```bash
-   streamlit run app/webui/main.py --server.port=8501 --server.address=0.0.0.0
-   ```
-
-5. Ensure all environment variables in the `.env` file are properly configured.
-
-## Reverse Proxy Configuration (Example with Nginx)
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    location /api/ {
-        proxy_pass http://localhost:8001/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location / {
-        proxy_pass http://localhost:8502/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+git clone https://github.com/WeepingDogel/matrix-historian.git
+cd matrix-historian
+cp .env.example .env
+# edit .env
+docker-compose up -d --build
 ```
 
-## HTTPS Configuration (Example with Let's Encrypt)
+## Default published ports
 
-1. Install Certbot:
-   ```bash
-   sudo apt-get update
-   sudo apt-get install certbot python3-certbot-nginx
-   ```
+| Service | Port |
+|---|---:|
+| Web UI | `3000` |
+| API | `8500` |
+| MinIO API | `9000` |
+| MinIO Console | `9001` |
 
-2. Obtain a certificate:
-   ```bash
-   sudo certbot --nginx -d yourdomain.com
-   ```
+## Important environment variables
 
-3. Update your Nginx configuration to redirect HTTP to HTTPS.
+```env
+MATRIX_HOMESERVER=https://matrix.org
+MATRIX_USER=@yourbot:matrix.org
+MATRIX_PASSWORD=your_bot_password
+DATABASE_URL=postgresql://historian:historian@db:5432/historian
+API_PORT=8500
+WEB_PORT=3000
+MINIO_ROOT_USER=historian
+MINIO_ROOT_PASSWORD=historian123
+MINIO_ENDPOINT=minio:9000
+MINIO_BUCKET=matrix-media
+MINIO_PUBLIC_URL=
+GROQ_API_KEY=
+```
+
+## Service notes
+
+### db
+Stores archived messages and metadata in PostgreSQL.
+
+### minio
+Stores archived media objects. `MINIO_PUBLIC_URL` can be configured when media URLs need to be externally reachable.
+
+### bot
+Logs into Matrix and archives events. It depends on healthy `db` and `minio` services.
+
+### api
+Provides `/health`, `/docs`, and `/api/v1/*` endpoints.
+
+### web
+Hosts the browser UI and talks to the API service via `API_URL=http://api:8000` in Docker.
+
+## Timezone and language behavior in deployment
+
+Current behavior is intentional:
+
+- backend/database timestamps are stored in **UTC**
+- frontend displays timestamps in **Local** or **UTC**
+- frontend supports `en` and `zh-CN`
+
+So if you see local-time rendering in the UI, that is a presentation feature rather than a storage change.
+
+## Health checks
+
+```bash
+curl http://localhost:8500/health
+docker-compose ps
+docker-compose logs -f api
+docker-compose logs -f web
+docker-compose logs -f bot
+```
 
 ## Troubleshooting
 
-- Verify that the `.env` file contains valid Matrix configuration.
-- Use `docker logs <container_name>` to inspect container logs if issues arise.
-- Confirm that the required ports are available and not conflicted by other applications.
+### Web unavailable
+- inspect `docker-compose logs web`
+- check `WEB_PORT`
 
-## AI Analysis Configuration
+### API unavailable
+- inspect `docker-compose logs api`
+- verify `API_PORT`
+- confirm PostgreSQL is healthy
 
-To enable AI analysis features (sentiment analysis, etc.), you need to:
+### Bot login/archive issues
+- verify Matrix credentials
+- inspect `docker-compose logs bot`
 
-1. Register and obtain a Groq API key
-2. Set the environment variable:
-   ```bash
-   GROQ_API_KEY=your_api_key_here
-   ```
-
-## System Requirements
-
-In addition to basic requirements, for analysis features we recommend:
-
-- CPU: 4+ cores
-- Memory: 8GB+ RAM
-- Disk: 20GB+ storage
-- Python 3.12+
-
-## Dependencies
-
-The project uses **uv** for dependency management. All dependencies are defined in `pyproject.toml`:
-- Matrix Bot libraries (matrix-nio, simplematrixbotlib)
-- FastAPI and uvicorn
-- Streamlit for web UI
-- pandas, plotly, networkx, wordcloud, matplotlib, jieba for analysis
-- Groq for AI-powered features
-
-Builds use uv for faster, more reliable dependency resolution.
-
+### Media download issues
+- verify MinIO is healthy
+- check `MINIO_ENDPOINT`, `MINIO_BUCKET`, and optional `MINIO_PUBLIC_URL`

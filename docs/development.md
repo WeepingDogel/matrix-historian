@@ -1,63 +1,144 @@
-# Category
-* [Overview](./overview.md)
-* [Get Started](./get-started.md)
-* [Deployment](./deployment.md)
-* [Development](./development.md)
-* [API Reference](./reference/api-reference.md)
-
----
-
-
 # Development Guide
 
-## Setup
+This guide reflects the current repository structure on the main branch.
 
-- Recommended Python version: 3.12 or higher.
-- The project uses **uv** for dependency management.
-- Dependencies are defined in `pyproject.toml` at the project root.
+## Repository layout
 
-### Installing Dependencies
-
-1. Install uv (if not already installed):
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-
-2. Install project dependencies:
-   ```bash
-   # Using uv pip install
-   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq pandas==2.2.3 plotly==5.20.0 jieba==0.42.1 networkx==3.2.1
-   
-   # Or using traditional pip
-   pip install -r ../src/requirements.txt
-   ```
-
-## Code Standards
-
-- Follow PEP8 style guidelines.
-- Use the built-in logging module for logging.
- - All API routes are mounted under `/api/v1`; analytics routes are nested under `/api/v1/analytics`.
-
-## Project Structure
-
-```
-src/
-├── app/             # Main application code
-│   ├── api/        # API endpoints
-│   ├── bot/        # Matrix bot logic
-│   ├── db/         # Database models and utilities
-│   ├── crud/       # Database CRUD operations
-│   ├── schemas/    # Data validation schemas
-│   ├── utils/      # Utility functions
-│   └── webui/      # Web interface
-├── tests/          # Test code
-├── docs/           # Documentation
-└── docker-compose.yml
+```text
+matrix-historian/
+├── docker-compose.yml
+├── docker-compose.production.yml
+├── docker-compose.staging.yml
+├── .env.example
+├── docs/
+├── services/
+│   ├── api/
+│   ├── bot/
+│   └── web/
+├── shared/
+└── tests/
 ```
 
-## Debugging
+## Tech stack
 
-- FastAPI supports auto-reload for development.
-- Streamlit automatically refreshes the interface.
-- Refer to `app/utils/logging_config.py` for logging configuration details.
- - The app launches a background Matrix bot task via `MatrixBot` during FastAPI lifespan; be mindful of async behavior when debugging.
+### Backend
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- MinIO
+
+### Frontend
+- SvelteKit
+- Vite
+- Tailwind CSS / DaisyUI
+- Chart.js
+
+## Local development
+
+### Backend setup
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -e ./shared
+pip install -r services/api/requirements.txt
+pip install -r services/bot/requirements.txt
+```
+
+### Frontend setup
+
+```bash
+cd services/web
+npm install
+```
+
+## Running local services
+
+You can use Docker Compose for infrastructure plus local app processes, or run the full stack in Docker.
+
+### Option A: Full stack with Docker Compose
+
+```bash
+docker-compose up -d --build
+```
+
+### Option B: Run app processes locally
+
+Start infrastructure first if needed:
+
+```bash
+docker-compose up -d db minio
+```
+
+Then run services:
+
+```bash
+# terminal 1
+cd services/api/app
+uvicorn main:app --reload --port 8000
+
+# terminal 2
+cd services/bot/app
+python main.py
+
+# terminal 3
+cd services/web
+npm run dev
+```
+
+## Frontend-specific notes
+
+The web frontend lives in `services/web/`.
+
+Current frontend responsibilities include:
+- archive browsing and analytics UI
+- language switching (`en`, `zh-CN`)
+- timezone display switching (`Local`, `UTC`)
+- formatting UTC timestamps for browser display
+
+Important: timestamps remain UTC in API/database data; conversion is done for presentation in the browser.
+
+## Useful frontend commands
+
+```bash
+cd services/web
+npm run dev
+npm run build
+npm run preview
+npm run check
+```
+
+## Useful backend commands
+
+```bash
+# API logs in Docker
+docker-compose logs -f api
+
+# Bot logs in Docker
+docker-compose logs -f bot
+```
+
+## Testing
+
+```bash
+pytest
+```
+
+For frontend validation:
+
+```bash
+cd services/web
+npm run check
+```
+
+## Contributing expectations
+
+When changing user-facing behavior, update docs accordingly.
+
+Examples:
+- new environment variables
+- port changes
+- web UI behavior
+- timezone display rules
+- supported languages

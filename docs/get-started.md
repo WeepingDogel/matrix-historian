@@ -1,81 +1,127 @@
-# Category
-* [Overview](./overview.md)
-* [Get Started](./get-started.md)
-* [Deployment](./deployment.md)
-* [Development](./development.md)
-* [API Reference](./reference/api-reference.md)
+# Get Started
 
----
-
-# Quick Start Guide
+This guide reflects the current Docker Compose setup in the repository.
 
 ## Prerequisites
-- Docker and docker-compose installed (optional)
-- Python 3.12 or higher
-- Git installed
 
-## Steps
+- Docker
+- Docker Compose
+- a Matrix account for the bot
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/matrix-historian.git
-   cd matrix-historian/src
-   ```
+## 1. Clone the repository
 
-2. Configure Environment Variables:
+```bash
+git clone https://github.com/WeepingDogel/matrix-historian.git
+cd matrix-historian
+```
 
-   Copy `.env.example` to `.env` and update the values:
-   ```bash
-   cp .env.example .env
-   # Edit .env to set MATRIX_HOMESERVER, MATRIX_USER, MATRIX_PASSWORD, etc.
-   ```
+## 2. Create `.env`
 
-3. Deploy the Application:
+```bash
+cp .env.example .env
+```
 
-### Using Docker
-   ```bash
-   docker-compose -f src/docker-compose.yml up -d
-   ```
-   - API Service will be accessible at: http://localhost:8001 (proxies to container port 8000)
-   - Web interface: removed (API-only deployment)
+Minimum useful settings:
 
-### Running Manually
+```env
+MATRIX_HOMESERVER=https://matrix.org
+MATRIX_USER=@yourbot:matrix.org
+MATRIX_PASSWORD=your_bot_password
+DATABASE_URL=postgresql://historian:historian@db:5432/historian
+API_PORT=8500
+WEB_PORT=3000
+MINIO_ROOT_USER=historian
+MINIO_ROOT_PASSWORD=historian123
+MINIO_ENDPOINT=minio:9000
+MINIO_BUCKET=matrix-media
+```
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Linux/macOS
-   .venv\Scripts\activate  # On Windows
-   ```
+Optional:
 
-2. Install uv and dependencies:
-   ```bash
-   # Install uv
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   
-   # Install project dependencies using uv (API + analysis)
-   uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq pandas==2.2.3 plotly==5.20.0 jieba==0.42.1 networkx==3.2.1
-   
-   # Or using traditional pip
-   pip install -r requirements.txt
-   ```
+```env
+MINIO_PUBLIC_URL=https://your-public-minio.example
+GROQ_API_KEY=your_groq_api_key_here
+```
 
-3. Initialize the database:
-   ```bash
-   python app/db/database.py
-   ```
+## 3. Start all services
 
-4. Start the FastAPI service:
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
+```bash
+docker-compose up -d
+```
 
-5. Web UI
+The default stack includes:
+- `db`
+- `minio`
+- `bot`
+- `api`
+- `web`
 
-   The Streamlit web UI has been removed from this repository. Use the API
-   endpoints (`GET /api/v1/...`) to access messages and analytics. See
-   `docs/reference/api-reference.md` for details.
+## 4. Verify service status
 
-## API Base Path
+```bash
+docker-compose ps
+docker-compose logs -f
+```
 
-All HTTP endpoints are mounted under `/api/v1` per the application router configuration.
+## 5. Open the app
+
+- Web UI: http://localhost:3000
+- API: http://localhost:8500
+- Swagger docs: http://localhost:8500/docs
+- MinIO Console: http://localhost:9001
+
+## 6. Verify API health
+
+```bash
+curl http://localhost:8500/health
+```
+
+## Frontend behavior
+
+### Languages
+
+The web frontend currently supports:
+- English (`en`)
+- Simplified Chinese (`zh-CN`)
+
+### Time display
+
+The API/backend stores timestamps in UTC.
+
+The frontend can present those timestamps in:
+- **Local**: browser timezone
+- **UTC**
+
+This is expected behavior and does not require DB/backend modification.
+
+## Common commands
+
+```bash
+# stop services
+docker-compose down
+
+# rebuild and start
+docker-compose up -d --build
+
+# watch logs
+docker-compose logs -f api
+docker-compose logs -f web
+docker-compose logs -f bot
+```
+
+## Common issues
+
+### Web UI does not load
+- check `docker-compose ps`
+- inspect `docker-compose logs web`
+- confirm port `3000` is free
+
+### API does not respond
+- inspect `docker-compose logs api`
+- confirm port `8500` is free
+- verify `db` is healthy
+
+### Bot does not archive messages
+- verify `MATRIX_HOMESERVER`, `MATRIX_USER`, `MATRIX_PASSWORD`
+- confirm the bot account can log in and join the target rooms
+- inspect `docker-compose logs bot`
