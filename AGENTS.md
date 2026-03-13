@@ -14,12 +14,12 @@ graph TB
     E -->|Query| C
     C -->|Results| E
     E -->|Response| D
-    
+
     F[Analysis Agent] -->|Process Data| C
     E -->|Request Analysis| F
     F -->|Analysis Results| E
     G[AI Agent] -->|Sentiment/Topic Analysis| F
-    
+
     style A fill:#f9f,stroke:#333
     style B fill:#bbf,stroke:#333
     style C fill:#dfd,stroke:#333

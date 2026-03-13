@@ -1,5 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { t } from '$lib/i18n';
+	import { formatTime } from '$lib/timezone';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
@@ -42,14 +44,14 @@
 </script>
 
 <svelte:head>
-	<title>Messages – Matrix Historian</title>
+	<title>{$t('messages.title')} – {$t('app.title')}</title>
 </svelte:head>
 
-<h2 class="text-2xl font-bold mb-4">Messages</h2>
+<h2 class="text-2xl font-bold mb-4">{$t('messages.title')}</h2>
 
 {#if data.error}
 	<div class="alert alert-warning mb-4">
-		<span>⚠️ {data.error}</span>
+		<span>{$t('common.error', { error: data.error })}</span>
 	</div>
 {/if}
 
@@ -57,26 +59,26 @@
 <form onsubmit={doSearch} class="flex flex-wrap gap-2 mb-4">
 	<input
 		type="text"
-		placeholder="Search messages…"
+		placeholder={$t('messages.searchPlaceholder')}
 		class="input input-bordered flex-1 min-w-48"
 		bind:value={searchInput}
 	/>
-	<button class="btn btn-primary" type="submit">Search</button>
+	<button class="btn btn-primary" type="submit">{$t('common.search')}</button>
 	{#if hasFilters}
-		<button type="button" class="btn btn-ghost" onclick={clearFilters}>Clear All</button>
+		<button type="button" class="btn btn-ghost" onclick={clearFilters}>{$t('common.clearAll')}</button>
 	{/if}
 </form>
 
 <!-- Filters -->
 <div class="flex flex-wrap gap-2 mb-6">
 	<select class="select select-bordered select-sm" bind:value={selectedRoom} onchange={onFilterChange}>
-		<option value="">All Rooms</option>
+		<option value="">{$t('messages.allRooms')}</option>
 		{#each data.rooms as room}
 			<option value={room.room_id}>{room.name || room.room_id}</option>
 		{/each}
 	</select>
 	<select class="select select-bordered select-sm" bind:value={selectedUser} onchange={onFilterChange}>
-		<option value="">All Users</option>
+		<option value="">{$t('messages.allUsers')}</option>
 		{#each data.users as user}
 			<option value={user.user_id}>{user.display_name || user.user_id}</option>
 		{/each}
@@ -85,19 +87,19 @@
 
 <div class="flex justify-between items-center mb-4">
 	<p class="text-sm opacity-60">
-		{data.total.toLocaleString()} message{data.total !== 1 ? 's' : ''}
-		{#if data.query}matching "<strong>{data.query}</strong>"{/if}
-		{#if data.room_id}in room{/if}
-		{#if data.user_id}by user{/if}
+		{$t('messages.messageCount', { count: data.total.toLocaleString() })}
+		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
+		{#if data.room_id}{$t('messages.inRoom')}{/if}
+		{#if data.user_id}{$t('messages.byUser')}{/if}
 	</p>
 	<p class="text-sm opacity-60">
-		Page {currentPage} of {totalPages}
+		{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}
 	</p>
 </div>
 
 <!-- Message list -->
 {#if data.messages.length === 0}
-	<p class="opacity-60">No messages found.</p>
+	<p class="opacity-60">{$t('messages.noMessages')}</p>
 {:else}
 	<div class="space-y-1">
 		{#each data.messages as msg}
@@ -107,7 +109,7 @@
 						{msg.sender?.display_name || msg.sender_id}
 					</a>
 					<time class="text-xs opacity-50 ml-2">
-						{new Date(msg.timestamp).toLocaleString()}
+						{$formatTime(msg.timestamp)}
 					</time>
 				</div>
 				<div class="chat-bubble">{msg.content}</div>
@@ -127,16 +129,16 @@
 				href="/messages?{buildParams({ skip: Math.max(0, data.skip - data.limit) })}"
 				class="btn btn-outline btn-sm"
 			>
-				← Previous
+				{$t('common.previous')}
 			</a>
 		{/if}
-		<span class="text-sm opacity-60">Page {currentPage} / {totalPages}</span>
+		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
 		{#if data.hasMore}
 			<a
 				href="/messages?{buildParams({ skip: data.nextSkip })}"
 				class="btn btn-outline btn-sm"
 			>
-				Next →
+				{$t('common.next')}
 			</a>
 		{/if}
 	</div>

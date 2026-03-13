@@ -1,16 +1,16 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 import sys
 
-# Add shared package to path
-sys.path.insert(0, '/app/shared')
+sys.path.insert(
+    0, "/app/shared"
+)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
 
-from api.routes import router
-from api import analytics
-from api import media
-from app.db.database import init_db
-from app.utils.logging_config import setup_logging
+from api import analytics, media  # noqa: E402
+from api.routes import router  # noqa: E402
+from base_app.db.database import init_db  # noqa: E402
+from base_app.utils.logging_config import setup_logging  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -50,5 +50,12 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+
+    import uvicorn  # noqa: E402
+
+    # Use environment variable for host, default to localhost for security
+    host = os.getenv("API_HOST", "127.0.0.1")
+    port = int(os.getenv("API_PORT", "8000"))
+
+    uvicorn.run(app, host=host, port=port)

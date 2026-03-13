@@ -1,4 +1,6 @@
 <script>
+	import { t } from '$lib/i18n';
+
 	let { data } = $props();
 	let searchQuery = $state('');
 
@@ -16,37 +18,37 @@
 </script>
 
 <svelte:head>
-	<title>Rooms – Matrix Historian</title>
+	<title>{$t('rooms.title')} – {$t('app.title')}</title>
 </svelte:head>
 
-<h2 class="text-2xl font-bold mb-4">Rooms</h2>
+<h2 class="text-2xl font-bold mb-4">{$t('rooms.title')}</h2>
 
 {#if data.error}
-	<div class="alert alert-warning mb-4"><span>⚠️ {data.error}</span></div>
+	<div class="alert alert-warning mb-4"><span>{$t('common.error', { error: data.error })}</span></div>
 {/if}
 
 <!-- Search -->
 <div class="mb-6">
 	<input
 		type="text"
-		placeholder="Filter rooms…"
+		placeholder={$t('rooms.filterPlaceholder')}
 		class="input input-bordered w-full max-w-md"
 		bind:value={searchQuery}
 	/>
 </div>
 
-<p class="text-sm opacity-60 mb-4">{filteredRooms.length} room{filteredRooms.length !== 1 ? 's' : ''}</p>
+<p class="text-sm opacity-60 mb-4">{$t('rooms.roomCount', { count: filteredRooms.length })}</p>
 
 {#if filteredRooms.length === 0}
-	<p class="opacity-60">No rooms found.</p>
+	<p class="opacity-60">{$t('rooms.noRooms')}</p>
 {:else}
 	<div class="overflow-x-auto">
 		<table class="table table-zebra">
 			<thead>
 				<tr>
-					<th>Name</th>
-					<th>Room ID</th>
-					<th class="text-right">Messages</th>
+					<th>{$t('rooms.name')}</th>
+					<th>{$t('rooms.roomId')}</th>
+					<th class="text-right">{$t('rooms.messagesCol')}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -54,7 +56,7 @@
 					<tr class="hover">
 						<td>
 							<a href="/rooms/{encodeURIComponent(room.room_id)}" class="link link-hover font-medium">
-								{room.name || '(unnamed)'}
+								{room.name || $t('common.unnamed')}
 							</a>
 						</td>
 						<td class="font-mono text-xs opacity-70">{room.room_id}</td>

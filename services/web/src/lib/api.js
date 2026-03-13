@@ -157,6 +157,11 @@ export function getUserNetwork(fetchFn = fetch) {
 	return request(`${BASE}/analytics/user-network`, {}, fetchFn);
 }
 
+export function getUserHourlyActivity(opts = {}, fetchFn = fetch) {
+	const { days, room_id, limit } = opts;
+	return request(`${BASE}/analytics/user-hourly-activity`, { days, room_id, limit }, fetchFn);
+}
+
 // ─── Health ─────────────────────────────────────────────────────────
 
 export function getHealth(fetchFn = fetch) {
