@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
+	import Time from '$lib/Time.svelte';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
@@ -109,7 +110,7 @@
 						{msg.sender?.display_name || msg.sender_id}
 					</a>
 					<time class="text-xs opacity-50 ml-2">
-						{$formatTime(msg.timestamp)}
+						<Time timestamp={msg.timestamp} />
 					</time>
 				</div>
 				<div class="chat-bubble">{msg.content}</div>

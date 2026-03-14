@@ -1,6 +1,7 @@
 <script>
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
+	import Time from '$lib/Time.svelte';
 
 	let { data } = $props();
 
@@ -45,7 +46,7 @@
 						{msg.sender?.display_name || msg.sender_id}
 					</a>
 					<time class="text-xs opacity-50 ml-2">
-						{$formatTime(msg.timestamp)}
+						<Time timestamp={msg.timestamp} />
 					</time>
 				</div>
 				<div class="chat-bubble chat-bubble-primary">{msg.content}</div>
