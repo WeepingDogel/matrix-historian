@@ -1,14 +1,45 @@
 <script>
 	import Chart from '$lib/Chart.svelte';
+	import AnimatedCount from '$lib/AnimatedCount.svelte';
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
+	import { getMessagesCount, getMessages, getUsers, getRooms } from '$lib/api.js';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// Live-updating stats
+	let messageCount = $state(data.messageCount);
+	let roomCount = $state(data.roomCount);
+	let userCount = $state(data.userCount);
+	let recentMessages = $state(data.recentMessages);
 
 	// Hourly activity from overview
 	let hourlyActivity = $derived(data.overview?.hourly_activity ?? []);
 	let hourlyLabels = $derived(hourlyActivity.map((h) => `${String(h.hour ?? h[0] ?? '').padStart(2, '0')}:00`));
 	let hourlyCounts = $derived(hourlyActivity.map((h) => h.count ?? h[1] ?? 0));
+
+	// Auto-refresh every 30 seconds
+	onMount(() => {
+		const interval = setInterval(async () => {
+			try {
+				const [countData, recent, allRooms, allUsers] = await Promise.all([
+					getMessagesCount({}),
+					getMessages({ limit: 10 }),
+					getRooms({ limit: 100000 }),
+					getUsers({ limit: 100000 })
+				]);
+				messageCount = countData.total ?? messageCount;
+				roomCount = Array.isArray(allRooms) ? allRooms.length : roomCount;
+				userCount = Array.isArray(allUsers) ? allUsers.length : userCount;
+				if (recent.messages?.length > 0) {
+					recentMessages = recent.messages;
+				}
+			} catch {}
+		}, 30000);
+
+		return () => clearInterval(interval);
+	});
 </script>
 
 <svelte:head>
@@ -28,19 +59,19 @@
 	<a href="/messages" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-primary text-3xl">💬</div>
 		<div class="stat-title">{$t('dashboard.totalMessages')}</div>
-		<div class="stat-value text-primary">{data.messageCount.toLocaleString()}</div>
+		<div class="stat-value text-primary"><AnimatedCount value={messageCount} /></div>
 		<div class="stat-desc">{$t('dashboard.viewMessages')}</div>
 	</a>
 	<a href="/rooms" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-secondary text-3xl">🏠</div>
 		<div class="stat-title">{$t('dashboard.rooms')}</div>
-		<div class="stat-value text-secondary">{data.roomCount}</div>
+		<div class="stat-value text-secondary"><AnimatedCount value={roomCount} /></div>
 		<div class="stat-desc">{$t('dashboard.browseRooms')}</div>
 	</a>
 	<a href="/users" class="stat bg-base-200 rounded-box shadow hover:bg-base-300 transition-colors cursor-pointer">
 		<div class="stat-figure text-accent text-3xl">👥</div>
 		<div class="stat-title">{$t('dashboard.users')}</div>
-		<div class="stat-value text-accent">{data.userCount}</div>
+		<div class="stat-value text-accent"><AnimatedCount value={userCount} /></div>
 		<div class="stat-desc">{$t('dashboard.viewUsers')}</div>
 	</a>
 </div>
@@ -82,11 +113,11 @@
 				<a href="/messages" class="btn btn-ghost btn-xs">{$t('common.viewAll')}</a>
 			</div>
 
-			{#if data.recentMessages.length === 0}
+			{#if recentMessages.length === 0}
 				<p class="opacity-60">{$t('dashboard.noMessages')}</p>
 			{:else}
 				<div class="space-y-2 max-h-96 overflow-y-auto">
-					{#each data.recentMessages as msg}
+					{#each recentMessages as msg}
 						<div class="chat chat-start">
 							<div class="chat-header">
 								<a href="/users/{encodeURIComponent(msg.sender_id)}" class="link link-hover font-medium text-sm">
