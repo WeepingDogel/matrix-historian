@@ -19,8 +19,8 @@ export async function load({ fetch, url }) {
 			getTrends(interval, fetch).catch(() => ({ trends: [] })),
 			getInteractions(fetch).catch(() => ({ interactions: [] })),
 			getMessagesCount({}, fetch).catch(() => ({ total: 0 })),
-			getRooms({ limit: 1000 }, fetch).catch(() => []),
-			getUsers({ limit: 1000 }, fetch).catch(() => []),
+			getRooms({ limit: 100000 }, fetch).catch(() => []),
+			getUsers({ limit: 100000 }, fetch).catch(() => []),
 			getUserHourlyActivity({ days: 7, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 }))
 		]);
 
