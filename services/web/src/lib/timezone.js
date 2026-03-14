@@ -7,7 +7,7 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
 function detectTimezone() {
-	if (!browser) return 'UTC';  // SSR: always render as UTC for consistency
+	if (!browser) return 'UTC';  // SSR always renders UTC
 	try {
 		const saved = localStorage.getItem('mh-timezone');
 		if (saved) return saved;
@@ -18,12 +18,15 @@ function detectTimezone() {
 /** 'local' = browser timezone, 'UTC' = force UTC */
 export const timezone = writable(detectTimezone());
 
-// Force store re-evaluation after hydration so client re-renders timestamps
+/**
+ * Hydration fix: Svelte 5 doesn't re-validate text nodes during hydration,
+ * so SSR-rendered UTC timestamps stay in the DOM even when the client would
+ * produce different values. This tick store forces formatTime to recompute
+ * after hydration by changing a dependency from 0 → 1.
+ */
+const _hydrated = writable(0);
 if (browser) {
-	// Micro-tick ensures this runs after Svelte hydration
-	queueMicrotask(() => {
-		timezone.update(v => v);
-	});
+	setTimeout(() => _hydrated.set(1), 0);
 }
 
 export function setTimezone(tz) {
@@ -33,9 +36,6 @@ export function setTimezone(tz) {
 
 /**
  * Normalize bare ISO timestamps from the API by appending 'Z' if missing.
- * The backend stores and returns UTC timestamps but without the 'Z' suffix
- * (e.g. "2026-03-14T13:44:48.472716"). Without 'Z', JS Date() treats them
- * as local time, causing incorrect timezone conversions.
  */
 function normalizeUtcTimestamp(timestamp) {
 	const s = String(timestamp);
@@ -46,9 +46,10 @@ function normalizeUtcTimestamp(timestamp) {
 }
 
 /**
- * Derived store: $formatTime(timestamp) returns localized date/time string
+ * Derived store: $formatTime(timestamp) returns localized date/time string.
+ * Depends on both timezone and _hydrated so it recomputes after hydration.
  */
-export const formatTime = derived(timezone, ($tz) => {
+export const formatTime = derived([timezone, _hydrated], ([$tz]) => {
 	return (timestamp) => {
 		if (!timestamp) return '';
 		const normalized = normalizeUtcTimestamp(timestamp);
@@ -66,7 +67,6 @@ export const formatTime = derived(timezone, ($tz) => {
 		if ($tz === 'UTC') {
 			options.timeZone = 'UTC';
 		}
-		// Use browser locale for date format
 		return d.toLocaleString(undefined, options);
 	};
 });
