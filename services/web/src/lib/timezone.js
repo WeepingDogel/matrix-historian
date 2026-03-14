@@ -4,9 +4,10 @@
  */
 
 import { writable, derived } from 'svelte/store';
+import { browser } from '$app/environment';
 
 function detectTimezone() {
-	if (typeof window === 'undefined') return 'local';
+	if (!browser) return 'UTC';  // SSR: always render as UTC for consistency
 	try {
 		const saved = localStorage.getItem('mh-timezone');
 		if (saved) return saved;
@@ -16,6 +17,14 @@ function detectTimezone() {
 
 /** 'local' = browser timezone, 'UTC' = force UTC */
 export const timezone = writable(detectTimezone());
+
+// Force store re-evaluation after hydration so client re-renders timestamps
+if (browser) {
+	// Micro-tick ensures this runs after Svelte hydration
+	queueMicrotask(() => {
+		timezone.update(v => v);
+	});
+}
 
 export function setTimezone(tz) {
 	timezone.set(tz);
