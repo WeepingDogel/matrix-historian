@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import { formatTime, normalizeUtcTimestamp } from '$lib/timezone';
+	import Time from '$lib/Time.svelte';
 
 	let { data } = $props();
 
@@ -363,7 +364,7 @@
 								<tr>
 									<td class="text-xs">{row.room_id ?? ''}</td>
 									<td class="text-xs">{row.sender_id ?? ''}</td>
-									<td class="text-xs opacity-60">{row.timestamp ? $formatTime(row.timestamp) : ''}</td>
+									<td class="text-xs opacity-60">{#if row.timestamp}<Time timestamp={row.timestamp} />{/if}</td>
 								</tr>
 							{/each}
 						</tbody>

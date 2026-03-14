@@ -3,6 +3,7 @@
 	import AnimatedCount from '$lib/AnimatedCount.svelte';
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
+	import Time from '$lib/Time.svelte';
 	import { getMessagesCount, getMessages, getUsers, getRooms } from '$lib/api.js';
 	import { onMount } from 'svelte';
 
@@ -124,7 +125,7 @@
 									{msg.sender?.display_name || msg.sender_id}
 								</a>
 								<time class="text-xs opacity-50 ml-2">
-									{$formatTime(msg.timestamp)}
+									<Time timestamp={msg.timestamp} />
 								</time>
 							</div>
 							<div class="chat-bubble chat-bubble-primary text-sm">{msg.content}</div>
