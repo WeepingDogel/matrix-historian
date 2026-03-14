@@ -36,7 +36,7 @@
 					recentMessages = recent.messages;
 				}
 			} catch {}
-		}, 30000);
+		}, 5000);
 
 		return () => clearInterval(interval);
 	});
