@@ -1,10 +1,4 @@
-import {
-	getRooms,
-	getRoomsCount,
-	searchRooms,
-	getSearchRoomsCount,
-	getRoomActivity
-} from '$lib/api.js';
+import { getRooms, getRoomsCount, getRoomActivity, searchRooms, getSearchRoomsCount } from '$lib/api.js';
 
 export async function load({ fetch, url }) {
 	const q = url.searchParams.get('q') || '';
@@ -14,8 +8,12 @@ export async function load({ fetch, url }) {
 
 	try {
 		const [rooms, countResult, activity] = await Promise.all([
-			q ? searchRooms(q, { skip, limit }, fetch) : getRooms({ skip, limit }, fetch),
-			q ? getSearchRoomsCount(q, fetch) : getRoomsCount(fetch),
+			q
+				? searchRooms(q, { skip, limit }, fetch)
+				: getRooms({ skip, limit }, fetch),
+			q
+				? getSearchRoomsCount(q, fetch)
+				: getRoomsCount(fetch),
 			getRoomActivity(200, fetch).catch(() => ({ rooms: [] }))
 		]);
 
