@@ -58,14 +58,11 @@ def _count_rows(cur, table):
 def _alter_column(cur, table):
     """Alter timestamp column to TIMESTAMPTZ for a known-safe table."""
     # table comes from TABLES_TO_MIGRATE constant, not user input
-    cur.execute(
-        f"""
-        ALTER TABLE {table}
-        ALTER COLUMN "timestamp"
-        TYPE TIMESTAMPTZ
-        USING "timestamp" AT TIME ZONE 'UTC'
-        """
-    )  # nosec B608
+    sql = (  # nosec B608
+        f'ALTER TABLE {table} ALTER COLUMN "timestamp"'
+        f" TYPE TIMESTAMPTZ USING \"timestamp\" AT TIME ZONE 'UTC'"
+    )
+    cur.execute(sql)
 
 
 def migrate(dry_run=False):
