@@ -14,7 +14,8 @@ Usage:
     python scripts/migrate_timestamps_to_utc.py
 
     # With custom database URL:
-    DATABASE_URL=postgresql://user:pass@host/db python scripts/migrate_timestamps_to_utc.py
+    DATABASE_URL=postgresql://user:pass@host/db \\
+        python scripts/migrate_timestamps_to_utc.py
 """
 
 import argparse
