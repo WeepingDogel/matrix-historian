@@ -35,25 +35,16 @@ export function setTimezone(tz) {
 }
 
 /**
- * Normalize bare ISO timestamps from the API by appending 'Z' if missing.
- */
-function normalizeUtcTimestamp(timestamp) {
-	const s = String(timestamp);
-	if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}/.test(s)) {
-		return s + 'Z';
-	}
-	return s;
-}
-
-/**
  * Derived store: $formatTime(timestamp) returns localized date/time string.
  * Depends on both timezone and _hydrated so it recomputes after hydration.
+ *
+ * Timestamps from the API are now timezone-aware (ISO 8601 with Z suffix)
+ * thanks to the backend TIMESTAMPTZ migration. No client-side normalization needed.
  */
 export const formatTime = derived([timezone, _hydrated], ([$tz]) => {
 	return (timestamp) => {
 		if (!timestamp) return '';
-		const normalized = normalizeUtcTimestamp(timestamp);
-		const d = new Date(normalized);
+		const d = new Date(String(timestamp));
 		if (isNaN(d.getTime())) return String(timestamp);
 		const options = {
 			year: 'numeric',
@@ -70,6 +61,3 @@ export const formatTime = derived([timezone, _hydrated], ([$tz]) => {
 		return d.toLocaleString(undefined, options);
 	};
 });
-
-/** Export for use in analytics chart labels */
-export { normalizeUtcTimestamp };
