@@ -5,11 +5,21 @@
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
 
+	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
+	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+
+	function buildParams(overrides = {}) {
+		const params = new URLSearchParams();
+		const q = overrides.q ?? searchInput;
+		const page = overrides.page ?? currentPage;
+		if (q) params.set('q', q);
+		if (page > 1) params.set('page', String(page));
+		return params.toString();
+	}
+
 	function doSearch(e) {
 		e.preventDefault();
-		const params = new URLSearchParams();
-		if (searchInput.trim()) params.set('q', searchInput.trim());
-		goto(`/users?${params.toString()}`);
+		goto(`/users?${buildParams({ page: 1 })}`);
 	}
 </script>
 
@@ -37,10 +47,15 @@
 	{/if}
 </form>
 
-<p class="text-sm opacity-60 mb-4">
-	{$t('users.userCount', { count: data.users.length })}
-	{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
-</p>
+<div class="flex justify-between items-center mb-4">
+	<p class="text-sm opacity-60">
+		{$t('users.userCount', { count: data.total })}
+		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
+	</p>
+	<p class="text-sm opacity-60">
+		{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}
+	</p>
+</div>
 
 {#if data.users.length === 0}
 	<p class="opacity-60">{$t('users.noUsers')}</p>
@@ -74,5 +89,26 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+
+	<!-- Pagination -->
+	<div class="flex items-center gap-2 mt-6 justify-center">
+		{#if data.skip > 0}
+			<a
+				href="/users?{buildParams({ page: currentPage - 1 })}"
+				class="btn btn-outline btn-sm"
+			>
+				{$t('common.previous')}
+			</a>
+		{/if}
+		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
+		{#if data.hasMore}
+			<a
+				href="/users?{buildParams({ page: currentPage + 1 })}"
+				class="btn btn-outline btn-sm"
+			>
+				{$t('common.next')}
+			</a>
+		{/if}
 	</div>
 {/if}

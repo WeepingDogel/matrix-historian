@@ -56,6 +56,19 @@ export function getRooms(opts = {}, fetchFn = fetch) {
 	return request(`${BASE}/rooms/`, { skip, limit }, fetchFn);
 }
 
+export function getRoomsCount(fetchFn = fetch) {
+	return request(`${BASE}/rooms/count`, {}, fetchFn);
+}
+
+export function searchRooms(query, opts = {}, fetchFn = fetch) {
+	const { skip, limit } = opts;
+	return request(`${BASE}/rooms/search/`, { query, skip, limit }, fetchFn);
+}
+
+export function getSearchRoomsCount(query, fetchFn = fetch) {
+	return request(`${BASE}/rooms/search/count`, { query }, fetchFn);
+}
+
 export function getRoomMessages(roomId, opts = {}, fetchFn = fetch) {
 	const { skip, limit } = opts;
 	return request(`${BASE}/rooms/${encodeURIComponent(roomId)}/messages`, { skip, limit }, fetchFn);
@@ -73,9 +86,17 @@ export function getUserMessages(userId, opts = {}, fetchFn = fetch) {
 	return request(`${BASE}/users/${encodeURIComponent(userId)}/messages`, { skip, limit }, fetchFn);
 }
 
+export function getUsersCount(fetchFn = fetch) {
+	return request(`${BASE}/users/count`, {}, fetchFn);
+}
+
 export function searchUsers(query, opts = {}, fetchFn = fetch) {
 	const { skip, limit } = opts;
 	return request(`${BASE}/users/search/`, { query, skip, limit }, fetchFn);
+}
+
+export function getSearchUsersCount(query, fetchFn = fetch) {
+	return request(`${BASE}/users/search/count`, { query }, fetchFn);
 }
 
 // ─── Media ──────────────────────────────────────────────────────────
@@ -109,6 +130,7 @@ export function getMessageStats(days = 7, fetchFn = fetch) {
 	return request(`${BASE}/analytics/message-stats`, { days }, fetchFn);
 }
 
+
 export function getUserActivity(limit = 10, fetchFn = fetch) {
 	return request(`${BASE}/analytics/user-activity`, { limit }, fetchFn);
 }
@@ -121,20 +143,24 @@ export function getAnalyticsOverview(fetchFn = fetch) {
 	return request(`${BASE}/analytics/overview`, {}, fetchFn);
 }
 
-export function getWordcloud(fetchFn = fetch) {
-	return request(`${BASE}/analytics/wordcloud`, {}, fetchFn);
+export function getWordcloud(opts = {}, fetchFn = fetch) {
+	const { days, room_id } = opts;
+	return request(`${BASE}/analytics/wordcloud`, { days, room_id }, fetchFn);
 }
 
-export function getInteractions(fetchFn = fetch) {
-	return request(`${BASE}/analytics/interactions`, {}, fetchFn);
+export function getInteractions(opts = {}, fetchFn = fetch) {
+	const { days } = opts;
+	return request(`${BASE}/analytics/interactions`, { days }, fetchFn);
 }
 
-export function getTrends(interval = 'day', fetchFn = fetch) {
-	return request(`${BASE}/analytics/trends`, { interval }, fetchFn);
+export function getTrends(opts = {}, fetchFn = fetch) {
+	const { interval, days } = opts;
+	return request(`${BASE}/analytics/trends`, { interval, days }, fetchFn);
 }
 
-export function getActivityHeatmap(fetchFn = fetch) {
-	return request(`${BASE}/analytics/activity-heatmap`, {}, fetchFn);
+export function getActivityHeatmap(opts = {}, fetchFn = fetch) {
+	const { days, room_id } = opts;
+	return request(`${BASE}/analytics/activity-heatmap`, { days, room_id }, fetchFn);
 }
 
 export function getSentiment(fetchFn = fetch) {

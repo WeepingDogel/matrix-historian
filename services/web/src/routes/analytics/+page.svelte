@@ -15,7 +15,7 @@
 		} catch { return String(raw); }
 	}
 
-	// Message trend chart data (14-day stats) — API returns {date, count} objects
+	// Message trend chart data — API returns {date, count} objects
 	let trendLabels = $derived(data.messageStats.map((s) => formatDateLabel(s.date ?? s[0] ?? '')));
 	let trendCounts = $derived(data.messageStats.map((s) => s.count ?? s[1] ?? 0));
 
@@ -50,10 +50,39 @@
 			: 1
 	);
 
-	// Interval selector
+	// Filter state
+	let selectedRoom = $state(data.room_id ?? '');
+	let selectedDays = $state(data.days ?? 7);
 	let selectedInterval = $state(data.interval);
-	function changeInterval() {
-		goto(`/analytics?interval=${selectedInterval}`);
+
+	/** Build URL with current filter params */
+	function buildFilterUrl(overrides = {}) {
+		const params = new URLSearchParams();
+		const roomId = overrides.room_id !== undefined ? overrides.room_id : selectedRoom;
+		const days = overrides.days !== undefined ? overrides.days : selectedDays;
+		const interval = overrides.interval !== undefined ? overrides.interval : selectedInterval;
+
+		if (roomId) params.set('room_id', roomId);
+		if (days) params.set('days', String(days));
+		if (interval) params.set('interval', interval);
+
+		const qs = params.toString();
+		return qs ? `/analytics?${qs}` : '/analytics';
+	}
+
+	function changeRoom(e) {
+		selectedRoom = e.target.value;
+		goto(buildFilterUrl({ room_id: selectedRoom }));
+	}
+
+	function changeDays(e) {
+		selectedDays = parseInt(e.target.value, 10);
+		goto(buildFilterUrl({ days: selectedDays }));
+	}
+
+	function changeInterval(e) {
+		selectedInterval = e.target.value;
+		goto(buildFilterUrl({ interval: selectedInterval }));
 	}
 
 	function heatmapColor(value) {
@@ -70,11 +99,39 @@
 	<title>{$t('analytics.title')} – {$t('app.title')}</title>
 </svelte:head>
 
-<h2 class="text-2xl font-bold mb-6">{$t('analytics.title')}</h2>
+<h2 class="text-2xl font-bold mb-4">{$t('analytics.title')}</h2>
 
 {#if data.error}
 	<div class="alert alert-warning mb-4"><span>{$t('common.error', { error: data.error })}</span></div>
 {/if}
+
+<!-- Filter bar -->
+<div class="flex flex-wrap gap-3 mb-6 items-center">
+	<!-- Room selector -->
+	<div class="flex items-center gap-2">
+		<label for="room-filter" class="text-sm font-medium whitespace-nowrap">{$t('analytics.filterByRoom')}</label>
+		<select id="room-filter" class="select select-bordered select-sm w-56" value={selectedRoom} onchange={changeRoom}>
+			<option value="">{$t('analytics.allRooms')}</option>
+			{#each data.rooms as room}
+				<option value={room.room_id}>{room.name || room.room_id}</option>
+			{/each}
+		</select>
+	</div>
+
+	<!-- Spacer -->
+	<div class="flex-1"></div>
+
+	<!-- Time range selector -->
+	<div class="flex items-center gap-2">
+		<label for="days-filter" class="text-sm font-medium whitespace-nowrap">{$t('analytics.timeRange')}</label>
+		<select id="days-filter" class="select select-bordered select-sm" value={selectedDays} onchange={changeDays}>
+			<option value={7}>{$t('analytics.days7')}</option>
+			<option value={14}>{$t('analytics.days14')}</option>
+			<option value={30}>{$t('analytics.days30')}</option>
+			<option value={90}>{$t('analytics.days90')}</option>
+		</select>
+	</div>
+</div>
 
 <!-- Overview stats -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -97,7 +154,7 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-	<!-- Message Trends (14 days) -->
+	<!-- Message Trends -->
 	<div class="card bg-base-200 shadow">
 		<div class="card-body">
 			<h3 class="card-title text-lg">{$t('analytics.messageTrends')}</h3>
@@ -128,7 +185,7 @@
 			<div class="flex justify-between items-center">
 				<h3 class="card-title text-lg">{$t('analytics.trends')}</h3>
 				<div class="flex gap-1">
-					<select class="select select-bordered select-xs" bind:value={selectedInterval} onchange={changeInterval}>
+					<select class="select select-bordered select-xs" value={selectedInterval} onchange={changeInterval}>
 						<option value="hour">{$t('analytics.hourly')}</option>
 						<option value="day">{$t('analytics.daily')}</option>
 						<option value="week">{$t('analytics.weekly')}</option>
@@ -271,14 +328,14 @@
 	<!-- User Hourly Activity -->
 	<div id="user-hourly" class="card bg-base-200 shadow lg:col-span-2">
 		<div class="card-body">
-			<h3 class="card-title text-lg">User Hourly Activity</h3>
-			<p class="text-xs opacity-60 mb-2">Messages per user by hour (top 10 users)</p>
+			<h3 class="card-title text-lg">{$t('analytics.userHourlyActivity')}</h3>
+			<p class="text-xs opacity-60 mb-2">{$t('analytics.userHourlyDesc')}</p>
 			{#if data.userHourlyActivity && data.userHourlyActivity.users && data.userHourlyActivity.users.length > 0}
 				<div class="overflow-x-auto">
 					<table class="table table-xs">
 						<thead>
 							<tr>
-								<th class="text-xs w-32">User</th>
+								<th class="text-xs w-32">{$t('analytics.user')}</th>
 								{#each data.userHourlyActivity.hours as hour}
 									<th class="text-xs text-center p-1">{String(hour).padStart(2, '0')}</th>
 								{/each}
@@ -309,14 +366,13 @@
 					</table>
 				</div>
 				<div class="mt-4 text-xs opacity-60">
-					<p>Showing {data.userHourlyActivity.user_count} users over {data.userHourlyActivity.days} days</p>
+					<p>{$t('analytics.showingUsers', { count: data.userHourlyActivity.user_count, days: data.userHourlyActivity.days })}</p>
 					{#if data.userHourlyActivity.room_id}
-						<p>Filtered by room: {data.userHourlyActivity.room_id}</p>
+						<p>{$t('analytics.filteredByRoom', { room: data.userHourlyActivity.room_id })}</p>
 					{/if}
 				</div>
 			{:else}
-				<p class="opacity-60">No user hourly activity data available.</p>
-				<p class="text-xs opacity-60 mt-2">This feature shows message counts for each user across 24 hours.</p>
+				<p class="opacity-60">{$t('common.noData')}</p>
 			{/if}
 		</div>
 	</div>

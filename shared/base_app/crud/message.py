@@ -204,6 +204,31 @@ def get_rooms(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Room).offset(skip).limit(limit).all()
 
 
+def count_rooms(db: Session):
+    """计算房间总数"""
+    return db.query(func.count(Room.room_id)).scalar()
+
+
+def search_rooms(db: Session, query: str, skip: int = 0, limit: int = 100):
+    """搜索房间"""
+    return (
+        db.query(Room)
+        .filter(Room.name.ilike(f"%{query}%") | Room.room_id.ilike(f"%{query}%"))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def count_search_rooms(db: Session, query: str):
+    """计算搜索房间结果总数"""
+    return (
+        db.query(func.count(Room.room_id))
+        .filter(Room.name.ilike(f"%{query}%") | Room.room_id.ilike(f"%{query}%"))
+        .scalar()
+    )
+
+
 def search_users(db: Session, query: str, skip: int = 0, limit: int = 100):
     """搜索用户"""
     return (

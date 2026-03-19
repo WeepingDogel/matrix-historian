@@ -119,7 +119,18 @@
 		"hourly": "按小时",
 		"daily": "按天",
 		"weekly": "按周",
-		"occurrences": "{count} 次"
+		"occurrences": "{count} 次",
+		"allRooms": "所有房间",
+		"timeRange": "时间范围",
+		"days7": "7 天",
+		"days14": "14 天",
+		"days30": "30 天",
+		"days90": "90 天",
+		"filterByRoom": "按房间筛选",
+		"userHourlyActivity": "用户每小时活动",
+		"userHourlyDesc": "每位用户按小时的消息数（前 10 名）",
+		"showingUsers": "显示 {count} 位用户，共 {days} 天",
+		"filteredByRoom": "按房间筛选：{room}"
 	},
 	"timezone": {
 		"label": "时区",
