@@ -2,7 +2,7 @@
 	import Chart from '$lib/Chart.svelte';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
-	import { formatTime, normalizeUtcTimestamp } from '$lib/timezone';
+	import { formatTime } from '$lib/timezone';
 	import Time from '$lib/Time.svelte';
 
 	let { data } = $props();
@@ -10,7 +10,7 @@
 	/** Format a date string as a short M/D label, normalizing UTC timestamps */
 	function formatDateLabel(raw) {
 		try {
-			const d = new Date(normalizeUtcTimestamp(raw));
+			const d = new Date(String(raw));
 			return isNaN(d) ? String(raw) : `${d.getMonth() + 1}/${d.getDate()}`;
 		} catch { return String(raw); }
 	}
