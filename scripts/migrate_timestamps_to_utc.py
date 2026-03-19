@@ -42,11 +42,10 @@ def get_database_url():
                 if line.startswith("DATABASE_URL="):
                     return line.split("=", 1)[1].strip().strip('"').strip("'")
 
-    # Default for docker-compose setup
-    return os.environ.get(
-        "DATABASE_URL",
-        "postgresql://historian:historian@db:5432/matrix_historian",
-    )  # pragma: allowlist secret
+    # Default: require DATABASE_URL to be set
+    print("ERROR: DATABASE_URL not found in environment or .env file.")
+    print("Set it like: DATABASE_URL=postgresql://user:pass@host/db")
+    sys.exit(1)
 
 
 def _count_rows(cur, table):
@@ -59,12 +58,14 @@ def _count_rows(cur, table):
 def _alter_column(cur, table):
     """Alter timestamp column to TIMESTAMPTZ for a known-safe table."""
     # table comes from TABLES_TO_MIGRATE constant, not user input
-    cur.execute(f"""
+    cur.execute(
+        f"""
         ALTER TABLE {table}
         ALTER COLUMN "timestamp"
         TYPE TIMESTAMPTZ
         USING "timestamp" AT TIME ZONE 'UTC'
-        """)  # nosec B608
+        """
+    )  # nosec B608
 
 
 def migrate(dry_run=False):
