@@ -130,7 +130,20 @@
 		"userHourlyActivity": "用户每小时活动",
 		"userHourlyDesc": "每位用户按小时的消息数（前 10 名）",
 		"showingUsers": "显示 {count} 位用户，共 {days} 天",
-		"filteredByRoom": "按房间筛选：{room}"
+		"filteredByRoom": "按房间筛选：{room}",
+		"sentimentTitle": "情感分析",
+		"confidence": "置信度",
+		"contentAnalysisTitle": "内容分析",
+		"word": "词语",
+		"count": "次数",
+		"userNetworkTitle": "用户关系网络",
+		"userNetworkDesc": "用户之间的互动连接关系",
+		"source": "发起方",
+		"target": "接收方",
+		"weight": "互动次数",
+		"topicEvolutionTitle": "话题演变",
+		"trend": "趋势",
+		"topic": "话题"
 	},
 	"timezone": {
 		"label": "时区",

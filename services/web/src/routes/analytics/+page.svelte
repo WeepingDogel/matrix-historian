@@ -429,4 +429,140 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Sentiment Analysis -->
+	{#if data.sentiment}
+		<div class="card bg-base-200 shadow">
+			<div class="card-body">
+				<h3 class="card-title text-lg">{$t('analytics.sentimentTitle')}</h3>
+				<div class="flex flex-col gap-3">
+					<div class="flex items-center gap-3">
+						<span class="text-3xl">
+							{#if data.sentiment.sentiment === 'positive'}😊
+							{:else if data.sentiment.sentiment === 'negative'}😔
+							{:else}😐
+							{/if}
+						</span>
+						<div>
+							<p class="font-bold capitalize">{data.sentiment.sentiment}</p>
+							<p class="text-xs opacity-60">{$t('analytics.confidence')}: {(data.sentiment.confidence * 100).toFixed(1)}%</p>
+						</div>
+					</div>
+					{#if data.sentiment.analysis}
+						<p class="text-sm opacity-80">{data.sentiment.analysis}</p>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Content Analysis (Word Frequency) -->
+	{#if data.contentAnalysis && data.contentAnalysis.word_frequency}
+		<div class="card bg-base-200 shadow">
+			<div class="card-body">
+				<h3 class="card-title text-lg">{$t('analytics.contentAnalysisTitle')}</h3>
+				{#if data.contentAnalysis.word_frequency.length > 0}
+					<div class="overflow-x-auto max-h-64 overflow-y-auto">
+						<table class="table table-xs">
+							<thead>
+								<tr>
+									<th>{$t('analytics.word')}</th>
+									<th class="text-right">{$t('analytics.count')}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.contentAnalysis.word_frequency.slice(0, 30) as item}
+									<tr>
+										<td class="text-sm">{item.word ?? item[0] ?? ''}</td>
+										<td class="text-sm text-right">{item.count ?? item[1] ?? 0}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{:else}
+					<p class="opacity-60">{$t('common.noData')}</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- User Network -->
+	{#if data.userNetwork && data.userNetwork.edges && data.userNetwork.edges.length > 0}
+		<div class="card bg-base-200 shadow lg:col-span-2">
+			<div class="card-body">
+				<h3 class="card-title text-lg">{$t('analytics.userNetworkTitle')}</h3>
+				<p class="text-xs opacity-60 mb-2">{$t('analytics.userNetworkDesc')}</p>
+				<div class="flex flex-wrap gap-2 mb-4">
+					{#each data.userNetwork.nodes as node}
+						<span class="badge badge-outline">{node.id}</span>
+					{/each}
+				</div>
+				<div class="overflow-x-auto max-h-64 overflow-y-auto">
+					<table class="table table-xs">
+						<thead>
+							<tr>
+								<th>{$t('analytics.source')}</th>
+								<th>{$t('analytics.target')}</th>
+								<th class="text-right">{$t('analytics.weight')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each data.userNetwork.edges.sort((a, b) => b.weight - a.weight) as edge}
+								<tr>
+									<td class="text-xs">{edge.source}</td>
+									<td class="text-xs">{edge.target}</td>
+									<td class="text-xs text-right">
+										<span class="badge badge-sm badge-primary">{edge.weight}</span>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Topic Evolution -->
+	{#if data.topicEvolution}
+		<div class="card bg-base-200 shadow lg:col-span-2">
+			<div class="card-body">
+				<h3 class="card-title text-lg">{$t('analytics.topicEvolutionTitle')}</h3>
+				{#if data.topicEvolution.summary}
+					<div class="mb-4">
+						<p class="text-sm"><span class="font-medium">{$t('analytics.trend')}:</span> {data.topicEvolution.summary.trend}</p>
+						<p class="text-sm opacity-80">{data.topicEvolution.summary.analysis}</p>
+						{#if data.topicEvolution.summary.main_topics}
+							<div class="flex flex-wrap gap-1 mt-2">
+								{#each data.topicEvolution.summary.main_topics as topic}
+									<span class="badge badge-sm badge-secondary">{topic}</span>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
+				{#if data.topicEvolution.topics && data.topicEvolution.topics.length > 0}
+					<div class="overflow-x-auto max-h-48 overflow-y-auto">
+						<table class="table table-xs">
+							<thead>
+								<tr>
+									<th>{$t('analytics.topic')}</th>
+									<th>{$t('analytics.time')}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.topicEvolution.topics.slice(-30) as item}
+									<tr>
+										<td class="text-xs">{item.topic}</td>
+										<td class="text-xs opacity-60">{#if item.timestamp}<Time timestamp={item.timestamp} />{/if}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 </div>

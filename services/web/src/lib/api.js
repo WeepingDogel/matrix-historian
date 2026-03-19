@@ -163,24 +163,29 @@ export function getActivityHeatmap(opts = {}, fetchFn = fetch) {
 	return request(`${BASE}/analytics/activity-heatmap`, { days, room_id }, fetchFn);
 }
 
-export function getSentiment(fetchFn = fetch) {
-	return request(`${BASE}/analytics/sentiment`, {}, fetchFn);
+export function getSentiment(opts = {}, fetchFn = fetch) {
+	const { days, room_id } = opts;
+	return request(`${BASE}/analytics/sentiment`, { days, room_id }, fetchFn);
 }
 
-export function getTopicEvolution(fetchFn = fetch) {
-	return request(`${BASE}/analytics/topic-evolution`, {}, fetchFn);
+export function getTopicEvolution(opts = {}, fetchFn = fetch) {
+	const { days, room_id } = opts;
+	return request(`${BASE}/analytics/topic-evolution`, { days, room_id }, fetchFn);
 }
 
-export function getAiAnalysis(fetchFn = fetch) {
-	return request(`${BASE}/analytics/ai-analysis`, {}, fetchFn);
+export function getAiAnalysis(opts = {}, fetchFn = fetch) {
+	const { days, room_id, analysis_type } = opts;
+	return request(`${BASE}/analytics/ai-analysis`, { days, room_id, analysis_type }, fetchFn);
 }
 
-export function getContentAnalysis(fetchFn = fetch) {
-	return request(`${BASE}/analytics/content-analysis`, {}, fetchFn);
+export function getContentAnalysis(opts = {}, fetchFn = fetch) {
+	const { days, room_id } = opts;
+	return request(`${BASE}/analytics/content-analysis`, { days, room_id }, fetchFn);
 }
 
-export function getUserNetwork(fetchFn = fetch) {
-	return request(`${BASE}/analytics/user-network`, {}, fetchFn);
+export function getUserNetwork(opts = {}, fetchFn = fetch) {
+	const { days, room_id, min_weight } = opts;
+	return request(`${BASE}/analytics/user-network`, { days, room_id, min_weight }, fetchFn);
 }
 
 export function getUserHourlyActivity(opts = {}, fetchFn = fetch) {

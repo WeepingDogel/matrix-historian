@@ -130,7 +130,20 @@
 		"userHourlyActivity": "User Hourly Activity",
 		"userHourlyDesc": "Messages per user by hour (top 10 users)",
 		"showingUsers": "Showing {count} users over {days} days",
-		"filteredByRoom": "Filtered by room: {room}"
+		"filteredByRoom": "Filtered by room: {room}",
+		"sentimentTitle": "Sentiment Analysis",
+		"confidence": "Confidence",
+		"contentAnalysisTitle": "Content Analysis",
+		"word": "Word",
+		"count": "Count",
+		"userNetworkTitle": "User Network",
+		"userNetworkDesc": "Interaction connections between users",
+		"source": "Source",
+		"target": "Target",
+		"weight": "Weight",
+		"topicEvolutionTitle": "Topic Evolution",
+		"trend": "Trend",
+		"topic": "Topic"
 	},
 	"timezone": {
 		"label": "Timezone",
