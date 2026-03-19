@@ -32,11 +32,13 @@ graph TB
 - Automatic Matrix message archiving
 - Search and filter by room, user, content, and time range
 - Media archival and download support via MinIO
-- Analytics endpoints and dashboard views
+- Analytics endpoints and dashboard views (including room selector, time range picker, server-side pagination, and advanced visualizations)
 - Docker Compose deployment for local or self-hosted setups
 - Web frontend with:
   - **Internationalization**: English (`en`) and Simplified Chinese (`zh-CN`)
   - **Timezone display controls**: switch between **Local** (browser timezone) and **UTC**
+  - **Server-side pagination**: for rooms, users, and messages
+  - **Advanced search**: with filters for room, user, content, and time range
 
 ## Timezone and i18n behavior
 
