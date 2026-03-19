@@ -44,7 +44,7 @@ services:
       - historian-network-production
 
   bot:
-    image: ${BOT_IMAGE:-ghcr.io/username/matrix-historian/bot:latest}
+    image: ${BOT_IMAGE:-${DOCKERHUB_USERNAME:-weepingdogel}/matrix-historian-bot:latest}
     container_name: matrix-historian-bot-production
     environment:
       - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
@@ -73,7 +73,7 @@ services:
       - bot_data_production:/app/data
 
   api:
-    image: ${API_IMAGE:-ghcr.io/username/matrix-historian/api:latest}
+    image: ${API_IMAGE:-${DOCKERHUB_USERNAME:-weepingdogel}/matrix-historian-api:latest}
     container_name: matrix-historian-api-production
     ports:
       - "${API_PORT:-8500}:8000"
@@ -101,7 +101,7 @@ services:
       - historian-network-production
 
   web:
-    image: ${WEB_IMAGE:-ghcr.io/username/matrix-historian/web:latest}
+    image: ${WEB_IMAGE:-${DOCKERHUB_USERNAME:-weepingdogel}/matrix-historian-web:latest}
     container_name: matrix-historian-web-production
     ports:
       - "${WEB_PORT:-3000}:3000"

@@ -1,0 +1,42 @@
+name: Deploy to Production
+
+on:
+  # Run after CI Pipeline completes successfully on main
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    # Skip if CI failed (only applies to workflow_run trigger)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /home/weepingdogel/my_services/matrix-historian
+
+            # Pull latest code (for docker-compose.yml updates)
+            git pull origin main
+
+            # Pull new images from Docker Hub
+            docker-compose -f docker-compose.production.yml pull bot api web
+
+            # Restart services with new images
+            docker-compose -f docker-compose.production.yml up -d --no-deps bot api web
+
+            # Wait and check health
+            echo "Waiting for services to start..."
+            sleep 15
+
+            echo "Service status:"
+            docker-compose -f docker-compose.production.yml ps

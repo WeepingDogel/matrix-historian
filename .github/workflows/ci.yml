@@ -145,6 +145,7 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    # Login to GHCR
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3
       with:
@@ -152,28 +153,12 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
+    # Login to Docker Hub
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push shared package
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./shared/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/shared:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push API service
       uses: docker/build-push-action@v5
@@ -184,6 +169,8 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-api:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-api:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -196,6 +183,8 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/bot:${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/bot:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-bot:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-bot:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -208,5 +197,7 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-web:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-web:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
