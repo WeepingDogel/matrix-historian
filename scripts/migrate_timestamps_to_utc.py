@@ -17,9 +17,9 @@ Usage:
     DATABASE_URL=postgresql://user:pass@host/db python scripts/migrate_timestamps_to_utc.py
 """
 
+import argparse
 import os
 import sys
-import argparse
 
 import psycopg2
 
