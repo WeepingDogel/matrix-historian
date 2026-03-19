@@ -2,7 +2,8 @@ import {
 	getMessageStats, getUserActivity, getRoomActivity,
 	getAnalyticsOverview, getWordcloud, getActivityHeatmap,
 	getTrends, getInteractions, getMessagesCount, getRooms, getUsers,
-	getUserHourlyActivity
+	getUserHourlyActivity, getSentiment, getContentAnalysis,
+	getUserNetwork, getTopicEvolution
 } from '$lib/api.js';
 
 export async function load({ fetch, url }) {
@@ -11,7 +12,7 @@ export async function load({ fetch, url }) {
 	const room_id = url.searchParams.get('room_id') || null;
 
 	try {
-		const [msgStats, userActivity, roomActivity, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users, userHourly] = await Promise.all([
+		const [msgStats, userActivity, roomActivity, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users, userHourly, sentiment, contentAnalysis, userNetwork, topicEvolution] = await Promise.all([
 			getMessageStats(days, fetch).catch(() => ({ stats: [] })),
 			getUserActivity(10, fetch).catch(() => ({ users: [] })),
 			getRoomActivity(10, fetch).catch(() => ({ rooms: [] })),
@@ -23,7 +24,11 @@ export async function load({ fetch, url }) {
 			getMessagesCount({}, fetch).catch(() => ({ total: 0 })),
 			getRooms({ limit: 100000 }, fetch).catch(() => []),
 			getUsers({ limit: 100000 }, fetch).catch(() => []),
-			getUserHourlyActivity({ days, room_id, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 }))
+			getUserHourlyActivity({ days, room_id, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 })),
+			getSentiment({ days, room_id }, fetch).catch(() => null),
+			getContentAnalysis({ days, room_id }, fetch).catch(() => null),
+			getUserNetwork({ days, room_id }, fetch).catch(() => null),
+			getTopicEvolution({ days, room_id }, fetch).catch(() => null)
 		]);
 
 		// Compute totals from count endpoint and list lengths
@@ -59,7 +64,11 @@ export async function load({ fetch, url }) {
 			room_id,
 			rooms: Array.isArray(rooms) ? rooms : [],
 			interactions: interactions.interactions ?? [],
-			userHourlyActivity: userHourly
+			userHourlyActivity: userHourly,
+			sentiment,
+			contentAnalysis,
+			userNetwork,
+			topicEvolution
 		};
 	} catch (e) {
 		console.error('Analytics load error:', e);
@@ -73,6 +82,7 @@ export async function load({ fetch, url }) {
 			rooms: [],
 			interactions: [],
 			userHourlyActivity: { users: [], hours: [], days: 7, user_count: 0 },
+			sentiment: null, contentAnalysis: null, userNetwork: null, topicEvolution: null,
 			error: e.message
 		};
 	}
