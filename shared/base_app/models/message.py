@@ -27,7 +27,9 @@ class Message(Base):
     room_id = Column(String, ForeignKey("rooms.room_id"))
     sender_id = Column(String, ForeignKey("users.user_id"))
     content = Column(Text, nullable=False)
-    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    timestamp = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     room = relationship("Room", back_populates="messages")
     sender = relationship("User", back_populates="messages")
@@ -53,7 +55,9 @@ class Media(Base):
     size = Column(Integer, nullable=True)  # bytes
     width = Column(Integer, nullable=True)  # for images
     height = Column(Integer, nullable=True)  # for images
-    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    timestamp = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     room = relationship("Room", back_populates="media")
     sender = relationship("User", back_populates="media")

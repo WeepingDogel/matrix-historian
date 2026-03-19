@@ -56,10 +56,13 @@ def migrate(dry_run=False):
     try:
         for table in tables:
             # Check current column type
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT data_type FROM information_schema.columns
                 WHERE table_name = %s AND column_name = 'timestamp'
-            """, (table,))
+            """,
+                (table,),
+            )
             row = cur.fetchone()
 
             if not row:
@@ -87,7 +90,9 @@ def migrate(dry_run=False):
                     TYPE TIMESTAMPTZ
                     USING "timestamp" AT TIME ZONE 'UTC'
                 """
-                print(f"  [{table}] Running: ALTER COLUMN timestamp TYPE TIMESTAMPTZ...")
+                print(
+                    f"  [{table}] Running: ALTER COLUMN timestamp TYPE TIMESTAMPTZ..."
+                )
                 cur.execute(sql)
                 print(f"  [{table}] Done! {count} rows migrated.")
 
@@ -108,8 +113,14 @@ def migrate(dry_run=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Migrate timestamps to UTC (TIMESTAMPTZ)")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without making changes")
+    parser = argparse.ArgumentParser(
+        description="Migrate timestamps to UTC (TIMESTAMPTZ)"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making changes",
+    )
     args = parser.parse_args()
 
     migrate(dry_run=args.dry_run)
