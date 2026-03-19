@@ -13,9 +13,8 @@ Usage:
     # Actually run the migration:
     python scripts/migrate_timestamps_to_utc.py
 
-    # With custom database URL:
-    DATABASE_URL=postgresql://user:pass@host/db \\
-        python scripts/migrate_timestamps_to_utc.py
+    # With custom database URL (set DATABASE_URL env var):
+    DATABASE_URL="postgresql://..." python scripts/migrate_timestamps_to_utc.py
 """
 
 import argparse
@@ -23,6 +22,10 @@ import os
 import sys
 
 import psycopg2
+
+
+# Only these tables are migrated — not user input
+TABLES_TO_MIGRATE = ("messages", "media")
 
 
 def get_database_url():
@@ -38,10 +41,37 @@ def get_database_url():
             for line in f:
                 line = line.strip()
                 if line.startswith("DATABASE_URL="):
-                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+                    return (
+                        line.split("=", 1)[1].strip().strip('"').strip("'")
+                    )
 
     # Default for docker-compose setup
-    return "postgresql://historian:historian@localhost:5432/matrix_historian"
+    return os.environ.get(
+        "DATABASE_URL",
+        "postgresql://historian:historian@db:5432/matrix_historian",
+    )  # pragma: allowlist secret
+
+
+def _count_rows(cur, table):
+    """Count rows in a known-safe table name."""
+    # table comes from TABLES_TO_MIGRATE constant, not user input
+    cur.execute(  # nosec B608
+        f"SELECT COUNT(*) FROM {table}"
+    )
+    return cur.fetchone()[0]
+
+
+def _alter_column(cur, table):
+    """Alter timestamp column to TIMESTAMPTZ for a known-safe table."""
+    # table comes from TABLES_TO_MIGRATE constant, not user input
+    cur.execute(  # nosec B608
+        f"""
+        ALTER TABLE {table}
+        ALTER COLUMN "timestamp"
+        TYPE TIMESTAMPTZ
+        USING "timestamp" AT TIME ZONE 'UTC'
+        """
+    )
 
 
 def migrate(dry_run=False):
@@ -52,10 +82,8 @@ def migrate(dry_run=False):
     conn.autocommit = False
     cur = conn.cursor()
 
-    tables = ["messages", "media"]
-
     try:
-        for table in tables:
+        for table in TABLES_TO_MIGRATE:
             # Check current column type
             cur.execute(
                 """
@@ -67,7 +95,9 @@ def migrate(dry_run=False):
             row = cur.fetchone()
 
             if not row:
-                print(f"  [{table}] No 'timestamp' column found, skipping.")
+                print(
+                    f"  [{table}] No 'timestamp' column found, skipping."
+                )
                 continue
 
             current_type = row[0]
@@ -77,24 +107,20 @@ def migrate(dry_run=False):
                 print(f"  [{table}] Already TIMESTAMPTZ, skipping.")
                 continue
 
-            # Count rows
-            cur.execute(f"SELECT COUNT(*) FROM {table}")
-            count = cur.fetchone()[0]
+            count = _count_rows(cur, table)
             print(f"  [{table}] {count} rows to migrate")
 
             if dry_run:
-                print(f"  [{table}] DRY RUN — would ALTER COLUMN to TIMESTAMPTZ")
-            else:
-                sql = f"""
-                    ALTER TABLE {table}
-                    ALTER COLUMN "timestamp"
-                    TYPE TIMESTAMPTZ
-                    USING "timestamp" AT TIME ZONE 'UTC'
-                """
                 print(
-                    f"  [{table}] Running: ALTER COLUMN timestamp TYPE TIMESTAMPTZ..."
+                    f"  [{table}] DRY RUN — would ALTER COLUMN "
+                    f"to TIMESTAMPTZ"
                 )
-                cur.execute(sql)
+            else:
+                print(
+                    f"  [{table}] Running: ALTER COLUMN timestamp "
+                    f"TYPE TIMESTAMPTZ..."
+                )
+                _alter_column(cur, table)
                 print(f"  [{table}] Done! {count} rows migrated.")
 
         if dry_run:
@@ -102,7 +128,10 @@ def migrate(dry_run=False):
             conn.rollback()
         else:
             conn.commit()
-            print("\nMigration complete! All timestamps are now TIMESTAMPTZ (UTC).")
+            print(
+                "\nMigration complete! "
+                "All timestamps are now TIMESTAMPTZ (UTC)."
+            )
 
     except Exception as e:
         conn.rollback()
