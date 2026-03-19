@@ -48,11 +48,17 @@ Because the API evolves over time, the most reliable source for request/response
 - list known users
 
 ### Analytics
-- overview and trends
-- activity heatmaps
-- user activity views
-- topic / content analysis
-- optional AI-assisted analysis when configured
+- **Overview**: summary statistics and trends
+- **Word cloud**: most frequent words in messages
+- **Interactions**: user interaction graphs
+- **Trends**: message volume over time
+- **Content analysis**: topic modeling and keyword extraction
+- **User network**: visual graph of user interactions
+- **Sentiment**: sentiment analysis of messages
+- **Activity heatmap**: hourly/daily activity patterns
+- **Topic evolution**: how topics change over time
+- **AI analysis**: AI-powered insights (requires GROQ_API_KEY)
+- **User hourly activity**: activity by hour of day
 
 ### Media
 - list archived media
