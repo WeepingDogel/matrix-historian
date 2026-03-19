@@ -56,6 +56,19 @@ export function getRooms(opts = {}, fetchFn = fetch) {
 	return request(`${BASE}/rooms/`, { skip, limit }, fetchFn);
 }
 
+export function getRoomsCount(fetchFn = fetch) {
+	return request(`${BASE}/rooms/count`, {}, fetchFn);
+}
+
+export function searchRooms(query, opts = {}, fetchFn = fetch) {
+	const { skip, limit } = opts;
+	return request(`${BASE}/rooms/search/`, { query, skip, limit }, fetchFn);
+}
+
+export function getSearchRoomsCount(query, fetchFn = fetch) {
+	return request(`${BASE}/rooms/search/count`, { query }, fetchFn);
+}
+
 export function getRoomMessages(roomId, opts = {}, fetchFn = fetch) {
 	const { skip, limit } = opts;
 	return request(`${BASE}/rooms/${encodeURIComponent(roomId)}/messages`, { skip, limit }, fetchFn);
@@ -73,9 +86,17 @@ export function getUserMessages(userId, opts = {}, fetchFn = fetch) {
 	return request(`${BASE}/users/${encodeURIComponent(userId)}/messages`, { skip, limit }, fetchFn);
 }
 
+export function getUsersCount(fetchFn = fetch) {
+	return request(`${BASE}/users/count`, {}, fetchFn);
+}
+
 export function searchUsers(query, opts = {}, fetchFn = fetch) {
 	const { skip, limit } = opts;
 	return request(`${BASE}/users/search/`, { query, skip, limit }, fetchFn);
+}
+
+export function getSearchUsersCount(query, fetchFn = fetch) {
+	return request(`${BASE}/users/search/count`, { query }, fetchFn);
 }
 
 // ─── Media ──────────────────────────────────────────────────────────
