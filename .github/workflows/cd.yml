@@ -31,14 +31,14 @@ jobs:
             git pull origin main
 
             # Pull new images from Docker Hub
-            docker-compose -f docker-compose.production.yml pull bot api web
+            docker compose -f docker-compose.production.yml pull bot api web
 
             # Start all services (ensures db and minio are running)
-            docker-compose -f docker-compose.production.yml up -d
+            docker compose -f docker-compose.production.yml up -d
 
             # Wait and check health
             echo "Waiting for services to start..."
             sleep 15
 
             echo "Service status:"
-            docker-compose -f docker-compose.production.yml ps
+            docker compose -f docker-compose.production.yml ps
