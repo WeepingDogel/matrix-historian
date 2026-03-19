@@ -1,20 +1,31 @@
 <script>
+	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 
 	let { data } = $props();
-	let searchQuery = $state('');
+	let searchInput = $state(data.query ?? '');
 
-	let filteredRooms = $derived(
-		searchQuery.trim()
-			? data.rooms.filter((r) => {
-					const q = searchQuery.toLowerCase();
-					return (
-						(r.name && r.name.toLowerCase().includes(q)) ||
-						r.room_id.toLowerCase().includes(q)
-					);
-				})
-			: data.rooms
-	);
+	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
+	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+
+	function buildParams(overrides = {}) {
+		const params = new URLSearchParams();
+		const q = overrides.q ?? searchInput;
+		const page = overrides.page ?? currentPage;
+		if (q) params.set('q', q);
+		if (page > 1) params.set('page', String(page));
+		return params.toString();
+	}
+
+	function doSearch(e) {
+		e.preventDefault();
+		goto(`/rooms?${buildParams({ page: 1 })}`);
+	}
+
+	function clearFilters() {
+		searchInput = '';
+		goto('/rooms');
+	}
 </script>
 
 <svelte:head>
@@ -28,18 +39,30 @@
 {/if}
 
 <!-- Search -->
-<div class="mb-6">
+<form onsubmit={doSearch} class="flex gap-2 mb-6">
 	<input
 		type="text"
 		placeholder={$t('rooms.filterPlaceholder')}
-		class="input input-bordered w-full max-w-md"
-		bind:value={searchQuery}
+		class="input input-bordered flex-1 max-w-md"
+		bind:value={searchInput}
 	/>
+	<button class="btn btn-primary" type="submit">{$t('common.search')}</button>
+	{#if data.query}
+		<a href="/rooms" class="btn btn-ghost">{$t('common.clear')}</a>
+	{/if}
+</form>
+
+<div class="flex justify-between items-center mb-4">
+	<p class="text-sm opacity-60">
+		{$t('rooms.roomCount', { count: data.total })}
+		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
+	</p>
+	<p class="text-sm opacity-60">
+		{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}
+	</p>
 </div>
 
-<p class="text-sm opacity-60 mb-4">{$t('rooms.roomCount', { count: filteredRooms.length })}</p>
-
-{#if filteredRooms.length === 0}
+{#if data.rooms.length === 0}
 	<p class="opacity-60">{$t('rooms.noRooms')}</p>
 {:else}
 	<div class="overflow-x-auto">
@@ -52,7 +75,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each filteredRooms as room}
+				{#each data.rooms as room}
 					<tr class="hover">
 						<td>
 							<a href="/rooms/{encodeURIComponent(room.room_id)}" class="link link-hover font-medium">
@@ -71,5 +94,26 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+
+	<!-- Pagination -->
+	<div class="flex items-center gap-2 mt-6 justify-center">
+		{#if data.skip > 0}
+			<a
+				href="/rooms?{buildParams({ page: currentPage - 1 })}"
+				class="btn btn-outline btn-sm"
+			>
+				{$t('common.previous')}
+			</a>
+		{/if}
+		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
+		{#if data.hasMore}
+			<a
+				href="/rooms?{buildParams({ page: currentPage + 1 })}"
+				class="btn btn-outline btn-sm"
+			>
+				{$t('common.next')}
+			</a>
+		{/if}
 	</div>
 {/if}

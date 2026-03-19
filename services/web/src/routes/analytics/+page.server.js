@@ -7,21 +7,23 @@ import {
 
 export async function load({ fetch, url }) {
 	const interval = url.searchParams.get('interval') || 'day';
+	const days = parseInt(url.searchParams.get('days') || '7', 10);
+	const room_id = url.searchParams.get('room_id') || null;
 
 	try {
 		const [msgStats, userActivity, roomActivity, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users, userHourly] = await Promise.all([
-			getMessageStats(14, fetch).catch(() => ({ stats: [] })),
+			getMessageStats(days, fetch).catch(() => ({ stats: [] })),
 			getUserActivity(10, fetch).catch(() => ({ users: [] })),
 			getRoomActivity(10, fetch).catch(() => ({ rooms: [] })),
 			getAnalyticsOverview(fetch).catch(() => null),
-			getWordcloud(fetch).catch(() => ({ messages: [] })),
-			getActivityHeatmap(fetch).catch(() => ({ heatmap: [], weekdays: [], hours: [] })),
-			getTrends(interval, fetch).catch(() => ({ trends: [] })),
-			getInteractions(fetch).catch(() => ({ interactions: [] })),
+			getWordcloud({ days, room_id }, fetch).catch(() => ({ messages: [] })),
+			getActivityHeatmap({ days, room_id }, fetch).catch(() => ({ heatmap: [], weekdays: [], hours: [] })),
+			getTrends({ interval, days }, fetch).catch(() => ({ trends: [] })),
+			getInteractions({ days }, fetch).catch(() => ({ interactions: [] })),
 			getMessagesCount({}, fetch).catch(() => ({ total: 0 })),
 			getRooms({ limit: 100000 }, fetch).catch(() => []),
 			getUsers({ limit: 100000 }, fetch).catch(() => []),
-			getUserHourlyActivity({ days: 7, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 }))
+			getUserHourlyActivity({ days, room_id, limit: 10 }, fetch).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 }))
 		]);
 
 		// Compute totals from count endpoint and list lengths
@@ -53,6 +55,9 @@ export async function load({ fetch, url }) {
 			heatmapHours: heatmap.hours ?? Array.from({ length: 24 }, (_, i) => i),
 			trends: trends.trends ?? [],
 			interval,
+			days,
+			room_id,
+			rooms: Array.isArray(rooms) ? rooms : [],
 			interactions: interactions.interactions ?? [],
 			userHourlyActivity: userHourly
 		};
@@ -64,7 +69,9 @@ export async function load({ fetch, url }) {
 			hourlyActivity: [],
 			wordcloud: [], heatmap: [],
 			heatmapWeekdays: [], heatmapHours: [],
-			trends: [], interval, interactions: [],
+			trends: [], interval, days, room_id,
+			rooms: [],
+			interactions: [],
 			userHourlyActivity: { users: [], hours: [], days: 7, user_count: 0 },
 			error: e.message
 		};

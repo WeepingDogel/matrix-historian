@@ -142,6 +142,13 @@ def read_users(
     return users
 
 
+@router.get("/users/count")
+def count_users(db: Session = Depends(get_db)):
+    """获取用户总数"""
+    total = crud.count_users(db)
+    return {"total": total}
+
+
 @router.get("/users/search/", response_model=List[UserBase])
 def search_users(
     query: str = Query(..., description="Search query string"),
@@ -154,6 +161,16 @@ def search_users(
     return users
 
 
+@router.get("/users/search/count")
+def count_search_users(
+    query: str = Query(..., description="Search query string"),
+    db: Session = Depends(get_db),
+):
+    """获取搜索用户结果总数"""
+    total = crud.count_search_users(db, query=query)
+    return {"total": total}
+
+
 @router.get("/rooms/", response_model=List[RoomBase])
 def read_rooms(
     skip: int = Query(0, description="Skip N records"),
@@ -162,6 +179,35 @@ def read_rooms(
 ):
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
     return rooms
+
+
+@router.get("/rooms/count")
+def count_rooms(db: Session = Depends(get_db)):
+    """获取房间总数"""
+    total = crud.count_rooms(db)
+    return {"total": total}
+
+
+@router.get("/rooms/search/", response_model=List[RoomBase])
+def search_rooms(
+    query: str = Query(..., description="Search query string"),
+    skip: int = Query(0, description="Skip N records"),
+    limit: int = Query(100, description="Limit the number of records"),
+    db: Session = Depends(get_db),
+):
+    """搜索房间API"""
+    rooms = crud.search_rooms(db, query=query, skip=skip, limit=limit)
+    return rooms
+
+
+@router.get("/rooms/search/count")
+def count_search_rooms(
+    query: str = Query(..., description="Search query string"),
+    db: Session = Depends(get_db),
+):
+    """获取搜索房间结果总数"""
+    total = crud.count_search_rooms(db, query=query)
+    return {"total": total}
 
 
 @router.get("/health")
