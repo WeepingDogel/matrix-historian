@@ -23,7 +23,6 @@ import sys
 
 import psycopg2
 
-
 # Only these tables are migrated — not user input
 TABLES_TO_MIGRATE = ("messages", "media")
 
@@ -41,9 +40,7 @@ def get_database_url():
             for line in f:
                 line = line.strip()
                 if line.startswith("DATABASE_URL="):
-                    return (
-                        line.split("=", 1)[1].strip().strip('"').strip("'")
-                    )
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
 
     # Default for docker-compose setup
     return os.environ.get(
@@ -55,23 +52,19 @@ def get_database_url():
 def _count_rows(cur, table):
     """Count rows in a known-safe table name."""
     # table comes from TABLES_TO_MIGRATE constant, not user input
-    cur.execute(  # nosec B608
-        f"SELECT COUNT(*) FROM {table}"
-    )
+    cur.execute(f"SELECT COUNT(*) FROM {table}")  # nosec B608
     return cur.fetchone()[0]
 
 
 def _alter_column(cur, table):
     """Alter timestamp column to TIMESTAMPTZ for a known-safe table."""
     # table comes from TABLES_TO_MIGRATE constant, not user input
-    cur.execute(  # nosec B608
-        f"""
+    cur.execute(f"""
         ALTER TABLE {table}
         ALTER COLUMN "timestamp"
         TYPE TIMESTAMPTZ
         USING "timestamp" AT TIME ZONE 'UTC'
-        """
-    )
+        """)  # nosec B608
 
 
 def migrate(dry_run=False):
@@ -95,9 +88,7 @@ def migrate(dry_run=False):
             row = cur.fetchone()
 
             if not row:
-                print(
-                    f"  [{table}] No 'timestamp' column found, skipping."
-                )
+                print(f"  [{table}] No 'timestamp' column found, skipping.")
                 continue
 
             current_type = row[0]
@@ -111,10 +102,7 @@ def migrate(dry_run=False):
             print(f"  [{table}] {count} rows to migrate")
 
             if dry_run:
-                print(
-                    f"  [{table}] DRY RUN — would ALTER COLUMN "
-                    f"to TIMESTAMPTZ"
-                )
+                print(f"  [{table}] DRY RUN — would ALTER COLUMN " f"to TIMESTAMPTZ")
             else:
                 print(
                     f"  [{table}] Running: ALTER COLUMN timestamp "
@@ -128,10 +116,7 @@ def migrate(dry_run=False):
             conn.rollback()
         else:
             conn.commit()
-            print(
-                "\nMigration complete! "
-                "All timestamps are now TIMESTAMPTZ (UTC)."
-            )
+            print("\nMigration complete! " "All timestamps are now TIMESTAMPTZ (UTC).")
 
     except Exception as e:
         conn.rollback()
