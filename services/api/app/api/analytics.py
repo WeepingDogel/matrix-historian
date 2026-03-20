@@ -1,3 +1,4 @@
+import re
 import sys
 
 sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared
@@ -78,6 +79,9 @@ def get_wordcloud_data(
         from collections import Counter  # noqa: E402
 
         import jieba.posseg as pseg  # noqa: E402
+
+        # Pre-compile URL/mxc pattern for stripping links before segmentation
+        url_pattern = re.compile(r"https?://\S+|mxc://\S+")
 
         # 扩展停用词列表
         stop_words = set(
@@ -226,6 +230,50 @@ def get_wordcloud_data(
                 "非常",
             ]
         )
+        # URL and media related
+        stop_words.update(
+            [
+                "https",
+                "http",
+                "www",
+                "com",
+                "org",
+                "net",
+                "cn",
+                "image",
+                "jpeg",
+                "jpg",
+                "png",
+                "gif",
+                "webp",
+                "mp4",
+                "mp3",
+                "wav",
+                "ogg",
+                "mxc",
+                "matrix",
+                "svg",
+                "pdf",
+                "zip",
+                "rar",
+                # Common web/tech noise
+                "html",
+                "css",
+                "json",
+                "xml",
+                "api",
+                "url",
+                "file",
+                # Short meaningless fragments
+                "de",
+                "le",
+                "la",
+                "el",
+                "en",
+                "id",
+                "re",
+            ]
+        )
 
         words = []
         for msg in messages:
@@ -235,6 +283,7 @@ def get_wordcloud_data(
                 and isinstance(content, str)
                 and content.strip() != ""
             ):
+                content = url_pattern.sub("", content)  # Strip URLs before segmentation
                 for word, flag in pseg.cut(content):
                     if (
                         flag.startswith("n")
