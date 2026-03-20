@@ -29,7 +29,8 @@
 		"error": "⚠️ {error}",
 		"download": "下载",
 		"unnamed": "（未命名）",
-		"noDisplayName": "（无显示名称）"
+		"noDisplayName": "（无显示名称）",
+		"allLoaded": "已加载全部"
 	},
 	"dashboard": {
 		"title": "仪表盘",

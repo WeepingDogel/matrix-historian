@@ -1,25 +1,56 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
+	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
 
-	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
-	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+	// Accumulated items for infinite scroll
+	let allUsers = $state([...data.users]);
+	let currentSkip = $state(data.skip + data.users.length);
+	let hasMore = $state(data.hasMore);
+	let loading = $state(false);
 
-	function buildParams(overrides = {}) {
-		const params = new URLSearchParams();
-		const q = overrides.q ?? searchInput;
-		const page = overrides.page ?? currentPage;
-		if (q) params.set('q', q);
-		if (page > 1) params.set('page', String(page));
-		return params.toString();
-	}
+	$effect(() => {
+		allUsers = [...data.users];
+		currentSkip = data.skip + data.users.length;
+		hasMore = data.hasMore;
+		loading = false;
+	});
 
 	function doSearch(e) {
 		e.preventDefault();
-		goto(`/users?${buildParams({ page: 1 })}`);
+		const params = new URLSearchParams();
+		if (searchInput.trim()) params.set('q', searchInput.trim());
+		goto(`/users?${params.toString()}`);
+	}
+
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+		try {
+			const apiParams = new URLSearchParams();
+			apiParams.set('skip', String(currentSkip));
+			apiParams.set('limit', String(data.limit));
+
+			const endpoint = data.query
+				? `/api/v1/users/search?query=${encodeURIComponent(data.query)}&${apiParams.toString()}`
+				: `/api/v1/users?${apiParams.toString()}`;
+
+			const res = await fetch(endpoint);
+			if (!res.ok) throw new Error(`API ${res.status}`);
+			const newUsers = await res.json();
+
+			allUsers = [...allUsers, ...newUsers];
+			currentSkip += newUsers.length;
+			hasMore = newUsers.length >= data.limit;
+		} catch (e) {
+			console.error('Load more error:', e);
+			hasMore = false;
+		} finally {
+			loading = false;
+		}
 	}
 </script>
 
@@ -53,11 +84,11 @@
 		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
 	</p>
 	<p class="text-sm opacity-60">
-		{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}
+		{allUsers.length} / {data.total}
 	</p>
 </div>
 
-{#if data.users.length === 0}
+{#if allUsers.length === 0 && !loading}
 	<p class="opacity-60">{$t('users.noUsers')}</p>
 {:else}
 	<div class="overflow-x-auto">
@@ -70,7 +101,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each data.users as user}
+				{#each allUsers as user (user.user_id)}
 					<tr class="hover">
 						<td>
 							<a href="/users/{encodeURIComponent(user.user_id)}" class="link link-hover font-medium">
@@ -91,24 +122,5 @@
 		</table>
 	</div>
 
-	<!-- Pagination -->
-	<div class="flex items-center gap-2 mt-6 justify-center">
-		{#if data.skip > 0}
-			<a
-				href="/users?{buildParams({ page: currentPage - 1 })}"
-				class="btn btn-outline btn-sm"
-			>
-				{$t('common.previous')}
-			</a>
-		{/if}
-		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
-		{#if data.hasMore}
-			<a
-				href="/users?{buildParams({ page: currentPage + 1 })}"
-				class="btn btn-outline btn-sm"
-			>
-				{$t('common.next')}
-			</a>
-		{/if}
-	</div>
+	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
 {/if}

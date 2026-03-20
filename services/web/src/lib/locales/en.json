@@ -29,7 +29,8 @@
 		"error": "⚠️ {error}",
 		"download": "Download",
 		"unnamed": "(unnamed)",
-		"noDisplayName": "(no display name)"
+		"noDisplayName": "(no display name)",
+		"allLoaded": "All loaded"
 	},
 	"dashboard": {
 		"title": "Dashboard",
