@@ -181,6 +181,17 @@ def create_user(db: Session, user_id: str, display_name: Optional[str] = None):
         db_user = User(user_id=user_id, display_name=display_name)
         db.add(db_user)
         db.commit()
+    elif display_name and db_user.display_name != display_name:
+        db_user.display_name = display_name
+        db.commit()
+    return db_user
+
+
+def update_user_avatar(db: Session, user_id: str, avatar_url: str):
+    db_user = get_user(db, user_id)
+    if db_user and db_user.avatar_url != avatar_url:
+        db_user.avatar_url = avatar_url
+        db.commit()
     return db_user
 
 
@@ -189,6 +200,17 @@ def create_room(db: Session, room_id: str, name: Optional[str] = None):
     if not db_room:
         db_room = Room(room_id=room_id, name=name)
         db.add(db_room)
+        db.commit()
+    elif name and db_room.name != name:
+        db_room.name = name
+        db.commit()
+    return db_room
+
+
+def update_room_avatar(db: Session, room_id: str, avatar_url: str):
+    db_room = get_room(db, room_id)
+    if db_room and db_room.avatar_url != avatar_url:
+        db_room.avatar_url = avatar_url
         db.commit()
     return db_room
 

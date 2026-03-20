@@ -186,6 +186,19 @@
 	<div class="space-y-1">
 		{#each allMessages as msg (msg.event_id)}
 			<div class="chat chat-start">
+				{#if msg.sender?.avatar_url}
+					<div class="chat-image avatar">
+						<div class="w-8 rounded-full">
+							<img src="/api/v1/avatars/users/{encodeURIComponent(msg.sender_id)}" alt="" loading="lazy" />
+						</div>
+					</div>
+				{:else}
+					<div class="chat-image avatar placeholder">
+						<div class="bg-neutral text-neutral-content w-8 rounded-full">
+							<span class="text-xs">{(msg.sender?.display_name || msg.sender_id || '?')[0]}</span>
+						</div>
+					</div>
+				{/if}
 				<div class="chat-header">
 					<a href="/users/{encodeURIComponent(msg.sender_id)}" class="link link-hover font-medium">
 						{msg.sender?.display_name || msg.sender_id}
