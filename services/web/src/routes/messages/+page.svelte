@@ -3,6 +3,7 @@
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
 	import Time from '$lib/Time.svelte';
+	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
@@ -11,15 +12,25 @@
 	let startDate = $state(data.start_date ?? '');
 	let endDate = $state(data.end_date ?? '');
 
-	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
-	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+	// Accumulated messages for infinite scroll
+	let allMessages = $state([...data.messages]);
+	let currentSkip = $state(data.skip + data.messages.length);
+	let hasMore = $state(data.hasMore);
+	let loading = $state(false);
 
-	function buildParams(overrides = {}) {
+	// Reset accumulated messages when filters/data change via navigation
+	$effect(() => {
+		allMessages = [...data.messages];
+		currentSkip = data.skip + data.messages.length;
+		hasMore = data.hasMore;
+		loading = false;
+	});
+
+	function buildFilterParams(overrides = {}) {
 		const params = new URLSearchParams();
 		const q = overrides.q ?? searchInput;
 		const room = overrides.room_id ?? selectedRoom;
 		const user = overrides.user_id ?? selectedUser;
-		const skip = overrides.skip ?? 0;
 		const sd = overrides.start_date ?? startDate;
 		const ed = overrides.end_date ?? endDate;
 		if (q) params.set('q', q);
@@ -27,17 +38,16 @@
 		if (user) params.set('user_id', user);
 		if (sd) params.set('start_date', sd);
 		if (ed) params.set('end_date', ed);
-		if (skip > 0) params.set('skip', String(skip));
 		return params.toString();
 	}
 
 	function doSearch(e) {
 		e.preventDefault();
-		goto(`/messages?${buildParams()}`);
+		goto(`/messages?${buildFilterParams()}`);
 	}
 
 	function onFilterChange() {
-		goto(`/messages?${buildParams({ skip: 0 })}`);
+		goto(`/messages?${buildFilterParams()}`);
 	}
 
 	function clearFilters() {
@@ -47,6 +57,49 @@
 		startDate = '';
 		endDate = '';
 		goto('/messages');
+	}
+
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+		try {
+			const params = new URLSearchParams();
+			params.set('skip', String(currentSkip));
+			params.set('limit', String(data.limit));
+			if (data.query) params.set('q', data.query);
+			if (data.room_id) params.set('room_id', data.room_id);
+			if (data.user_id) params.set('user_id', data.user_id);
+			if (data.start_date) params.set('start_date', data.start_date);
+			if (data.end_date) params.set('end_date', data.end_date);
+
+			// Build the correct API path
+			const after = data.start_date ? `${data.start_date}T00:00:00Z` : '';
+			const before = data.end_date ? `${data.end_date}T23:59:59Z` : '';
+
+			const apiParams = new URLSearchParams();
+			apiParams.set('skip', String(currentSkip));
+			apiParams.set('limit', String(data.limit));
+			if (data.query) apiParams.set('query', data.query);
+			if (data.room_id) apiParams.set('room_id', data.room_id);
+			if (data.user_id) apiParams.set('user_id', data.user_id);
+			if (after) apiParams.set('after', after);
+			if (before) apiParams.set('before', before);
+
+			const endpoint = data.query ? '/api/v1/search' : '/api/v1/messages';
+			const res = await fetch(`${endpoint}?${apiParams.toString()}`);
+			if (!res.ok) throw new Error(`API ${res.status}`);
+			const result = await res.json();
+
+			const newMessages = result.messages ?? [];
+			allMessages = [...allMessages, ...newMessages];
+			currentSkip += newMessages.length;
+			hasMore = result.has_more ?? false;
+		} catch (e) {
+			console.error('Load more error:', e);
+			hasMore = false;
+		} finally {
+			loading = false;
+		}
 	}
 
 	let hasFilters = $derived(data.query || data.room_id || data.user_id || data.start_date || data.end_date);
@@ -122,16 +175,16 @@
 		{#if data.user_id}{$t('messages.byUser')}{/if}
 	</p>
 	<p class="text-sm opacity-60">
-		{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}
+		{allMessages.length} / {data.total}
 	</p>
 </div>
 
 <!-- Message list -->
-{#if data.messages.length === 0}
+{#if allMessages.length === 0 && !loading}
 	<p class="opacity-60">{$t('messages.noMessages')}</p>
 {:else}
 	<div class="space-y-1">
-		{#each data.messages as msg}
+		{#each allMessages as msg (msg.event_id)}
 			<div class="chat chat-start">
 				<div class="chat-header">
 					<a href="/users/{encodeURIComponent(msg.sender_id)}" class="link link-hover font-medium">
@@ -151,24 +204,5 @@
 		{/each}
 	</div>
 
-	<!-- Pagination -->
-	<div class="flex items-center gap-2 mt-6 justify-center">
-		{#if data.skip > 0}
-			<a
-				href="/messages?{buildParams({ skip: Math.max(0, data.skip - data.limit) })}"
-				class="btn btn-outline btn-sm"
-			>
-				{$t('common.previous')}
-			</a>
-		{/if}
-		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
-		{#if data.hasMore}
-			<a
-				href="/messages?{buildParams({ skip: data.nextSkip })}"
-				class="btn btn-outline btn-sm"
-			>
-				{$t('common.next')}
-			</a>
-		{/if}
-	</div>
+	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
 {/if}
