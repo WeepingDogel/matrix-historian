@@ -39,6 +39,10 @@ class Message(Base):
         Index("ix_messages_room_id", "room_id"),
         Index("ix_messages_sender_id", "sender_id"),
         Index("ix_messages_timestamp", "timestamp"),
+        # Composite indexes for common query patterns
+        Index("ix_messages_room_id_timestamp", "room_id", timestamp.desc()),
+        Index("ix_messages_sender_id_timestamp", "sender_id", timestamp.desc()),
+        Index("ix_messages_timestamp_room_id", "timestamp", "room_id"),
     )
 
 
