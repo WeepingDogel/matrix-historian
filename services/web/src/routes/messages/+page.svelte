@@ -201,12 +201,12 @@
 							{#each msg.media as attachment}
 								{#if attachment.mime_type && attachment.mime_type.startsWith('image/')}
 									<a
-										href="/api/v1/media/{attachment.media_id}"
+										href="/api/v1/media/{attachment.media_id}/download"
 										target="_blank"
 										class="block max-w-48"
 									>
 										<img
-											src="/api/v1/media/{attachment.media_id}"
+											src="/api/v1/media/{attachment.media_id}/download"
 											alt={attachment.original_filename || 'image'}
 											class="rounded max-h-48 object-cover"
 											loading="lazy"
