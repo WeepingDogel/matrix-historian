@@ -33,8 +33,11 @@ jobs:
             # Pull new images from Docker Hub
             docker compose -f docker-compose.production.yml pull bot api web
 
-            # Start all services (ensures db and minio are running)
-            docker compose -f docker-compose.production.yml up -d
+            # Recreate containers with new images (--force-recreate ensures updated latest tags are used)
+            docker compose -f docker-compose.production.yml up -d --force-recreate bot api web
+
+            # Clean up old dangling images
+            docker image prune -f
 
             # Wait and check health
             echo "Waiting for services to start..."
