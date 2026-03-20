@@ -15,6 +15,7 @@ class MessageBase(BaseModel):
 class UserBase(BaseModel):
     user_id: str
     display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -22,6 +23,7 @@ class UserBase(BaseModel):
 class RoomBase(BaseModel):
     room_id: str
     name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = "users"
     user_id = Column(String, primary_key=True, index=True)
     display_name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
     messages = relationship("Message", back_populates="sender")
     media = relationship("Media", back_populates="sender")
 
@@ -17,6 +18,7 @@ class Room(Base):
     __tablename__ = "rooms"
     room_id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
     messages = relationship("Message", back_populates="room")
     media = relationship("Media", back_populates="room")
 

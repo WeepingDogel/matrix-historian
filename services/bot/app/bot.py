@@ -69,6 +69,54 @@ class MatrixBot:
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
 
+    async def process_avatar(self, mxc_url: str, entity_type: str, entity_id: str):
+        """Download avatar, create thumbnail, upload to MinIO."""
+        try:
+            media_data = await self.download_matrix_media(mxc_url)
+            if not media_data:
+                return None
+
+            # Create thumbnail with Pillow
+            from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
+
+            img = Image.open(BytesIO(media_data))
+            img.thumbnail((128, 128), Image.LANCZOS)
+
+            # Convert to RGB if necessary (e.g. RGBA PNGs)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=60, optimize=True)
+            thumb_data = buf.getvalue()
+
+            # Upload to MinIO avatars bucket
+            import hashlib  # noqa: E402
+
+            id_hash = hashlib.md5(entity_id.encode(), usedforsecurity=False).hexdigest()
+            minio_key = f"avatars/{entity_type}/{id_hash}.jpg"
+
+            storage = MediaStorage()
+            storage.ensure_bucket("matrix-media")
+            storage.client.put_object(
+                "matrix-media",
+                minio_key,
+                BytesIO(thumb_data),
+                len(thumb_data),
+                content_type="image/jpeg",
+            )
+
+            logger.info(
+                f"Saved {entity_type} avatar for {entity_id} "
+                f"({len(thumb_data)} bytes)"
+            )
+            return minio_key
+        except Exception as e:
+            logger.error(f"Error processing avatar: {str(e)}", exc_info=True)
+            return None
+
     async def download_matrix_media(self, mxc_url: str) -> bytes:
         """Download media from Matrix server"""
         try:
@@ -111,6 +159,25 @@ class MatrixBot:
                         room.room_id,
                         getattr(room, "name", room.room_id),  # Use room ID if no name
                     )
+
+                    # Check and update user avatar
+                    try:
+                        user_profile = await self.bot.async_client.get_profile(
+                            event.sender
+                        )
+                        if (
+                            hasattr(user_profile, "avatar_url")
+                            and user_profile.avatar_url
+                        ):
+                            db_user = crud.get_user(db, event.sender)
+                            if db_user and not db_user.avatar_url:
+                                minio_key = await self.process_avatar(
+                                    user_profile.avatar_url, "users", event.sender
+                                )
+                                if minio_key:
+                                    crud.update_user_avatar(db, event.sender, minio_key)
+                    except Exception as e:
+                        logger.debug(f"Could not fetch avatar for {event.sender}: {e}")
 
                     # Determine if this is a media event
                     is_media = False

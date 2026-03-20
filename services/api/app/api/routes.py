@@ -257,3 +257,35 @@ def get_room_activity(
             for room, count in activity
         ]
     }
+
+
+@router.get("/avatars/{avatar_type}/{entity_id}")
+def get_avatar(
+    avatar_type: str,
+    entity_id: str,
+    db: Session = Depends(get_db),
+):
+    """Get avatar image for a user or room"""
+
+    from base_app.storage.minio_client import MediaStorage
+
+    if avatar_type not in ("users", "rooms"):
+        raise HTTPException(status_code=400, detail="Invalid avatar type")
+
+    # Check if entity has avatar
+    if avatar_type == "users":
+        entity = crud.get_user(db, entity_id)
+    else:
+        entity = crud.get_room(db, entity_id)
+
+    if not entity or not entity.avatar_url:
+        raise HTTPException(status_code=404, detail="Avatar not found")
+
+    try:
+        storage = MediaStorage()
+        url = storage.get_url(entity.avatar_url, expires=3600)
+        from fastapi.responses import RedirectResponse
+
+        return RedirectResponse(url=url)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching avatar: {str(e)}")
