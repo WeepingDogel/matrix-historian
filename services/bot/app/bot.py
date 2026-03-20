@@ -99,7 +99,7 @@ class MatrixBot:
             minio_key = f"avatars/{entity_type}/{id_hash}.jpg"
 
             storage = MediaStorage()
-            storage._ensure_bucket("matrix-media")
+            # bucket is auto-created in MediaStorage.__init__
             storage.client.put_object(
                 "matrix-media",
                 minio_key,
