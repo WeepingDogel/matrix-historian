@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 from base_app.models.message import Message, Room, User
 from sqlalchemy import extract, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 
 def get_messages(
@@ -16,7 +16,7 @@ def get_messages(
     skip: int = 0,
     limit: int = 100,
 ):
-    query = db.query(Message)
+    query = db.query(Message).options(joinedload(Message.media))
 
     if room_id:
         query = query.filter(Message.room_id == room_id)
@@ -31,7 +31,12 @@ def get_messages(
 
 
 def get_message(db: Session, event_id: str):
-    return db.query(Message).filter(Message.event_id == event_id).first()
+    return (
+        db.query(Message)
+        .options(joinedload(Message.media))
+        .filter(Message.event_id == event_id)
+        .first()
+    )
 
 
 def get_room_messages(
@@ -42,7 +47,11 @@ def get_room_messages(
     skip: int = 0,
     limit: int = 100,
 ):
-    query = db.query(Message).filter(Message.room_id == room_id)
+    query = (
+        db.query(Message)
+        .options(joinedload(Message.media))
+        .filter(Message.room_id == room_id)
+    )
 
     if after:
         query = query.filter(Message.timestamp >= after)
@@ -60,7 +69,11 @@ def get_user_messages(
     skip: int = 0,
     limit: int = 100,
 ):
-    query = db.query(Message).filter(Message.sender_id == user_id)
+    query = (
+        db.query(Message)
+        .options(joinedload(Message.media))
+        .filter(Message.sender_id == user_id)
+    )
 
     if after:
         query = query.filter(Message.timestamp >= after)
@@ -80,7 +93,11 @@ def search_messages(
     skip: int = 0,
     limit: int = 100,
 ):
-    search_query = db.query(Message).filter(Message.content.like(f"%{query}%"))
+    search_query = (
+        db.query(Message)
+        .options(joinedload(Message.media))
+        .filter(Message.content.like(f"%{query}%"))
+    )
 
     if room_id:
         search_query = search_query.filter(Message.room_id == room_id)
