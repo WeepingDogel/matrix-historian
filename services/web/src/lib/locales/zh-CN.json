@@ -60,7 +60,9 @@
 		"matching": "匹配 \"{query}\"",
 		"inRoom": "在房间中",
 		"byUser": "发送者",
-		"noMessages": "未找到消息。"
+		"noMessages": "未找到消息。",
+		"dateFrom": "从",
+		"dateTo": "到"
 	},
 	"rooms": {
 		"title": "房间",

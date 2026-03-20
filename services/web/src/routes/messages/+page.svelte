@@ -8,6 +8,8 @@
 	let searchInput = $state(data.query ?? '');
 	let selectedRoom = $state(data.room_id ?? '');
 	let selectedUser = $state(data.user_id ?? '');
+	let startDate = $state(data.start_date ?? '');
+	let endDate = $state(data.end_date ?? '');
 
 	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
 	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
@@ -18,9 +20,13 @@
 		const room = overrides.room_id ?? selectedRoom;
 		const user = overrides.user_id ?? selectedUser;
 		const skip = overrides.skip ?? 0;
+		const sd = overrides.start_date ?? startDate;
+		const ed = overrides.end_date ?? endDate;
 		if (q) params.set('q', q);
 		if (room) params.set('room_id', room);
 		if (user) params.set('user_id', user);
+		if (sd) params.set('start_date', sd);
+		if (ed) params.set('end_date', ed);
 		if (skip > 0) params.set('skip', String(skip));
 		return params.toString();
 	}
@@ -38,10 +44,12 @@
 		searchInput = '';
 		selectedRoom = '';
 		selectedUser = '';
+		startDate = '';
+		endDate = '';
 		goto('/messages');
 	}
 
-	let hasFilters = $derived(data.query || data.room_id || data.user_id);
+	let hasFilters = $derived(data.query || data.room_id || data.user_id || data.start_date || data.end_date);
 </script>
 
 <svelte:head>
@@ -71,7 +79,7 @@
 </form>
 
 <!-- Filters -->
-<div class="flex flex-wrap gap-2 mb-6">
+<div class="flex flex-wrap gap-2 mb-6 items-center">
 	<select class="select select-bordered select-sm" bind:value={selectedRoom} onchange={onFilterChange}>
 		<option value="">{$t('messages.allRooms')}</option>
 		{#each data.rooms as room}
@@ -84,6 +92,26 @@
 			<option value={user.user_id}>{user.display_name || user.user_id}</option>
 		{/each}
 	</select>
+
+	<!-- Date range -->
+	<div class="flex items-center gap-1">
+		<label class="text-xs opacity-60 whitespace-nowrap">{$t('messages.dateFrom')}</label>
+		<input
+			type="date"
+			class="input input-bordered input-sm w-36"
+			bind:value={startDate}
+			onchange={onFilterChange}
+		/>
+	</div>
+	<div class="flex items-center gap-1">
+		<label class="text-xs opacity-60 whitespace-nowrap">{$t('messages.dateTo')}</label>
+		<input
+			type="date"
+			class="input input-bordered input-sm w-36"
+			bind:value={endDate}
+			onchange={onFilterChange}
+		/>
+	</div>
 </div>
 
 <div class="flex justify-between items-center mb-4">

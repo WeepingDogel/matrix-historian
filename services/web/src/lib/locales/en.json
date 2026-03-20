@@ -60,7 +60,9 @@
 		"matching": "matching \"{query}\"",
 		"inRoom": "in room",
 		"byUser": "by user",
-		"noMessages": "No messages found."
+		"noMessages": "No messages found.",
+		"dateFrom": "From",
+		"dateTo": "To"
 	},
 	"rooms": {
 		"title": "Rooms",
