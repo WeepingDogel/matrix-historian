@@ -1,4 +1,5 @@
 """Simple in-process TTL cache for analytics endpoints."""
+
 from cachetools import TTLCache
 
 # Max 256 cached results, 15 minute TTL
