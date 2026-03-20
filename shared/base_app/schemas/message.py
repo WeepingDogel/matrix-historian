@@ -26,6 +26,17 @@ class RoomBase(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MediaAttachment(BaseModel):
+    media_id: str
+    mime_type: Optional[str] = None
+    original_filename: Optional[str] = None
+    size: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+
+    model_config = {"from_attributes": True}
+
+
 class Message(MessageBase):
     event_id: str
     room_id: str
@@ -33,6 +44,7 @@ class Message(MessageBase):
     timestamp: datetime
     room: RoomBase
     sender: UserBase
+    media: List[MediaAttachment] = []
 
     model_config = {"from_attributes": True}
 

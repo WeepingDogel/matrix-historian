@@ -194,7 +194,45 @@
 						<Time timestamp={msg.timestamp} />
 					</time>
 				</div>
-				<div class="chat-bubble">{msg.content}</div>
+				<div class="chat-bubble">
+					{msg.content}
+					{#if msg.media && msg.media.length > 0}
+						<div class="flex flex-wrap gap-2 mt-2">
+							{#each msg.media as attachment}
+								{#if attachment.mime_type && attachment.mime_type.startsWith('image/')}
+									<a
+										href="/api/v1/media/{attachment.media_id}"
+										target="_blank"
+										class="block max-w-48"
+									>
+										<img
+											src="/api/v1/media/{attachment.media_id}"
+											alt={attachment.original_filename || 'image'}
+											class="rounded max-h-48 object-cover"
+											loading="lazy"
+										/>
+									</a>
+								{:else}
+									<a
+										href="/api/v1/media/{attachment.media_id}/download"
+										class="flex items-center gap-2 bg-base-300 rounded px-3 py-2 text-sm hover:bg-base-100 transition-colors"
+										target="_blank"
+									>
+										<span class="opacity-60">📎</span>
+										<span class="truncate max-w-32">{attachment.original_filename || 'file'}</span>
+										{#if attachment.size}
+											<span class="text-xs opacity-50">
+												{attachment.size > 1048576
+													? `${(attachment.size / 1048576).toFixed(1)}MB`
+													: `${Math.round(attachment.size / 1024)}KB`}
+											</span>
+										{/if}
+									</a>
+								{/if}
+							{/each}
+						</div>
+					{/if}
+				</div>
 				<div class="chat-footer opacity-50">
 					<a href="/rooms/{encodeURIComponent(msg.room_id)}" class="link link-hover text-xs">
 						{msg.room?.name || msg.room_id}
