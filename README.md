@@ -225,7 +225,7 @@ See `docs/` for focused documentation:
 - `docs/get-started.md`
 - `docs/deployment.md`
 - `docs/development.md`
-- `docs/media-storage.md`
+- `docs/contributing.md`
 - `docs/reference/api-reference.md`
 
 ## Documentation consistency

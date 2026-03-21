@@ -225,7 +225,7 @@ npm run dev
 - `docs/get-started.md`
 - `docs/deployment.md`
 - `docs/development.md`
-- `docs/media-storage.md`
+- `docs/contributing.md`
 - `docs/reference/api-reference.md`
 
 ## 文档一致性说明
