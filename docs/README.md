@@ -19,6 +19,11 @@ This documentation covers the current main-branch architecture of Matrix Histori
   - Docker deployment notes
   - Environment and operations guidance
 
+- **[Media Storage](./media-storage.md)**
+  - PostgreSQL metadata vs MinIO object storage
+  - Media download flow and external URL strategy
+  - `MINIO_PUBLIC_URL` guidance and image-hosting considerations
+
 - **[Development](./development.md)**
   - Backend and frontend development flow
   - Local run commands
