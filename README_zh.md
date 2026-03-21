@@ -227,16 +227,17 @@ npm run dev
 - `docs/development.md`
 - `docs/reference/api-reference.md`
 
-## 迁移说明
+## 文档一致性说明
 
-旧文档中如果还出现以下描述，均已过时：
+当前主分支对应的是 README 与 `docs/` 中描述的现行微服务架构：
 
-- SQLite
-- “前端已移除” / API-only
-- 旧端口号
-- 旧版单体结构或早期前端结构
+- 用于归档 Matrix 事件的 bot 服务
+- FastAPI API 服务
+- Svelte Web 前端
+- 使用 PostgreSQL 存储消息与元数据
+- 使用 MinIO 存储媒体对象
 
-当前主分支已经包含 Web 前端，以及前端侧的 i18n 与时区显示能力。
+后续更新文档时，应优先使用当前服务名称、当前端口，以及 `services/` + `shared/` 的目录结构。
 
 ## 许可证
 

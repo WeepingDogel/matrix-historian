@@ -227,16 +227,17 @@ See `docs/` for focused documentation:
 - `docs/development.md`
 - `docs/reference/api-reference.md`
 
-## Migration notes
+## Documentation consistency
 
-Older documentation may still mention:
+The current main branch reflects the active microservice architecture described in this README and in `docs/`:
 
-- SQLite
-- API-only / frontend removed
-- old port mappings
-- pre-Svelte frontend structure
+- Matrix bot service for event archiving
+- FastAPI API service
+- Svelte web frontend
+- PostgreSQL for metadata and message storage
+- MinIO for media object storage
 
-Those descriptions are obsolete for the current main branch.
+When updating documentation, prefer current service names, current ports, and the `services/` + `shared/` layout.
 
 ## License
 
