@@ -1,299 +1,171 @@
 # Matrix Historian Agents
 
-This document describes the various agents and services that make up the Matrix Historian system.
+This document describes the primary agents, service roles, and delegation model used by Matrix Historian.
 
-## System Architecture
+Matrix Historian is a microservice-based Matrix message archival and analytics platform with:
+- a **bot service** for Matrix event ingestion
+- an **API service** for archive, media, room, user, and analytics access
+- a **web service** for browsing data and dashboards
+- a **shared package** for common models, schemas, CRUD, database, and storage helpers
+- **PostgreSQL** for metadata and message storage
+- **MinIO** for S3-compatible object storage of media attachments
 
-The Matrix Historian system consists of several interconnected agents that work together to collect, store, and analyze Matrix messages:
+## Agent Overview
 
 ```mermaid
 graph TB
-    A[Matrix Server] -->|Events| B[Matrix Bot Agent]
-    B -->|Extract Data| C[Database Agent]
-    D[Web Interface Agent] -->|API Requests| E[API Server Agent]
-    E -->|Query| C
-    C -->|Results| E
-    E -->|Response| D
-
-    F[Analysis Agent] -->|Process Data| C
-    E -->|Request Analysis| F
-    F -->|Analysis Results| E
-    G[AI Agent] -->|Sentiment/Topic Analysis| F
-
-    style A fill:#f9f,stroke:#333
-    style B fill:#bbf,stroke:#333
-    style C fill:#dfd,stroke:#333
-    style D fill:#fbb,stroke:#333
-    style E fill:#bfb,stroke:#333
-    style F fill:#bff,stroke:#333
-    style G fill:#fbf,stroke:#333
+    A[Matrix Homeserver] -->|Events| B[Archive Backend Engineer]
+    B -->|Archive metadata| C[PostgreSQL]
+    B -->|Store media objects| D[MinIO]
+    E[Web Frontend Engineer] -->|HTTP| F[FastAPI API]
+    F -->|Query| C
+    F -->|Media metadata / URLs| D
+    G[Historian Architect] -->|Cross-service planning| B
+    G -->|Cross-service planning| F
+    G -->|Cross-service planning| E
+    H[DevOps & Deployment Steward] -->|Compose / env / release| B
+    H -->|Compose / env / release| F
+    H -->|Compose / env / release| E
+    I[Storage & Media Operator] -->|Bucket / access strategy| D
 ```
 
-## Agent Descriptions
+## Primary Agent
 
-### 1. Matrix Bot Agent
-**Location**: `src/app/bot/`
-**Purpose**: Connects to Matrix servers and collects message events
-
-**Key Components**:
-- `client.py`: Bot connection and authentication
-- `handler.py`: Message event processing and storage
+### Liliya von Roland
+**Role**: Primary coordinator and final decision-maker for the project
 
 **Responsibilities**:
-- Authenticate with Matrix homeserver
-- Join configured rooms
-- Listen for message events
-- Extract message data (content, sender, timestamp, room)
-- Store messages in database
-- Handle connection errors and reconnection
+- interpret user goals and convert them into actionable project work
+- decide when to answer directly versus delegating to a specialized agent
+- coordinate architectural, backend, frontend, storage, and deployment concerns
+- summarize trade-offs clearly across multiple services
+- keep project-facing communication consistent and high-level
 
-**Configuration**:
-```bash
-MATRIX_HOMESERVER=https://your-matrix-server.com
-MATRIX_USER=@bot:your-matrix-server.com
-MATRIX_PASSWORD=your-bot-password
-```
+**Routing Logic**:
+- all incoming work is evaluated here first
+- direct delegation is based on the dominant technical domain of the task
+- cross-cutting work may involve multiple specialist agents, but the primary agent owns the final synthesis
 
-### 2. API Server Agent
-**Location**: `src/app/api/`
-**Purpose**: Provides RESTful API endpoints for data access
+## Specialist Agents
 
-**Key Components**:
-- `routes.py`: API endpoint definitions
-- `analytics.py`: Analytics-specific endpoints
+### 1. Historian Architect
+**Scope**: System design, repo-wide planning, and cross-service coordination
 
-**Responsibilities**:
-- Serve HTTP API requests
-- Query database for messages
-- Provide analytics data
-- Handle authentication (if needed)
-- Rate limiting and error handling
-
-**Endpoints**:
-- `GET /api/v1/messages` - Retrieve messages with filtering
-- `GET /api/v1/analytics/overview` - Get activity overview
-- `GET /api/v1/analytics/wordcloud` - Generate word cloud data
-- `GET /api/v1/analytics/sentiment` - Get sentiment analysis
-- `GET /api/v1/health` - Health check endpoint
-
-### 3. Database Agent
-**Location**: `src/app/db/`
-**Purpose**: Manages data persistence and retrieval
-
-**Key Components**:
-- `database.py`: Database connection and initialization
-- `models/`: SQLAlchemy models
-- `crud/`: Database operations
+**Best For**:
+- architecture discussions
+- large refactors spanning multiple services
+- feature planning that affects bot, API, web, shared code, or infrastructure
+- migration strategy and service boundary decisions
+- performance and scale planning
 
 **Responsibilities**:
-- Initialize SQLite database
-- Create and manage database tables
-- Provide CRUD operations for messages
-- Handle database migrations
-- Optimize queries for performance
+- maintain coherent boundaries between `services/bot/`, `services/api/`, `services/web/`, and `shared/`
+- design data flow from Matrix events to PostgreSQL and MinIO
+- propose patterns for analytics, search, pagination, and media access
+- identify risks in repo-wide changes before implementation
 
-**Data Models**:
-- `Message`: Core message data
-- `Room`: Room information
-- `User`: User profiles
-- `Analytics`: Cached analysis results
+### 2. Archive Backend Engineer
+**Scope**: Matrix ingestion, Python backend services, shared data models, and analytics endpoints
 
-# Web Interface Agent (removed)
-**Location**: `src/app/webui/` (removed / inert)
-**Note**: The Streamlit web UI has been removed from this repository; the project now
-focuses on the API service and analysis agents. If you need a frontend, use the
-`docs/frontend-migration-*` notes which describe migrating to a JS frontend.
-
-### 5. Analysis Agent
-**Location**: `src/app/ai/`
-**Purpose**: Processes data for analytics and insights
-
-**Key Components**:
-- `analyzer.py`: Core analysis logic
+**Best For**:
+- FastAPI endpoint work
+- Matrix bot ingestion logic
+- shared schemas and CRUD updates
+- PostgreSQL-backed archive queries
+- analytics API changes
+- backend bug fixing and tests
 
 **Responsibilities**:
-- Generate activity overviews
-- Create word clouds and frequency analysis
-- Analyze user interaction patterns
-- Track topic evolution
-- Perform sentiment analysis
-- Generate heatmaps and visualizations
+- ingest Matrix room events reliably
+- persist message and room metadata in PostgreSQL
+- manage media metadata and storage integration points
+- expose archive, room, user, analytics, and media APIs
+- maintain backend correctness, performance, and testability
 
-**Analysis Types**:
-- **Activity Analysis**: Message trends and user activity
-- **Content Analysis**: Word frequency and topic extraction
-- **Social Analysis**: User interaction networks
-- **Temporal Analysis**: Time-based patterns and trends
-- **Sentiment Analysis**: Emotional tone of conversations
+**Primary Areas**:
+- `services/bot/`
+- `services/api/`
+- `shared/`
 
-### 6. AI Agent
-**Purpose**: Provides AI-powered analysis capabilities
+### 3. Web Frontend Engineer
+**Scope**: SvelteKit frontend and browser-side presentation logic
+
+**Best For**:
+- archive browsing UI
+- search and filter interactions
+- analytics dashboards
+- pagination behavior
+- internationalization
+- timezone display behavior
+- frontend bug fixing and polish
 
 **Responsibilities**:
-- Integrate with external AI services (Groq API)
-- Perform sentiment analysis on messages
-- Extract topics and themes
-- Generate insights and summaries
-- Handle AI service rate limiting
+- build and maintain the SvelteKit interface in `services/web/`
+- present archive results clearly for messages, rooms, users, and analytics
+- keep timezone conversion in the browser while backend data remains UTC
+- support localized UI strings for English and Simplified Chinese
+- ensure frontend state and navigation remain intuitive at larger data scale
 
-**Configuration**:
-```bash
-GROQ_API_KEY=your-groq-api-key
-```
+### 4. Storage & Media Operator
+**Scope**: MinIO integration, media persistence, and attachment delivery strategy
 
-## Agent Communication
+**Best For**:
+- MinIO and S3-compatible object storage setup
+- media archival flows
+- bucket naming and access policies
+- public versus private media URL strategy
+- attachment download troubleshooting
+- image-hosting and object-storage use cases
 
-### Data Flow
-1. **Matrix Bot Agent** → **Database Agent**: Store incoming messages
-2. **Web Interface Agent** → **API Server Agent**: Request data and analytics
-3. **API Server Agent** → **Database Agent**: Query stored data
-4. **API Server Agent** → **Analysis Agent**: Request processed analytics
-5. **Analysis Agent** → **AI Agent**: Request AI-powered insights
+**Responsibilities**:
+- define and maintain media object storage behavior
+- ensure uploaded/downloaded Matrix media is tracked consistently
+- coordinate media metadata between API/shared code and object storage
+- support external media access patterns when `MINIO_PUBLIC_URL` is used
+- help evaluate storage trade-offs for self-hosted deployments
 
-### Inter-Agent Protocols
-- **HTTP/REST**: Web Interface ↔ API Server
-- **SQL**: API Server ↔ Database
-- **Direct Function Calls**: Analysis ↔ AI services
-- **Matrix Protocol**: Bot ↔ Matrix Server
+### 5. DevOps & Deployment Steward
+**Scope**: Environment management, Compose orchestration, CI/CD, and operational health
 
-## Deployment Configurations
+**Best For**:
+- Docker Compose changes
+- staging or production deployment
+- environment variable design
+- service startup failures
+- container networking issues
+- release workflows and operational hardening
 
-### Docker Compose Setup
-The system uses Docker Compose to orchestrate multiple agents:
+**Responsibilities**:
+- maintain deployment consistency across local, staging, and production setups
+- coordinate `docker-compose.yml` and environment-driven configuration
+- validate service dependencies across PostgreSQL, MinIO, bot, API, and web
+- improve operability, health checks, and release safety
+- support CI/CD and production rollout workflows
 
-```yaml
-services:
-  app:          # API Server + Matrix Bot + Database + Analysis
-  webui:        # Web Interface Agent
-```
+## Delegation Guide
 
-### Environment Variables
-Each agent requires specific configuration:
+Use the following routing rules when deciding who should own a task:
 
-```bash
-# Matrix Bot Agent
-MATRIX_HOMESERVER=https://your-matrix-server.com
-MATRIX_USER=@bot:your-matrix-server.com
-MATRIX_PASSWORD=your-bot-password
+- **Architecture / multi-service planning** -> **Historian Architect**
+- **Matrix ingestion / FastAPI / schemas / analytics backend** -> **Archive Backend Engineer**
+- **Svelte UI / UX / i18n / timezone presentation** -> **Web Frontend Engineer**
+- **MinIO / object storage / media delivery** -> **Storage & Media Operator**
+- **Docker Compose / env / deploy / CI/CD** -> **DevOps & Deployment Steward**
 
-# Database Agent
-DATABASE_URL=sqlite:///app/db/database.db
+When a task spans several domains, the primary agent coordinates and merges results.
 
-# AI Agent
-GROQ_API_KEY=your-groq-api-key
+## System Notes
 
-# Web Interface Agent
-API_URL=http://app:8000/api/v1
-```
+- Matrix Historian stores timestamps in the backend and database as **UTC**.
+- Timezone conversion is a **frontend presentation concern**.
+- Media attachments are stored in **MinIO**, while metadata and archival records live in **PostgreSQL**.
+- The project is organized around the current service layout in `services/` and `shared/`, not the legacy single-app or removed frontend structure.
 
-### Dependency Management
-The system uses **uv** for fast and reliable Python package management. All dependencies are defined in `pyproject.toml` at the project root.
+## Maintenance Rules
 
-**To install dependencies locally:**
-```bash
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install project dependencies
-uv pip install matrix-nio==0.24.0 simplematrixbotlib==2.12.3 h11==0.14.0 httpcore==0.17.3 fastapi==0.115.12 uvicorn==0.34.2 sqlalchemy==2.0.40 python-multipart==0.0.20 pydantic==2.11.4 email-validator==2.2.0 pytest==8.3.5 python-dotenv==1.1.0 backoff==2.2.1 groq streamlit==1.45.0 pandas==2.2.3 requests==2.32.3 humanize==4.12.3 plotly==5.20.0 wordcloud==1.9.3 jieba==0.42.1 networkx==3.2.1 matplotlib==3.8.0 scipy==1.12.0
-
-# Or using traditional pip
-pip install -r src/requirements.txt
-```
-
-Docker builds automatically use uv for dependency installation.
-
-## Monitoring and Health Checks
-
-### Health Check Endpoints
-- **API Server**: `GET /api/v1/health`
-- **Web Interface**: `GET /?health=check`
-
-### Logging
-Each agent logs to stdout with structured logging:
-- **Matrix Bot**: Connection status, message processing
-- **API Server**: Request/response logs, errors
-- **Database**: Query performance, connection status
-- **Analysis**: Processing time, AI service calls
-
-### Metrics
-- Message collection rate
-- API response times
-- Database query performance
-- AI service usage and costs
-- User activity and engagement
-
-## Scaling Considerations
-
-### Horizontal Scaling
-- **API Server**: Can be scaled behind a load balancer
-- **Database**: Consider PostgreSQL for production
-- **Analysis**: Can be moved to separate worker processes
-
-### Vertical Scaling
-- **Matrix Bot**: Single instance recommended
-- **Web Interface**: Stateless, can be replicated
-- **Analysis**: CPU-intensive, benefit from more cores
-
-## Security Considerations
-
-### Authentication
-- Matrix bot uses homeserver authentication
-- API endpoints may require additional authentication
-- Web interface access control
-
-### Data Privacy
-- Messages are stored locally
-- No data sent to external services except AI analysis
-- Configurable data retention policies
-
-### Network Security
-- HTTPS for all external communications
-- Internal service communication over Docker network
-- Firewall rules for exposed ports
-
-## Troubleshooting
-
-### Common Issues
-1. **Matrix Bot Connection**: Check homeserver URL and credentials
-2. **Database Issues**: Verify SQLite file permissions
-3. **API Errors**: Check service dependencies
-4. **Analysis Failures**: Verify AI service configuration
-
-### Debug Commands
-```bash
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs [service-name]
-
-# Test API endpoints
-curl http://localhost:8001/api/v1/health
-
-# Check database
-sqlite3 database.db ".tables"
-```
-
-## Development
-
-### Adding New Agents
-1. Create agent directory in `src/app/`
-2. Implement agent interface
-3. Add to Docker Compose configuration
-4. Update environment variables
-5. Add health checks and monitoring
-
-### Agent Interface Standards
-- Use async/await for I/O operations
-- Implement proper error handling
-- Add comprehensive logging
-- Include health check endpoints
-- Follow configuration management patterns
-
-### Development Tools
-- **Python Version**: 3.12+
-- **Package Manager**: uv (for fast dependency resolution)
-- **Testing**: pytest
-- **Code Style**: PEP8 compliance
-- **Documentation**: Comprehensive docstrings and markdown docs
+When updating this file:
+- keep agent descriptions aligned with the current main branch architecture
+- prefer current directories and service names over historical ones
+- avoid referencing removed components as active agents
+- reflect real deployment patterns from the Compose files and docs
+- update delegation guidance when new services or major subsystems are introduced
