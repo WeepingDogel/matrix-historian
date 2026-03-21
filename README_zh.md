@@ -225,6 +225,7 @@ npm run dev
 - `docs/get-started.md`
 - `docs/deployment.md`
 - `docs/development.md`
+- `docs/contributing.md`
 - `docs/reference/api-reference.md`
 
 ## 迁移说明

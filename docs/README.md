@@ -22,7 +22,12 @@ This documentation covers the current main-branch architecture of Matrix Histori
 - **[Development](./development.md)**
   - Backend and frontend development flow
   - Local run commands
-  - Testing and contribution notes
+  - Testing notes
+
+- **[Contributing](./contributing.md)**
+  - Where to make changes across bot/API/web/shared
+  - Pre-PR checklist and validation expectations
+  - Contribution boundaries for humans and coding agents
 
 - **[API Reference](./reference/api-reference.md)**
   - API groups and usage notes
