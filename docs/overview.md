@@ -84,12 +84,14 @@ Language selection is handled client-side and used only for presentation.
 - frontend i18n (`en`, `zh-CN`)
 - frontend timezone display controls
 
-### Documentation caution
+### Documentation alignment
 
-Older documents or comments may still mention:
-- SQLite
-- API-only mode
-- “frontend removed”
-- outdated port mappings
+This overview matches the current main-branch architecture:
+- Matrix bot ingestion
+- FastAPI API service
+- PostgreSQL + MinIO storage
+- web frontend
+- frontend i18n (`en`, `zh-CN`)
+- frontend timezone display controls
 
-Those descriptions do not match the current main branch.
+When extending docs, keep terminology aligned with the current `services/` and `shared/` layout.

@@ -19,6 +19,11 @@ This documentation covers the current main-branch architecture of Matrix Histori
   - Docker deployment notes
   - Environment and operations guidance
 
+- **[Media Storage](./media-storage.md)**
+  - PostgreSQL metadata vs MinIO object storage
+  - Media download flow and external URL strategy
+  - `MINIO_PUBLIC_URL` guidance and image-hosting considerations
+
 - **[Development](./development.md)**
   - Backend and frontend development flow
   - Local run commands
@@ -60,6 +65,14 @@ Language and timezone preferences are handled client-side.
 - **Swagger**: http://localhost:8500/docs
 - **MinIO Console**: http://localhost:9001
 
-## Notes about older docs
+## Documentation maintenance note
 
-If you see references elsewhere to SQLite, a removed frontend, or old ports/endpoints, treat them as historical and prefer the docs in this directory plus the root README.
+Keep documentation aligned with the current architecture described here and in the root README:
+- `services/bot/`
+- `services/api/`
+- `services/web/`
+- `shared/`
+- PostgreSQL for archive metadata
+- MinIO for media storage
+
+Prefer current ports, current service names, and current deployment flows when updating docs.
