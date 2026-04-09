@@ -290,4 +290,6 @@ def get_avatar(
 
         return RedirectResponse(url=url)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching avatar: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching avatar: {str(e)}"
+        ) from e

@@ -29,7 +29,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.skip}|${data.mimeFilter}`;
 		if (key === lastFetchKey) return;

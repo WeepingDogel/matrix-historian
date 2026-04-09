@@ -75,7 +75,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.days}|${data.room_id}|${data.interval}`;
 		if (key === lastFetchKey) return;

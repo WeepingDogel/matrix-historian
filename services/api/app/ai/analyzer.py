@@ -28,12 +28,13 @@ class MessageAnalyzer:
             texts = [msg["content"] for msg in messages]
             combined_text = "\n".join(texts)
 
-            system_prompt = """你是一个专门进行数据分析的AI助手。请按照以下格式返回JSON：
-{
-    "sentiment": "positive/negative/neutral",
-    "confidence": 0.0-1.0,
-    "analysis": "分析总结"
-}"""
+            system_prompt = (
+                "你是一个专门进行数据分析的AI助手。"
+                "请按照以下格式返回JSON：\n"
+                '{\n    "sentiment": "positive/negative/neutral",'
+                '\n    "confidence": 0.0-1.0,'
+                '\n    "analysis": "分析总结"\n}'
+            )
             user_prompt = f"""分析以下消息的整体情感倾向：\n{combined_text}"""
 
             response = self.client.chat.completions.create(
@@ -79,7 +80,10 @@ class MessageAnalyzer:
             ]
             combined_text = "\n".join(texts)
 
-            system_prompt = "你是一个专门总结对话的AI助手。只返回JSON格式的结果，包含summary和key_points字段。"
+            system_prompt = (
+                "你是一个专门总结对话的AI助手。"
+                "只返回JSON格式的结果，包含summary和key_points字段。"
+            )
             user_prompt = f"""为这段对话生成摘要：\n{combined_text}"""
 
             response = self.client.chat.completions.create(

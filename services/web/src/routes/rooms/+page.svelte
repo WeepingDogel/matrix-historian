@@ -42,7 +42,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.query}`;
 		if (key === lastFetchKey) return;

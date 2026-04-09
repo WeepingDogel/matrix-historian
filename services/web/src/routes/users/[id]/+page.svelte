@@ -38,7 +38,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.userId}|${data.skip}`;
 		if (key === lastFetchKey) return;

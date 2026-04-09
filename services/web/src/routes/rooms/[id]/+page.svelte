@@ -36,7 +36,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.roomId}|${data.skip}`;
 		if (key === lastFetchKey) return;

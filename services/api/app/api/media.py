@@ -127,7 +127,9 @@ def get_media_metadata(media_id: str, db: Session = Depends(get_db)):
         return MediaWithUrl(**media_dict)
     except Exception as e:
         logger.error(f"Error generating presigned URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error generating download URL")
+        raise HTTPException(
+            status_code=500, detail="Error generating download URL"
+        ) from e
 
 
 @router.get("/{media_id}/download")
@@ -164,4 +166,6 @@ def download_media(
             )
     except Exception as e:
         logger.error(f"Error downloading media: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error downloading media")
+        raise HTTPException(
+            status_code=500, detail="Error downloading media"
+        ) from e

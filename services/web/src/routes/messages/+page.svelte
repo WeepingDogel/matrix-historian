@@ -39,7 +39,7 @@
 		}
 	}
 
-	let lastFetchKey = '';
+	let lastFetchKey = null;
 	$effect(() => {
 		const key = `${data.query}|${data.room_id}|${data.user_id}|${data.start_date}|${data.end_date}|${data.sort}`;
 		if (key === lastFetchKey) return;
