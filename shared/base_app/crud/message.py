@@ -114,9 +114,7 @@ def search_messages(
         search_query = search_query.filter(Message.timestamp <= before)
 
     order = Message.timestamp.asc() if sort == "asc" else Message.timestamp.desc()
-    return (
-        search_query.order_by(order).offset(skip).limit(limit).all()
-    )
+    return search_query.order_by(order).offset(skip).limit(limit).all()
 
 
 def count_messages(
