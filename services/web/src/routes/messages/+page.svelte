@@ -39,13 +39,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.query;
-		void data.room_id;
-		void data.user_id;
-		void data.start_date;
-		void data.end_date;
-		void data.sort;
+		const key = `${data.query}|${data.room_id}|${data.user_id}|${data.start_date}|${data.end_date}|${data.sort}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchMessages();
 	});
 

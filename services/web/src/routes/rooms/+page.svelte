@@ -42,8 +42,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.query;
+		const key = `${data.query}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchRooms();
 	});
 

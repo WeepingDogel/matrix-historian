@@ -36,9 +36,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.roomId;
-		void data.skip;
+		const key = `${data.roomId}|${data.skip}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchRoomMessages();
 	});
 </script>

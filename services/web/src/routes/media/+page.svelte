@@ -29,9 +29,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.skip;
-		void data.mimeFilter;
+		const key = `${data.skip}|${data.mimeFilter}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchMedia();
 	});
 

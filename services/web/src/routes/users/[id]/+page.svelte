@@ -38,9 +38,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.userId;
-		void data.skip;
+		const key = `${data.userId}|${data.skip}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchUserMessages();
 	});
 </script>
