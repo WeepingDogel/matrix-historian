@@ -4,6 +4,9 @@
 	import { formatTime } from '$lib/timezone';
 	import Time from '$lib/Time.svelte';
 	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
+	import SearchableDropdown from '$lib/SearchableDropdown.svelte';
+	import Skeleton from '$lib/Skeleton.svelte';
+	import { getRooms, getUsers, getMessages, searchMessages } from '$lib/api.js';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
@@ -11,6 +14,54 @@
 	let selectedUser = $state(data.user_id ?? '');
 	let startDate = $state(data.start_date ?? '');
 	let endDate = $state(data.end_date ?? '');
+	let sortOrder = $state(data.sort ?? 'desc');
+	let pageLoading = $state(true);
+
+	async function fetchMessages() {
+		pageLoading = true;
+		try {
+			const after = data.start_date ? `${data.start_date}T00:00:00Z` : undefined;
+			const before = data.end_date ? `${data.end_date}T23:59:59Z` : undefined;
+			const opts = {
+				skip: 0, limit: data.limit,
+				room_id: data.room_id || undefined,
+				user_id: data.user_id || undefined,
+				after, before, sort: data.sort
+			};
+			const result = data.query
+				? await searchMessages(data.query, opts)
+				: await getMessages(opts);
+			data = { ...data, messages: result.messages ?? [], total: result.total ?? 0, hasMore: result.has_more ?? false, nextSkip: result.next_skip, _loading: false };
+		} catch (e) {
+			console.error('Messages fetch error:', e);
+		} finally {
+			pageLoading = false;
+		}
+	}
+
+	$effect(() => {
+		void data.query;
+		void data.room_id;
+		void data.user_id;
+		void data.start_date;
+		void data.end_date;
+		void data.sort;
+		fetchMessages();
+	});
+
+	function escapeHtml(str) {
+		return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+	}
+	function escapeRegex(str) {
+		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+	function highlightContent(text, query) {
+		if (!query || !text) return escapeHtml(text || '');
+		const escaped = escapeHtml(text);
+		const pattern = new RegExp(`(${escapeRegex(escapeHtml(query))})`, 'gi');
+		return escaped.replace(pattern, '<mark class="bg-error/30 rounded px-0.5">$1</mark>');
+	}
 
 	// Accumulated messages for infinite scroll
 	let allMessages = $state([...data.messages]);
@@ -33,11 +84,13 @@
 		const user = overrides.user_id ?? selectedUser;
 		const sd = overrides.start_date ?? startDate;
 		const ed = overrides.end_date ?? endDate;
+		const s = overrides.sort ?? sortOrder;
 		if (q) params.set('q', q);
 		if (room) params.set('room_id', room);
 		if (user) params.set('user_id', user);
 		if (sd) params.set('start_date', sd);
 		if (ed) params.set('end_date', ed);
+		if (s && s !== 'desc') params.set('sort', s);
 		return params.toString();
 	}
 
@@ -50,12 +103,18 @@
 		goto(`/messages?${buildFilterParams()}`);
 	}
 
+	function toggleSort() {
+		sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+		goto(`/messages?${buildFilterParams({ sort: sortOrder })}`);
+	}
+
 	function clearFilters() {
 		searchInput = '';
 		selectedRoom = '';
 		selectedUser = '';
 		startDate = '';
 		endDate = '';
+		sortOrder = 'desc';
 		goto('/messages');
 	}
 
@@ -84,6 +143,7 @@
 			if (data.user_id) apiParams.set('user_id', data.user_id);
 			if (after) apiParams.set('after', after);
 			if (before) apiParams.set('before', before);
+			if (data.sort) apiParams.set('sort', data.sort);
 
 			const endpoint = data.query ? '/api/v1/search' : '/api/v1/messages';
 			const res = await fetch(`${endpoint}?${apiParams.toString()}`);
@@ -133,18 +193,24 @@
 
 <!-- Filters -->
 <div class="flex flex-wrap gap-2 mb-6 items-center">
-	<select class="select select-bordered select-sm" bind:value={selectedRoom} onchange={onFilterChange}>
-		<option value="">{$t('messages.allRooms')}</option>
-		{#each data.rooms as room}
-			<option value={room.room_id}>{room.name || room.room_id}</option>
-		{/each}
-	</select>
-	<select class="select select-bordered select-sm" bind:value={selectedUser} onchange={onFilterChange}>
-		<option value="">{$t('messages.allUsers')}</option>
-		{#each data.users as user}
-			<option value={user.user_id}>{user.display_name || user.user_id}</option>
-		{/each}
-	</select>
+	<SearchableDropdown
+		value={selectedRoom}
+		placeholder={$t('messages.allRooms')}
+		searchFn={async (q, skip, limit) => getRooms({ skip, limit })}
+		valueKey="room_id"
+		labelKey="name"
+		fallbackLabelKey="room_id"
+		onchange={(v) => { selectedRoom = v; onFilterChange(); }}
+	/>
+	<SearchableDropdown
+		value={selectedUser}
+		placeholder={$t('messages.allUsers')}
+		searchFn={async (q, skip, limit) => getUsers({ skip, limit })}
+		valueKey="user_id"
+		labelKey="display_name"
+		fallbackLabelKey="user_id"
+		onchange={(v) => { selectedUser = v; onFilterChange(); }}
+	/>
 
 	<!-- Date range -->
 	<div class="flex items-center gap-1">
@@ -165,6 +231,15 @@
 			onchange={onFilterChange}
 		/>
 	</div>
+
+	<!-- Sort toggle -->
+	<button class="btn btn-sm btn-ghost gap-1" onclick={toggleSort}>
+		{#if sortOrder === 'desc'}
+			<span>&#8595;</span> {$t('messages.newestFirst')}
+		{:else}
+			<span>&#8593;</span> {$t('messages.oldestFirst')}
+		{/if}
+	</button>
 </div>
 
 <div class="flex justify-between items-center mb-4">
@@ -180,7 +255,11 @@
 </div>
 
 <!-- Message list -->
-{#if allMessages.length === 0 && !loading}
+{#if pageLoading}
+	<div class="space-y-3">
+		<Skeleton variant="chat" count={5} />
+	</div>
+{:else if allMessages.length === 0 && !loading}
 	<p class="opacity-60">{$t('messages.noMessages')}</p>
 {:else}
 	<div class="space-y-1">
@@ -208,7 +287,7 @@
 					</time>
 				</div>
 				<div class="chat-bubble">
-					{msg.content}
+					{@html highlightContent(msg.content, data.query)}
 					{#if msg.media && msg.media.length > 0}
 						<div class="flex flex-wrap gap-2 mt-2">
 							{#each msg.media as attachment}

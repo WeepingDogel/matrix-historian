@@ -63,7 +63,9 @@
 		"byUser": "发送者",
 		"noMessages": "未找到消息。",
 		"dateFrom": "从",
-		"dateTo": "到"
+		"dateTo": "到",
+		"newestFirst": "最新优先",
+		"oldestFirst": "最早优先"
 	},
 	"rooms": {
 		"title": "房间",
@@ -136,7 +138,6 @@
 		"filteredByRoom": "按房间筛选：{room}",
 		"sentimentTitle": "情感分析",
 		"confidence": "置信度",
-		"contentAnalysisTitle": "内容分析",
 		"word": "词语",
 		"count": "次数",
 		"userNetworkTitle": "用户关系网络",

@@ -31,8 +31,8 @@ async function request(path, params = {}, fetchFn = fetch) {
 // ─── Messages ───────────────────────────────────────────────────────
 
 export function getMessages(opts = {}, fetchFn = fetch) {
-	const { skip, limit, room_id, user_id, after, before } = opts;
-	return request(`${BASE}/messages/`, { skip, limit, room_id, user_id, after, before }, fetchFn);
+	const { skip, limit, room_id, user_id, after, before, sort } = opts;
+	return request(`${BASE}/messages/`, { skip, limit, room_id, user_id, after, before, sort }, fetchFn);
 }
 
 export function getMessagesCount(opts = {}, fetchFn = fetch) {
@@ -45,8 +45,8 @@ export function getMessage(eventId, fetchFn = fetch) {
 }
 
 export function searchMessages(query, opts = {}, fetchFn = fetch) {
-	const { skip, limit, room_id, user_id, after, before } = opts;
-	return request(`${BASE}/search/`, { query, skip, limit, room_id, user_id, after, before }, fetchFn);
+	const { skip, limit, room_id, user_id, after, before, sort } = opts;
+	return request(`${BASE}/search/`, { query, skip, limit, room_id, user_id, after, before, sort }, fetchFn);
 }
 
 // ─── Rooms ──────────────────────────────────────────────────────────

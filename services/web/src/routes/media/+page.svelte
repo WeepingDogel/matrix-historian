@@ -1,7 +1,39 @@
 <script>
 	import { t } from '$lib/i18n';
+	import Skeleton from '$lib/Skeleton.svelte';
+	import { getMedia, getMediaStats } from '$lib/api.js';
 
 	let { data } = $props();
+	let pageLoading = $state(true);
+
+	async function fetchMedia() {
+		pageLoading = true;
+		try {
+			const [result, stats] = await Promise.all([
+				getMedia({ skip: data.skip, limit: data.limit, mime_type: data.mimeFilter || undefined }),
+				getMediaStats().catch(() => null)
+			]);
+			data = {
+				...data,
+				media: result.media ?? [],
+				total: result.total ?? 0,
+				hasMore: result.has_more ?? false,
+				nextSkip: result.next_skip,
+				stats,
+				_loading: false
+			};
+		} catch (e) {
+			console.error('Media fetch error:', e);
+		} finally {
+			pageLoading = false;
+		}
+	}
+
+	$effect(() => {
+		void data.skip;
+		void data.mimeFilter;
+		fetchMedia();
+	});
 
 	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
 	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
@@ -52,6 +84,15 @@
 {#if data.error}
 	<div class="alert alert-warning mb-4"><span>{$t('common.error', { error: data.error })}</span></div>
 {/if}
+
+{#if pageLoading}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+	<Skeleton variant="stat" count={4} />
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+	<Skeleton variant="media" count={12} />
+</div>
+{:else}
 
 <!-- Media stats -->
 {#if data.stats}
@@ -155,4 +196,6 @@
 			</a>
 		{/if}
 	</div>
+{/if}
+
 {/if}
