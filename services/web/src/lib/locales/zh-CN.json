@@ -146,7 +146,11 @@
 		"weight": "互动次数",
 		"topicEvolutionTitle": "话题演变",
 		"trend": "趋势",
-		"topic": "话题"
+		"topic": "话题",
+		"messageSummaryTitle": "消息摘要",
+		"messageSummaryNoData": "暂无摘要。",
+		"summaryLabel": "摘要",
+		"keyPoints": "要点"
 	},
 	"timezone": {
 		"label": "时区",

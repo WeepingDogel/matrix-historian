@@ -153,6 +153,63 @@
 	</div>
 </div>
 
+<!-- Message Summary -->
+{#if (data.messageSummary && data.messageSummary.result) || data.sentiment}
+	<div class="card bg-base-200 shadow mb-6">
+		<div class="card-body">
+			<h3 class="card-title text-lg">{$t('analytics.messageSummaryTitle')}</h3>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<!-- Sentiment -->
+				{#if data.sentiment}
+					<div>
+						<p class="text-sm font-medium mb-2">{$t('analytics.sentimentTitle')}</p>
+						<div class="flex items-center gap-3">
+							<span class="text-3xl">
+								{#if data.sentiment.sentiment === 'positive'}😊
+								{:else if data.sentiment.sentiment === 'negative'}😔
+								{:else}😐
+								{/if}
+							</span>
+							<div>
+								<p class="font-bold capitalize">{data.sentiment.sentiment}</p>
+								<p class="text-xs opacity-60">{$t('analytics.confidence')}: {(data.sentiment.confidence * 100).toFixed(1)}%</p>
+							</div>
+						</div>
+						{#if data.sentiment.analysis}
+							<p class="text-sm opacity-80 mt-2">{data.sentiment.analysis}</p>
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Summary -->
+				{#if data.messageSummary && data.messageSummary.result}
+					{@const summary = data.messageSummary.result}
+					<div>
+						{#if summary.error}
+							<p class="opacity-60">{$t('analytics.messageSummaryNoData')}</p>
+						{:else}
+							{#if summary.summary}
+								<p class="text-sm font-medium mb-2">{$t('analytics.summaryLabel')}</p>
+								<p class="text-sm">{summary.summary}</p>
+							{/if}
+							{#if summary.key_points && summary.key_points.length > 0}
+								<div class="mt-3">
+									<p class="text-sm font-medium mb-1">{$t('analytics.keyPoints')}</p>
+									<ul class="list-disc list-inside text-sm opacity-80 space-y-1">
+										{#each summary.key_points as point}
+											<li>{point}</li>
+										{/each}
+									</ul>
+								</div>
+							{/if}
+						{/if}
+					</div>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
+
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 	<!-- Message Trends -->
 	<div class="card bg-base-200 shadow">
@@ -425,32 +482,6 @@
 							{/each}
 						</tbody>
 					</table>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Sentiment Analysis -->
-	{#if data.sentiment}
-		<div class="card bg-base-200 shadow">
-			<div class="card-body">
-				<h3 class="card-title text-lg">{$t('analytics.sentimentTitle')}</h3>
-				<div class="flex flex-col gap-3">
-					<div class="flex items-center gap-3">
-						<span class="text-3xl">
-							{#if data.sentiment.sentiment === 'positive'}😊
-							{:else if data.sentiment.sentiment === 'negative'}😔
-							{:else}😐
-							{/if}
-						</span>
-						<div>
-							<p class="font-bold capitalize">{data.sentiment.sentiment}</p>
-							<p class="text-xs opacity-60">{$t('analytics.confidence')}: {(data.sentiment.confidence * 100).toFixed(1)}%</p>
-						</div>
-					</div>
-					{#if data.sentiment.analysis}
-						<p class="text-sm opacity-80">{data.sentiment.analysis}</p>
-					{/if}
 				</div>
 			</div>
 		</div>

@@ -567,6 +567,21 @@ async def get_ai_analysis(
             result = await analyzer.analyze_sentiment(
                 message_texts, model="llama-3.1-8b-instant"
             )
+            model_used = "llama-3.1-8b-instant"
+        elif analysis_type == "summary":
+            message_dicts = [
+                {
+                    "sender": {
+                        "display_name": (
+                            msg.sender.display_name if msg.sender else msg.sender_id
+                        )
+                    },
+                    "content": msg.content,
+                }
+                for msg in messages
+            ]
+            result = await analyzer.generate_summary(message_dicts)
+            model_used = "mixtral-8x7b-32768"
         else:
             raise HTTPException(status_code=400, detail="不支持的分析类型")
 
@@ -577,7 +592,7 @@ async def get_ai_analysis(
                 "message_count": len(messages),
                 "room_id": room_id,
                 "analysis_time": datetime.utcnow().isoformat(),
-                "model": "llama-3.1-8b-instant",
+                "model": model_used,
             },
         }
     except Exception as e:
