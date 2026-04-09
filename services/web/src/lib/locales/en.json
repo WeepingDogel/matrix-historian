@@ -146,7 +146,11 @@
 		"weight": "Weight",
 		"topicEvolutionTitle": "Topic Evolution",
 		"trend": "Trend",
-		"topic": "Topic"
+		"topic": "Topic",
+		"messageSummaryTitle": "Message Summary",
+		"messageSummaryNoData": "No summary available.",
+		"summaryLabel": "Summary",
+		"keyPoints": "Key Points"
 	},
 	"timezone": {
 		"label": "Timezone",
