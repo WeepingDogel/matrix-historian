@@ -581,7 +581,7 @@ async def get_ai_analysis(
                 for msg in messages
             ]
             result = await analyzer.generate_summary(message_dicts)
-            model_used = "mixtral-8x7b-32768"
+            model_used = "llama-3.1-8b-instant"
         else:
             raise HTTPException(status_code=400, detail="不支持的分析类型")
 
