@@ -75,10 +75,11 @@
 		}
 	}
 
+	let lastFetchKey = '';
 	$effect(() => {
-		void data.days;
-		void data.room_id;
-		void data.interval;
+		const key = `${data.days}|${data.room_id}|${data.interval}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
 		fetchAnalytics();
 	});
 
