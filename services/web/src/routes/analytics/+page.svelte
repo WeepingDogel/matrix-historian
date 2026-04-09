@@ -186,7 +186,7 @@
 					{@const summary = data.messageSummary.result}
 					<div>
 						{#if summary.error}
-							<p class="opacity-60">{$t('analytics.messageSummaryNoData')}</p>
+							<p class="opacity-60">{$t('analytics.messageSummaryNoData')}{#if summary.message} ({summary.message}){/if}</p>
 						{:else}
 							{#if summary.summary}
 								<p class="text-sm font-medium mb-2">{$t('analytics.summaryLabel')}</p>

@@ -87,7 +87,7 @@ class MessageAnalyzer:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                model="mixtral-8x7b-32768",
+                model="llama-3.1-8b-instant",
                 temperature=0.3,
                 max_tokens=1000,
                 response_format={"type": "json_object"},
