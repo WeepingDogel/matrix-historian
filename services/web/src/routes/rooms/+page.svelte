@@ -2,21 +2,49 @@
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
+	import Skeleton from '$lib/Skeleton.svelte';
+	import { getRooms, getRoomsCount, getRoomActivity, searchRooms, getSearchRoomsCount } from '$lib/api.js';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
+	let pageLoading = $state(true);
 
 	// Accumulated items for infinite scroll
-	let allRooms = $state([...data.rooms]);
-	let currentSkip = $state(data.skip + data.rooms.length);
-	let hasMore = $state(data.hasMore);
+	let allRooms = $state([]);
+	let currentSkip = $state(0);
+	let hasMore = $state(false);
 	let loading = $state(false);
 
+	async function fetchRooms() {
+		pageLoading = true;
+		try {
+			const q = data.query;
+			const limit = data.limit;
+			const [rooms, countResult, activity] = await Promise.all([
+				q ? searchRooms(q, { skip: 0, limit }) : getRooms({ skip: 0, limit }),
+				q ? getSearchRoomsCount(q) : getRoomsCount(),
+				getRoomActivity(200).catch(() => ({ rooms: [] }))
+			]);
+			const total = countResult.total ?? 0;
+			const activityMap = {};
+			for (const r of activity.rooms ?? []) {
+				const id = r.room_id || r.room;
+				if (id) activityMap[id] = r.message_count ?? 0;
+			}
+			data = { ...data, rooms, activityMap, total, hasMore: total > limit, nextSkip: limit, _loading: false };
+			allRooms = [...rooms];
+			currentSkip = rooms.length;
+			hasMore = total > limit;
+		} catch (e) {
+			console.error('Rooms fetch error:', e);
+		} finally {
+			pageLoading = false;
+		}
+	}
+
 	$effect(() => {
-		allRooms = [...data.rooms];
-		currentSkip = data.skip + data.rooms.length;
-		hasMore = data.hasMore;
-		loading = false;
+		void data.query;
+		fetchRooms();
 	});
 
 	function doSearch(e) {
@@ -78,19 +106,7 @@
 	{/if}
 </form>
 
-<div class="flex justify-between items-center mb-4">
-	<p class="text-sm opacity-60">
-		{$t('rooms.roomCount', { count: data.total })}
-		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
-	</p>
-	<p class="text-sm opacity-60">
-		{allRooms.length} / {data.total}
-	</p>
-</div>
-
-{#if allRooms.length === 0 && !loading}
-	<p class="opacity-60">{$t('rooms.noRooms')}</p>
-{:else}
+{#if pageLoading}
 	<div class="overflow-x-auto">
 		<table class="table table-zebra">
 			<thead>
@@ -101,26 +117,55 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each allRooms as room (room.room_id)}
-					<tr class="hover">
-						<td>
-							<a href="/rooms/{encodeURIComponent(room.room_id)}" class="link link-hover font-medium">
-								{room.name || $t('common.unnamed')}
-							</a>
-						</td>
-						<td class="font-mono text-xs opacity-70">{room.room_id}</td>
-						<td class="text-right">
-							{#if data.activityMap[room.room_id] !== undefined}
-								<span class="badge badge-sm">{data.activityMap[room.room_id].toLocaleString()}</span>
-							{:else}
-								<span class="opacity-40">—</span>
-							{/if}
-						</td>
-					</tr>
-				{/each}
+				<Skeleton variant="table-row" count={5} />
 			</tbody>
 		</table>
 	</div>
+{:else}
+	<div class="flex justify-between items-center mb-4">
+		<p class="text-sm opacity-60">
+			{$t('rooms.roomCount', { count: data.total })}
+			{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
+		</p>
+		<p class="text-sm opacity-60">
+			{allRooms.length} / {data.total}
+		</p>
+	</div>
 
-	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
+	{#if allRooms.length === 0 && !loading}
+		<p class="opacity-60">{$t('rooms.noRooms')}</p>
+	{:else}
+		<div class="overflow-x-auto">
+			<table class="table table-zebra">
+				<thead>
+					<tr>
+						<th>{$t('rooms.name')}</th>
+						<th>{$t('rooms.roomId')}</th>
+						<th class="text-right">{$t('rooms.messagesCol')}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each allRooms as room (room.room_id)}
+						<tr class="hover">
+							<td>
+								<a href="/rooms/{encodeURIComponent(room.room_id)}" class="link link-hover font-medium">
+									{room.name || $t('common.unnamed')}
+								</a>
+							</td>
+							<td class="font-mono text-xs opacity-70">{room.room_id}</td>
+							<td class="text-right">
+								{#if data.activityMap[room.room_id] !== undefined}
+									<span class="badge badge-sm">{data.activityMap[room.room_id].toLocaleString()}</span>
+								{:else}
+									<span class="opacity-40">—</span>
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+
+		<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
+	{/if}
 {/if}

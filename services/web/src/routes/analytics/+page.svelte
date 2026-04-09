@@ -1,11 +1,86 @@
 <script>
 	import Chart from '$lib/Chart.svelte';
+	import Skeleton from '$lib/Skeleton.svelte';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import { formatTime } from '$lib/timezone';
 	import Time from '$lib/Time.svelte';
+	import {
+		getMessageStats, getUserActivity, getRoomActivity,
+		getAnalyticsOverview, getWordcloud, getActivityHeatmap,
+		getTrends, getInteractions, getMessagesCount, getRooms, getUsers,
+		getUserHourlyActivity, getSentiment,
+		getUserNetwork, getTopicEvolution, getAiAnalysis
+	} from '$lib/api.js';
 
 	let { data } = $props();
+	let pageLoading = $state(true);
+
+	async function fetchAnalytics() {
+		const { days, room_id, interval } = data;
+		pageLoading = true;
+		try {
+			const [msgStats, userAct, roomAct, overview, wordcloud, heatmap, trends, interactions, countData, rooms, users, userHourly, sentiment, userNetwork, topicEvolution, messageSummary] = await Promise.all([
+				getMessageStats(days).catch(() => ({ stats: [] })),
+				getUserActivity(10).catch(() => ({ users: [] })),
+				getRoomActivity(10).catch(() => ({ rooms: [] })),
+				getAnalyticsOverview().catch(() => null),
+				getWordcloud({ days, room_id }).catch(() => ({ messages: [] })),
+				getActivityHeatmap({ days, room_id }).catch(() => ({ heatmap: [], weekdays: [], hours: [] })),
+				getTrends({ interval, days }).catch(() => ({ trends: [] })),
+				getInteractions({ days }).catch(() => ({ interactions: [] })),
+				getMessagesCount({}).catch(() => ({ total: 0 })),
+				getRooms({ limit: 100000 }).catch(() => []),
+				getUsers({ limit: 100000 }).catch(() => []),
+				getUserHourlyActivity({ days, room_id, limit: 10 }).catch(() => ({ users: [], hours: [], days: 7, user_count: 0 })),
+				getSentiment({ days, room_id }).catch(() => null),
+				getUserNetwork({ days, room_id }).catch(() => null),
+				getTopicEvolution({ days, room_id }).catch(() => null),
+				getAiAnalysis({ days, room_id, analysis_type: 'summary' }).catch(() => null)
+			]);
+
+			const stats = msgStats.stats ?? [];
+			const totalMessages = countData.total ?? 0;
+			const totalRooms = Array.isArray(rooms) ? rooms.length : 0;
+			const totalUsers = Array.isArray(users) ? users.length : 0;
+			const avgPerDay = stats.length > 0
+				? Math.round(stats.reduce((sum, s) => sum + (s.count ?? s[1] ?? 0), 0) / stats.length)
+				: 0;
+
+			data = {
+				...data,
+				messageStats: stats,
+				userActivity: userAct.users ?? [],
+				roomActivity: roomAct.rooms ?? [],
+				totalMessages, totalRooms, totalUsers, avgPerDay,
+				hourlyActivity: overview?.hourly_activity ?? [],
+				wordcloud: wordcloud.messages ?? wordcloud.words ?? [],
+				heatmap: heatmap.heatmap ?? [],
+				heatmapWeekdays: heatmap.weekdays ?? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+				heatmapHours: heatmap.hours ?? Array.from({ length: 24 }, (_, i) => i),
+				trends: trends.trends ?? [],
+				rooms: Array.isArray(rooms) ? rooms : [],
+				interactions: interactions.interactions ?? [],
+				userHourlyActivity: userHourly,
+				sentiment,
+				userNetwork,
+				topicEvolution,
+				messageSummary,
+				_loading: false
+			};
+		} catch (e) {
+			console.error('Analytics fetch error:', e);
+		} finally {
+			pageLoading = false;
+		}
+	}
+
+	$effect(() => {
+		void data.days;
+		void data.room_id;
+		void data.interval;
+		fetchAnalytics();
+	});
 
 	/** Format a date string as a short M/D label, normalizing UTC timestamps */
 	function formatDateLabel(raw) {
@@ -132,6 +207,16 @@
 		</select>
 	</div>
 </div>
+
+{#if pageLoading}
+<!-- Loading skeletons -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+	<Skeleton variant="stat" count={4} />
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+	<Skeleton variant="chart" count={4} />
+</div>
+{:else}
 
 <!-- Overview stats -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -487,37 +572,6 @@
 		</div>
 	{/if}
 
-	<!-- Content Analysis (Word Frequency) -->
-	{#if data.contentAnalysis && data.contentAnalysis.word_frequency}
-		<div class="card bg-base-200 shadow">
-			<div class="card-body">
-				<h3 class="card-title text-lg">{$t('analytics.contentAnalysisTitle')}</h3>
-				{#if data.contentAnalysis.word_frequency.length > 0}
-					<div class="overflow-x-auto max-h-64 overflow-y-auto">
-						<table class="table table-xs">
-							<thead>
-								<tr>
-									<th>{$t('analytics.word')}</th>
-									<th class="text-right">{$t('analytics.count')}</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each data.contentAnalysis.word_frequency.slice(0, 30) as item}
-									<tr>
-										<td class="text-sm">{item.word ?? item[0] ?? ''}</td>
-										<td class="text-sm text-right">{item.count ?? item[1] ?? 0}</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<p class="opacity-60">{$t('common.noData')}</p>
-				{/if}
-			</div>
-		</div>
-	{/if}
-
 	<!-- User Network -->
 	{#if data.userNetwork && data.userNetwork.edges && data.userNetwork.edges.length > 0}
 		<div class="card bg-base-200 shadow lg:col-span-2">
@@ -597,3 +651,5 @@
 		</div>
 	{/if}
 </div>
+
+{/if}

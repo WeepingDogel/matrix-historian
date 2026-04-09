@@ -15,8 +15,11 @@ def get_messages(
     before: Optional[datetime] = None,
     skip: int = 0,
     limit: int = 100,
+    sort: str = "desc",
 ):
-    query = db.query(Message).options(joinedload(Message.media))
+    query = db.query(Message).options(
+        joinedload(Message.media), joinedload(Message.sender)
+    )
 
     if room_id:
         query = query.filter(Message.room_id == room_id)
@@ -27,7 +30,8 @@ def get_messages(
     if before:
         query = query.filter(Message.timestamp <= before)
 
-    return query.order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
+    order = Message.timestamp.asc() if sort == "asc" else Message.timestamp.desc()
+    return query.order_by(order).offset(skip).limit(limit).all()
 
 
 def get_message(db: Session, event_id: str):
@@ -92,6 +96,7 @@ def search_messages(
     before: Optional[datetime] = None,
     skip: int = 0,
     limit: int = 100,
+    sort: str = "desc",
 ):
     search_query = (
         db.query(Message)
@@ -108,8 +113,9 @@ def search_messages(
     if before:
         search_query = search_query.filter(Message.timestamp <= before)
 
+    order = Message.timestamp.asc() if sort == "asc" else Message.timestamp.desc()
     return (
-        search_query.order_by(Message.timestamp.desc()).offset(skip).limit(limit).all()
+        search_query.order_by(order).offset(skip).limit(limit).all()
     )
 
 

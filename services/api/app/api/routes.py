@@ -46,6 +46,7 @@ def read_messages(
     before: datetime = Query(None, description="Filter messages before this time"),
     skip: int = Query(0, description="Skip N records"),
     limit: int = Query(100, description="Limit the number of records"),
+    sort: str = Query("desc", description="Sort order: asc or desc"),
     db: Session = Depends(get_db),
 ):
     query_params: Dict[str, Any] = {}
@@ -59,7 +60,7 @@ def read_messages(
         query_params["before"] = before.isoformat() if before else None
 
     total = crud.count_messages(db, **query_params)
-    messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)
+    messages = crud.get_messages(db, skip=skip, limit=limit, sort=sort, **query_params)
     # 转换 ORM model 为 Pydantic schema
     messages_schema = [Message.model_validate(msg) for msg in messages]
     return MessageResponse(
@@ -117,11 +118,12 @@ def search_messages(
     before: datetime = Query(None, description="Filter messages before this time"),
     skip: int = Query(0, description="Skip N records"),
     limit: int = Query(100, description="Limit the number of records"),
+    sort: str = Query("desc", description="Sort order: asc or desc"),
     db: Session = Depends(get_db),
 ):
     total = crud.count_search_messages(db, query, room_id, user_id, after, before)
     messages = crud.search_messages(
-        db, query, room_id, user_id, after, before, skip=skip, limit=limit
+        db, query, room_id, user_id, after, before, skip=skip, limit=limit, sort=sort
     )
     messages_schema = [Message.model_validate(msg) for msg in messages]
     return MessageResponse(

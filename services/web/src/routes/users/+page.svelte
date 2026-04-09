@@ -2,21 +2,48 @@
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
+	import Skeleton from '$lib/Skeleton.svelte';
+	import { getUsers, getUsersCount, searchUsers, getSearchUsersCount, getUserActivity } from '$lib/api.js';
 
 	let { data } = $props();
 	let searchInput = $state(data.query ?? '');
+	let pageLoading = $state(true);
 
-	// Accumulated items for infinite scroll
-	let allUsers = $state([...data.users]);
-	let currentSkip = $state(data.skip + data.users.length);
-	let hasMore = $state(data.hasMore);
+	let allUsers = $state([]);
+	let currentSkip = $state(0);
+	let hasMore = $state(false);
 	let loading = $state(false);
 
+	async function fetchUsers() {
+		pageLoading = true;
+		try {
+			const q = data.query;
+			const limit = data.limit;
+			const [users, countResult, activity] = await Promise.all([
+				q ? searchUsers(q, { skip: 0, limit }) : getUsers({ skip: 0, limit }),
+				q ? getSearchUsersCount(q) : getUsersCount(),
+				getUserActivity(200).catch(() => ({ users: [] }))
+			]);
+			const total = countResult.total ?? 0;
+			const activityMap = {};
+			for (const u of activity.users ?? []) {
+				const id = u.user_id || u.user;
+				if (id) activityMap[id] = u.message_count ?? 0;
+			}
+			data = { ...data, users, activityMap, total, hasMore: total > limit, _loading: false };
+			allUsers = [...users];
+			currentSkip = users.length;
+			hasMore = total > limit;
+		} catch (e) {
+			console.error('Users fetch error:', e);
+		} finally {
+			pageLoading = false;
+		}
+	}
+
 	$effect(() => {
-		allUsers = [...data.users];
-		currentSkip = data.skip + data.users.length;
-		hasMore = data.hasMore;
-		loading = false;
+		void data.query;
+		fetchUsers();
 	});
 
 	function doSearch(e) {
@@ -78,19 +105,7 @@
 	{/if}
 </form>
 
-<div class="flex justify-between items-center mb-4">
-	<p class="text-sm opacity-60">
-		{$t('users.userCount', { count: data.total })}
-		{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
-	</p>
-	<p class="text-sm opacity-60">
-		{allUsers.length} / {data.total}
-	</p>
-</div>
-
-{#if allUsers.length === 0 && !loading}
-	<p class="opacity-60">{$t('users.noUsers')}</p>
-{:else}
+{#if pageLoading}
 	<div class="overflow-x-auto">
 		<table class="table table-zebra">
 			<thead>
@@ -101,26 +116,55 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each allUsers as user (user.user_id)}
-					<tr class="hover">
-						<td>
-							<a href="/users/{encodeURIComponent(user.user_id)}" class="link link-hover font-medium">
-								{user.display_name || $t('common.noDisplayName')}
-							</a>
-						</td>
-						<td class="font-mono text-xs opacity-70">{user.user_id}</td>
-						<td class="text-right">
-							{#if data.activityMap[user.user_id] !== undefined}
-								<span class="badge badge-sm">{data.activityMap[user.user_id].toLocaleString()}</span>
-							{:else}
-								<span class="opacity-40">—</span>
-							{/if}
-						</td>
-					</tr>
-				{/each}
+				<Skeleton variant="table-row" count={5} />
 			</tbody>
 		</table>
 	</div>
+{:else}
+	<div class="flex justify-between items-center mb-4">
+		<p class="text-sm opacity-60">
+			{$t('users.userCount', { count: data.total })}
+			{#if data.query}{$t('messages.matching', { query: data.query })}{/if}
+		</p>
+		<p class="text-sm opacity-60">
+			{allUsers.length} / {data.total}
+		</p>
+	</div>
 
-	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
+	{#if allUsers.length === 0 && !loading}
+		<p class="opacity-60">{$t('users.noUsers')}</p>
+	{:else}
+		<div class="overflow-x-auto">
+			<table class="table table-zebra">
+				<thead>
+					<tr>
+						<th>{$t('users.displayName')}</th>
+						<th>{$t('users.userId')}</th>
+						<th class="text-right">{$t('users.messagesCol')}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each allUsers as user (user.user_id)}
+						<tr class="hover">
+							<td>
+								<a href="/users/{encodeURIComponent(user.user_id)}" class="link link-hover font-medium">
+									{user.display_name || $t('common.noDisplayName')}
+								</a>
+							</td>
+							<td class="font-mono text-xs opacity-70">{user.user_id}</td>
+							<td class="text-right">
+								{#if data.activityMap[user.user_id] !== undefined}
+									<span class="badge badge-sm">{data.activityMap[user.user_id].toLocaleString()}</span>
+								{:else}
+									<span class="opacity-40">—</span>
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+
+		<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
+	{/if}
 {/if}
