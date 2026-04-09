@@ -606,9 +606,7 @@ async def get_ai_analysis(
             },
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"AI分析失败: {str(e)}"
-        ) from e
+        raise HTTPException(status_code=500, detail=f"AI分析失败: {str(e)}") from e
 
 
 @router.get("/user-hourly-activity")
