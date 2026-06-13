@@ -56,7 +56,9 @@ def get_analytics_overview(
         }
         return set_cached(key, stats)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析数据获取失败: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"分析数据获取失败: {str(e)}"
+        ) from e
 
 
 @router.get("/wordcloud")
@@ -301,7 +303,9 @@ def get_wordcloud_data(
 
         return set_cached(key, {"messages": result})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"生成词云数据失败: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"生成词云数据失败: {str(e)}"
+        ) from e
 
 
 @router.get("/interactions")
@@ -408,7 +412,9 @@ def get_user_network(
             ],
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析用户网络失败: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"分析用户网络失败: {str(e)}"
+        ) from e
 
 
 @router.get("/sentiment")
@@ -479,7 +485,9 @@ async def get_activity_heatmap(
         }
         return set_cached(key, result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"生成活动热力图失败: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"生成活动热力图失败: {str(e)}"
+        ) from e
 
 
 @router.get("/topic-evolution")
