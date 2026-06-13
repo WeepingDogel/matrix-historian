@@ -1,10 +1,18 @@
 <script>
+	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import Skeleton from '$lib/Skeleton.svelte';
+	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
 	import { getMedia, getMediaStats } from '$lib/api.js';
 
 	let { data } = $props();
 	let pageLoading = $state(true);
+
+	// Accumulated media for infinite scroll
+	let allMedia = $state([]);
+	let currentSkip = $state(0);
+	let hasMore = $state(false);
+	let loading = $state(false);
 
 	async function fetchMedia() {
 		pageLoading = true;
@@ -13,15 +21,19 @@
 				getMedia({ skip: data.skip, limit: data.limit, mime_type: data.mimeFilter || undefined }),
 				getMediaStats().catch(() => null)
 			]);
+			const total = result.total ?? 0;
 			data = {
 				...data,
 				media: result.media ?? [],
-				total: result.total ?? 0,
+				total,
 				hasMore: result.has_more ?? false,
 				nextSkip: result.next_skip,
 				stats,
 				_loading: false
 			};
+			allMedia = [...(result.media ?? [])];
+			currentSkip = result.media?.length ?? 0;
+			hasMore = total > data.limit;
 		} catch (e) {
 			console.error('Media fetch error:', e);
 		} finally {
@@ -37,8 +49,30 @@
 		fetchMedia();
 	});
 
-	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
-	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+		try {
+			const params = new URLSearchParams();
+			params.set('skip', String(currentSkip));
+			params.set('limit', String(data.limit));
+			if (data.mimeFilter) params.set('mime_type', data.mimeFilter);
+
+			const res = await fetch(`/api/v1/media?${params.toString()}`);
+			if (!res.ok) throw new Error(`API ${res.status}`);
+			const result = await res.json();
+
+			const newMedia = result.media ?? [];
+			allMedia = [...allMedia, ...newMedia];
+			currentSkip += newMedia.length;
+			hasMore = result.has_more ?? false;
+		} catch (e) {
+			console.error('Load more error:', e);
+			hasMore = false;
+		} finally {
+			loading = false;
+		}
+	}
 
 	function isImage(mime) {
 		return mime && mime.startsWith('image/');
@@ -67,6 +101,10 @@
 		if (mime.startsWith('text/')) return '📝';
 		if (mime.includes('pdf')) return '📕';
 		return '📄';
+	}
+
+	function setFilter(value) {
+		goto(`/media?type=${value}`);
 	}
 
 	let filterItems = $derived([
@@ -121,27 +159,27 @@
 <!-- Filter tabs -->
 <div class="tabs tabs-box mb-6">
 	{#each filterItems as f}
-		<a
-			href="/media?type={f.value}"
+		<button
 			class="tab"
 			class:tab-active={data.mimeFilter === f.value}
+			onclick={() => setFilter(f.value)}
 		>
 			<span class="mr-1">{f.icon}</span>
 			{f.label}
-		</a>
+		</button>
 	{/each}
 </div>
 
 <div class="flex justify-between items-center mb-4">
 	<p class="text-sm opacity-60">{$t('media.fileCount', { count: data.total.toLocaleString() })}</p>
-	<p class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</p>
+	<p class="text-sm opacity-60">{allMedia.length} / {data.total}</p>
 </div>
 
-{#if data.media.length === 0}
+{#if allMedia.length === 0 && !loading}
 	<p class="opacity-60">{$t('media.noMedia')}</p>
 {:else}
 	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-		{#each data.media as m}
+		{#each allMedia as m}
 			<div class="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
 				<figure class="h-32 bg-base-300 flex items-center justify-center overflow-hidden relative">
 					{#if isImage(m.mime_type)}
@@ -184,20 +222,7 @@
 		{/each}
 	</div>
 
-	<!-- Pagination -->
-	<div class="flex items-center gap-2 mt-6 justify-center">
-		{#if data.skip > 0}
-			<a href="/media?skip={Math.max(0, data.skip - data.limit)}&type={data.mimeFilter}" class="btn btn-outline btn-sm">
-				{$t('common.previous')}
-			</a>
-		{/if}
-		<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
-		{#if data.hasMore}
-			<a href="/media?skip={data.nextSkip}&type={data.mimeFilter}" class="btn btn-outline btn-sm">
-				{$t('common.next')}
-			</a>
-		{/if}
-	</div>
+	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
 {/if}
 
 {/if}
