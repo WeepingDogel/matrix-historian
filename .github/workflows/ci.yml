@@ -2,10 +2,10 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   lint-and-format:
@@ -22,38 +22,8 @@ jobs:
         python-version: '3.12'
         cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install black isort flake8 mypy bandit ruff pre-commit
-
-    - name: Run black (code formatting)
-      run: |
-        black --check --diff .
-
-    - name: Run isort (import sorting)
-      run: |
-        isort --check-only --diff .
-
-    - name: Run flake8 (code style)
-      run: |
-        flake8 .
-
-    # - name: Run mypy (type checking)
-    #   run: |
-    #     mypy .
-
-    - name: Run bandit (security scanning)
-      run: |
-        bandit -r services shared --skip B101,B104,B105,B605,B607
-
-    - name: Run ruff (additional linting)
-      run: |
-        ruff check .
-
     - name: Run pre-commit
-      run: |
-        pre-commit run --all-files
+      uses: pre-commit/action@v3.0.1
 
   test:
     name: Run Tests
@@ -125,10 +95,14 @@ jobs:
         flags: unittests
 
   build-and-push:
-    name: Build and Push Docker Images
+    name: Build and Push (${{ matrix.service }})
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        service: [api, bot, web]
 
     steps:
     - name: Checkout code
@@ -143,38 +117,14 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push API service
+    - name: Build and push ${{ matrix.service }} service
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./services/api/Dockerfile
+        file: ./services/${{ matrix.service }}/Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-api:${{ github.sha }}
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-api:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Bot service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/bot/Dockerfile
-        push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-bot:${{ github.sha }}
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-bot:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Web service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/web/Dockerfile
-        push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-web:${{ github.sha }}
-          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-web:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-${{ matrix.service }}:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/matrix-historian-${{ matrix.service }}:latest
+        cache-from: type=gha,scope=${{ matrix.service }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.service }}

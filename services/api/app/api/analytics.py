@@ -346,7 +346,9 @@ def get_message_trends(
         }
         return set_cached(key, result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取消息趋势失败: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"获取消息趋势失败: {str(e)}"
+        ) from e
 
 
 @router.get("/content-analysis")
@@ -439,7 +441,7 @@ async def analyze_sentiment(
         }
         return set_cached(key, result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/activity-heatmap")
@@ -516,7 +518,7 @@ async def analyze_topic_evolution(
         }
         return set_cached(key, result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 def analyze_single_topic(text: str) -> str:
@@ -590,7 +592,7 @@ async def get_ai_analysis(
             },
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI分析失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"AI分析失败: {str(e)}") from e
 
 
 @router.get("/user-hourly-activity")
@@ -644,7 +646,7 @@ async def get_user_hourly_activity(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"获取用户每小时活动数据失败: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/analytics-health")

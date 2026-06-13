@@ -63,7 +63,9 @@
 		"byUser": "by user",
 		"noMessages": "No messages found.",
 		"dateFrom": "From",
-		"dateTo": "To"
+		"dateTo": "To",
+		"newestFirst": "Newest First",
+		"oldestFirst": "Oldest First"
 	},
 	"rooms": {
 		"title": "Rooms",
@@ -136,7 +138,6 @@
 		"filteredByRoom": "Filtered by room: {room}",
 		"sentimentTitle": "Sentiment Analysis",
 		"confidence": "Confidence",
-		"contentAnalysisTitle": "Content Analysis",
 		"word": "Word",
 		"count": "Count",
 		"userNetworkTitle": "User Network",
@@ -146,7 +147,11 @@
 		"weight": "Weight",
 		"topicEvolutionTitle": "Topic Evolution",
 		"trend": "Trend",
-		"topic": "Topic"
+		"topic": "Topic",
+		"messageSummaryTitle": "Message Summary",
+		"messageSummaryNoData": "No summary available.",
+		"summaryLabel": "Summary",
+		"keyPoints": "Key Points"
 	},
 	"timezone": {
 		"label": "Timezone",
