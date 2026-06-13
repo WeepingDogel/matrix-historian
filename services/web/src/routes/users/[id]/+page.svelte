@@ -3,6 +3,7 @@
 	import { formatTime } from '$lib/timezone';
 	import Time from '$lib/Time.svelte';
 	import Skeleton from '$lib/Skeleton.svelte';
+	import InfiniteScroll from '$lib/InfiniteScroll.svelte';
 	import { getUserMessages, getMessagesCount } from '$lib/api.js';
 
 	let { data } = $props();
@@ -14,23 +15,30 @@
 			: data.userId
 	);
 
-	let currentPage = $derived(Math.floor(data.skip / data.limit) + 1);
-	let totalPages = $derived(Math.ceil(data.total / data.limit) || 1);
+	// Accumulated messages for infinite scroll
+	let allMessages = $state([]);
+	let currentSkip = $state(0);
+	let hasMore = $state(false);
+	let loading = $state(false);
 
 	async function fetchUserMessages() {
 		pageLoading = true;
 		try {
 			const [messages, countData] = await Promise.all([
-				getUserMessages(data.userId, { skip: data.skip, limit: data.limit }),
+				getUserMessages(data.userId, { skip: 0, limit: data.limit }),
 				getMessagesCount({ user_id: data.userId }).catch(() => ({ total: 0 }))
 			]);
+			const total = countData.total ?? 0;
 			data = {
 				...data,
 				messages,
-				total: countData.total ?? 0,
+				total,
 				hasMore: messages.length === data.limit,
 				_loading: false
 			};
+			allMessages = [...messages];
+			currentSkip = messages.length;
+			hasMore = total > data.limit;
 		} catch (e) {
 			console.error('User detail fetch error:', e);
 		} finally {
@@ -40,11 +48,34 @@
 
 	let lastFetchKey = null;
 	$effect(() => {
-		const key = `${data.userId}|${data.skip}`;
+		const key = data.userId;
 		if (key === lastFetchKey) return;
 		lastFetchKey = key;
 		fetchUserMessages();
 	});
+
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+		try {
+			const params = new URLSearchParams();
+			params.set('skip', String(currentSkip));
+			params.set('limit', String(data.limit));
+
+			const res = await fetch(`/api/v1/users/${encodeURIComponent(data.userId)}/messages?${params.toString()}`);
+			if (!res.ok) throw new Error(`API ${res.status}`);
+			const newMessages = await res.json();
+
+			allMessages = [...allMessages, ...newMessages];
+			currentSkip += newMessages.length;
+			hasMore = newMessages.length >= data.limit;
+		} catch (e) {
+			console.error('Load more error:', e);
+			hasMore = false;
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -66,20 +97,24 @@
 		<Skeleton variant="chat" count={5} />
 	</div>
 {:else}
-	<p class="text-sm opacity-60 mb-6">
-		{$t('users.messageCount', { count: data.total.toLocaleString() })}
-		{#if data.total > 0}· {$t('common.page')} {currentPage} {$t('common.of')} {totalPages}{/if}
-	</p>
+	<div class="flex justify-between items-center mb-6">
+		<p class="text-sm opacity-60">
+			{$t('users.messageCount', { count: data.total.toLocaleString() })}
+		</p>
+		<p class="text-sm opacity-60">
+			{allMessages.length} / {data.total}
+		</p>
+	</div>
 
 	{#if data.error}
 		<div class="alert alert-warning mb-4"><span>{$t('common.error', { error: data.error })}</span></div>
 	{/if}
 
-	{#if data.messages.length === 0}
+	{#if allMessages.length === 0 && !loading}
 		<p class="opacity-60">{$t('users.noMessagesFrom')}</p>
 	{:else}
 		<div class="space-y-1">
-			{#each data.messages as msg}
+			{#each allMessages as msg}
 				<div class="chat chat-start">
 					<div class="chat-header">
 						<span class="font-medium">{displayName}</span>
@@ -97,18 +132,6 @@
 			{/each}
 		</div>
 
-		<div class="flex items-center gap-2 mt-6 justify-center">
-			{#if data.skip > 0}
-				<a href="/users/{encodeURIComponent(data.userId)}?skip={Math.max(0, data.skip - data.limit)}" class="btn btn-outline btn-sm">
-					{$t('common.previous')}
-				</a>
-			{/if}
-			<span class="text-sm opacity-60">{$t('common.page')} {currentPage} {$t('common.of')} {totalPages}</span>
-			{#if data.hasMore}
-				<a href="/users/{encodeURIComponent(data.userId)}?skip={data.skip + data.limit}" class="btn btn-outline btn-sm">
-					{$t('common.next')}
-				</a>
-			{/if}
-		</div>
+		<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
 	{/if}
 {/if}
