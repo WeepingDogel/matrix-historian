@@ -223,6 +223,7 @@
 	</div>
 
 	<InfiniteScroll {loading} {hasMore} onLoadMore={loadMore} />
-{/if}
+ {/if}
 
 {/if}
+
