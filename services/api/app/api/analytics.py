@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared
 from datetime import datetime, timezone  # noqa: E402
 from typing import Dict, List  # noqa: E402
+
 from base_app.crud import message as crud  # noqa: E402
 from base_app.db.database import get_db  # noqa: E402
 from cache import cache_key, get_cached, set_cached  # noqa: E402
@@ -276,7 +277,11 @@ def get_wordcloud_data(
 
         words = []
         for content in messages:
-            if content is not None and isinstance(content, str) and content.strip() != "":
+            if (
+                content is not None
+                and isinstance(content, str)
+                and content.strip() != ""
+            ):
                 content = url_pattern.sub("", content)  # Strip URLs before segmentation
                 for word, flag in pseg.cut(content):
                     if (

@@ -64,11 +64,7 @@ def get_room_messages(
         joinedload(Message.sender),
         joinedload(Message.room),
     ]
-    query = (
-        db.query(Message)
-        .options(*_load_options)
-        .filter(Message.room_id == room_id)
-    )
+    query = db.query(Message).options(*_load_options).filter(Message.room_id == room_id)
 
     if after:
         query = query.filter(Message.timestamp >= after)
@@ -92,9 +88,7 @@ def get_user_messages(
         joinedload(Message.room),
     ]
     query = (
-        db.query(Message)
-        .options(*_load_options)
-        .filter(Message.sender_id == user_id)
+        db.query(Message).options(*_load_options).filter(Message.sender_id == user_id)
     )
 
     if after:
