@@ -142,6 +142,10 @@ class MatrixBot:
             if event.sender == self.creds.username:
                 return
 
+            # Skip text handler for events already handled as media
+            if getattr(event, "_is_media_event", False):
+                return
+
             try:
                 with SessionLocal() as db:
                     # Create or update user
@@ -267,16 +271,22 @@ class MatrixBot:
         # Register listeners for media event types.
         # simplematrixbotlib's on_message_event only captures RoomMessageText,
         # so we use on_custom_event to route media events into the same handler.
+        # Use a factory function to avoid Python's closure-over-loop-variable gotcha.
+        def _register_media_handler(et):
+            @self.bot.listener.on_custom_event(et)
+            async def _media_proxy(room, event):
+                # Mark the event as already handled so the text handler doesn't
+                # fall through and double-save it as text
+                event._is_media_event = True
+                await handle_message(room, event)
+
         for event_type in [
             RoomMessageImage,
             RoomMessageFile,
             RoomMessageAudio,
             RoomMessageVideo,
         ]:
-
-            @self.bot.listener.on_custom_event(event_type)
-            async def _media_proxy(room, event):
-                await handle_message(room, event)
+            _register_media_handler(event_type)
 
     async def _heartbeat_loop(self):
         """Periodically touch healthcheck file to signal the bot is alive.

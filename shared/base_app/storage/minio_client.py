@@ -15,7 +15,16 @@ logger = logging.getLogger(__name__)
 class MediaStorage:
     """MediaStorage handles file uploads/downloads to MinIO object storage"""
 
-    def __init__(self):
+    _instance = None
+    _bucket_ensured = False
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._init_client()
+        return cls._instance
+
+    def _init_client(self):
         endpoint = os.getenv("MINIO_ENDPOINT", "minio:9000")
         access_key = os.getenv("MINIO_ROOT_USER", "historian")
         secret_key = os.getenv("MINIO_ROOT_PASSWORD", "historian123")
@@ -29,7 +38,7 @@ class MediaStorage:
             secure=False,  # Internal Docker network, no TLS
         )
         self.bucket = os.getenv("MINIO_BUCKET", "matrix-media")
-        self._ensure_bucket()
+        self._ensure_bucket_once()
         # Public-facing MinIO client for presigned URLs
         public_url = os.getenv("MINIO_PUBLIC_URL")
         if public_url:
@@ -47,18 +56,22 @@ class MediaStorage:
         else:
             self.public_client = self.client
 
-    def _ensure_bucket(self):
-        """Ensure the bucket exists, create if it doesn't"""
-        try:
-            if not self.client.bucket_exists(self.bucket):
-                logger.info(f"Creating bucket: {self.bucket}")
-                self.client.make_bucket(self.bucket)
-                logger.info(f"Bucket {self.bucket} created successfully")
-            else:
-                logger.debug(f"Bucket {self.bucket} already exists")
-        except S3Error as e:
-            logger.error(f"Error ensuring bucket exists: {e}")
-            raise
+    def _ensure_bucket_once(self):
+        """Ensure the bucket exists, only on first initialization"""
+        if not MediaStorage._bucket_ensured:
+            try:
+                if not self.client.bucket_exists(self.bucket):
+                    logger.info(f"Creating bucket: {self.bucket}")
+                    self.client.make_bucket(self.bucket)
+                    logger.info(f"Bucket {self.bucket} created successfully")
+                else:
+                    logger.debug(f"Bucket {self.bucket} already exists")
+                MediaStorage._bucket_ensured = True
+            except S3Error as e:
+                logger.error(f"Error ensuring bucket exists: {e}")
+                raise
+        else:
+            logger.debug(f"Bucket {self.bucket} already ensured, skipping check")
 
     def upload(
         self, data: bytes, filename: str, mime_type: str = "application/octet-stream"

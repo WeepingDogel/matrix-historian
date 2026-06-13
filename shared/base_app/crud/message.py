@@ -1,5 +1,5 @@
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple
 
 from base_app.models.message import Message, Room, User
@@ -17,9 +17,12 @@ def get_messages(
     limit: int = 100,
     sort: str = "desc",
 ):
-    query = db.query(Message).options(
-        joinedload(Message.media), joinedload(Message.sender)
-    )
+    _load_options = [
+        joinedload(Message.media),
+        joinedload(Message.sender),
+        joinedload(Message.room),
+    ]
+    query = db.query(Message).options(*_load_options)
 
     if room_id:
         query = query.filter(Message.room_id == room_id)
@@ -35,9 +38,14 @@ def get_messages(
 
 
 def get_message(db: Session, event_id: str):
+    _load_options = [
+        joinedload(Message.media),
+        joinedload(Message.sender),
+        joinedload(Message.room),
+    ]
     return (
         db.query(Message)
-        .options(joinedload(Message.media))
+        .options(*_load_options)
         .filter(Message.event_id == event_id)
         .first()
     )
@@ -51,11 +59,12 @@ def get_room_messages(
     skip: int = 0,
     limit: int = 100,
 ):
-    query = (
-        db.query(Message)
-        .options(joinedload(Message.media))
-        .filter(Message.room_id == room_id)
-    )
+    _load_options = [
+        joinedload(Message.media),
+        joinedload(Message.sender),
+        joinedload(Message.room),
+    ]
+    query = db.query(Message).options(*_load_options).filter(Message.room_id == room_id)
 
     if after:
         query = query.filter(Message.timestamp >= after)
@@ -73,10 +82,13 @@ def get_user_messages(
     skip: int = 0,
     limit: int = 100,
 ):
+    _load_options = [
+        joinedload(Message.media),
+        joinedload(Message.sender),
+        joinedload(Message.room),
+    ]
     query = (
-        db.query(Message)
-        .options(joinedload(Message.media))
-        .filter(Message.sender_id == user_id)
+        db.query(Message).options(*_load_options).filter(Message.sender_id == user_id)
     )
 
     if after:
@@ -98,9 +110,14 @@ def search_messages(
     limit: int = 100,
     sort: str = "desc",
 ):
+    _load_options = [
+        joinedload(Message.media),
+        joinedload(Message.sender),
+        joinedload(Message.room),
+    ]
     search_query = (
         db.query(Message)
-        .options(joinedload(Message.media))
+        .options(*_load_options)
         .filter(Message.content.like(f"%{query}%"))
     )
 
@@ -287,7 +304,7 @@ def search_users(db: Session, query: str, skip: int = 0, limit: int = 100):
 
 def get_message_stats(db: Session, days: int = 7):
     """获取消息统计数据"""
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     daily_stats = (
@@ -309,7 +326,7 @@ def get_user_activity(db: Session, limit: int = 10):
     return (
         db.query(User, func.count(Message.event_id).label("message_count"))
         .join(Message)
-        .group_by(User)
+        .group_by(User.user_id)
         .order_by(func.count(Message.event_id).desc())
         .limit(limit)
         .all()
@@ -321,7 +338,7 @@ def get_room_activity(db: Session, limit: int = 10):
     return (
         db.query(Room, func.count(Message.event_id).label("message_count"))
         .join(Message)
-        .group_by(Room)
+        .group_by(Room.room_id)
         .order_by(func.count(Message.event_id).desc())
         .limit(limit)
         .all()
@@ -330,7 +347,7 @@ def get_room_activity(db: Session, limit: int = 10):
 
 def get_hourly_activity(db: Session, days: int = 7):
     """获取每小时活跃度统计"""
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     return (
@@ -345,9 +362,43 @@ def get_hourly_activity(db: Session, days: int = 7):
     )
 
 
+def get_messages_content_only(
+    db: Session,
+    room_id: Optional[str] = None,
+    after: Optional[datetime] = None,
+    before: Optional[datetime] = None,
+    skip: int = 0,
+    limit: int = 1000,
+) -> List[str]:
+    """
+    Get only message content strings with filtering, avoiding ORM overhead.
+
+    Used by analytics endpoints (e.g., wordcloud) that only need the text content
+    and not the full ORM objects with relationships.
+    """
+    query = db.query(Message.content).filter(
+        Message.content.isnot(None), Message.content != ""
+    )
+
+    if room_id:
+        query = query.filter(Message.room_id == room_id)
+    if after:
+        query = query.filter(Message.timestamp >= after)
+    if before:
+        query = query.filter(Message.timestamp <= before)
+
+    return [
+        row[0]
+        for row in query.order_by(Message.timestamp.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    ]
+
+
 def get_word_frequency(db: Session, limit: int = 50, days: int = 7):
     """获取高频词统计"""
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     messages = db.query(Message.content).filter(Message.timestamp >= start_date).all()
@@ -362,7 +413,7 @@ def get_user_interaction_pairs(
     """
     获取用户互动对，支持按房间筛选
     """
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     query = db.query(Message.room_id, Message.sender_id, Message.timestamp).filter(
@@ -378,7 +429,7 @@ def get_user_interaction_pairs(
 
 def get_message_trends(db: Session, days: int = 7, interval: str = "day"):
     """获取消息趋势数据"""
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     if interval == "hour":
@@ -399,7 +450,7 @@ def get_message_trends(db: Session, days: int = 7, interval: str = "day"):
 
 def get_conversation_patterns(db: Session, days: int = 7):
     """分析对话模式"""
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     # 获取消息序列
@@ -462,7 +513,7 @@ def get_activity_heatmap(
         days: 分析天数
         room_id: 可选的房间ID过滤
     """
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     query = db.query(
@@ -493,7 +544,7 @@ def get_user_hourly_activity(
         room_id: 可选的房间ID过滤
         limit: 返回的用户数量限制
     """
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
 
     # 首先获取最活跃的用户

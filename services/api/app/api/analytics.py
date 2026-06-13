@@ -2,7 +2,7 @@ import re
 import sys
 
 sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared
-from datetime import datetime  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 from typing import Dict, List  # noqa: E402
 
 from base_app.crud import message as crud  # noqa: E402
@@ -75,7 +75,7 @@ def get_wordcloud_data(
         if cached is not None:
             return cached
 
-        messages = crud.get_messages(db, room_id=room_id, limit=1000)  # 获取原始消息
+        messages = crud.get_messages_content_only(db, room_id=room_id, limit=1000)
 
         # 使用jieba.posseg分词并统计名词词频
         from collections import Counter  # noqa: E402
@@ -278,8 +278,7 @@ def get_wordcloud_data(
         )
 
         words = []
-        for msg in messages:
-            content = getattr(msg, "content", None)
+        for content in messages:
             if (
                 content is not None
                 and isinstance(content, str)
@@ -601,7 +600,7 @@ async def get_ai_analysis(
             "metadata": {
                 "message_count": len(messages),
                 "room_id": room_id,
-                "analysis_time": datetime.utcnow().isoformat(),
+                "analysis_time": datetime.now(timezone.utc).isoformat(),
                 "model": model_used,
             },
         }
