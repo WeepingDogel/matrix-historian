@@ -54,9 +54,9 @@ def read_messages(
     if user_id:
         query_params["user_id"] = user_id
     if after:
-        query_params["after"] = after.isoformat() if after else None
+        query_params["after"] = after
     if before:
-        query_params["before"] = before.isoformat() if before else None
+        query_params["before"] = before
 
     total = crud.count_messages(db, **query_params)
     messages = crud.get_messages(db, skip=skip, limit=limit, **query_params)

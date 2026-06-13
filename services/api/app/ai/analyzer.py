@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 
 class MessageAnalyzer:
     def __init__(self):
-        self.client = groq.Groq()
-        self.client.api_key = os.getenv("GROQ_API_KEY")
+        self.api_key = os.getenv("GROQ_API_KEY")
+        if self.api_key:
+            self.client = groq.Groq(api_key=self.api_key)
+        else:
+            self.client = None
         self.stop_words = set(
             ["的", "了", "和", "是", "就", "都", "而", "及", "与", "着"]
         )

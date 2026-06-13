@@ -1,7 +1,7 @@
 """CRUD operations for media"""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from base_app.models.message import Media
@@ -55,7 +55,7 @@ def create_media(
         size=size,
         width=width,
         height=height,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
     )
 
     db.add(db_media)
