@@ -126,6 +126,12 @@
 			: 1
 	);
 
+	let userHourlyMax = $derived(
+		data.userHourlyActivity && data.userHourlyActivity.users && data.userHourlyActivity.users.length > 0
+			? Math.max(...data.userHourlyActivity.users.flatMap((u) => u.hourly_activity).filter((v) => typeof v === 'number'), 1)
+			: 1
+	);
+
 	// Filter state
 	let selectedRoom = $state(data.room_id ?? '');
 	let selectedDays = $state(data.days ?? 7);
@@ -164,6 +170,15 @@
 	function heatmapColor(value) {
 		if (!value || value === 0) return 'bg-base-300 opacity-30';
 		const intensity = value / heatmapMax;
+		if (intensity > 0.75) return 'bg-primary text-primary-content';
+		if (intensity > 0.5) return 'bg-primary/70 text-primary-content';
+		if (intensity > 0.25) return 'bg-primary/40';
+		return 'bg-primary/20';
+	}
+
+	function userHourlyHeatmapColor(value) {
+		if (!value || value === 0) return 'bg-base-300 opacity-30';
+		const intensity = value / userHourlyMax;
 		if (intensity > 0.75) return 'bg-primary text-primary-content';
 		if (intensity > 0.5) return 'bg-primary/70 text-primary-content';
 		if (intensity > 0.25) return 'bg-primary/40';
@@ -495,7 +510,7 @@
 									{#each user.hourly_activity as count, hourIdx}
 										<td class="p-0">
 											<div
-												class="w-full h-6 flex items-center justify-center text-[10px] rounded-sm {count > 0 ? 'bg-primary/20' : 'bg-base-300 opacity-30'}"
+												class="w-full h-6 flex items-center justify-center text-[10px] rounded-sm {userHourlyHeatmapColor(count)}"
 												title="{user.display_name || user.user_id} at {String(hourIdx).padStart(2, '0')}:00: {count} messages"
 											>
 												{#if count > 0}{count}{/if}
