@@ -52,6 +52,8 @@ services:
       - MATRIX_HOMESERVER=${MATRIX_HOMESERVER}
       - MATRIX_USER=${MATRIX_USER}
       - MATRIX_PASSWORD=${MATRIX_PASSWORD}
+      - MATRIX_ENCRYPTION_ENABLED=${MATRIX_ENCRYPTION_ENABLED:-false}
+      - MATRIX_DEVICE_NAME=${MATRIX_DEVICE_NAME:-matrix-historian}
       - DATABASE_URL=postgresql://historian:historian@db:5432/historian
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian}
