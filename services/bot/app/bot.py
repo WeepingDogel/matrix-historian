@@ -17,6 +17,7 @@ from base_app.storage.minio_client import MediaStorage  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 from nio import (  # noqa: E402
     DownloadResponse,
+    InviteEvent,
     RoomMessageAudio,
     RoomMessageFile,
     RoomMessageImage,
@@ -33,6 +34,7 @@ class MatrixBot:
     """
     Matrix Bot for archiving messages to PostgreSQL database.
     Consolidated bot initialization - single source of truth.
+    Supports optional end-to-end encryption (E2EE).
     """
 
     def __init__(self):
@@ -41,11 +43,19 @@ class MatrixBot:
         if self.username and not self.username.startswith("@"):
             self.username = f"@{self.username}:matrix.org"
         self.password = os.getenv("MATRIX_PASSWORD")
+        self.encryption_enabled = (
+            os.getenv("MATRIX_ENCRYPTION_ENABLED", "false").lower() == "true"
+        )
+        self.device_name = os.getenv("MATRIX_DEVICE_NAME", "matrix-historian")
 
         if not all([self.homeserver, self.username, self.password]):
             raise ValueError("Missing Matrix credentials in environment variables")
 
         logger.info(f"Initializing bot with user {self.username}")
+        if self.encryption_enabled:
+            logger.info("E2EE encryption is ENABLED")
+        else:
+            logger.info("E2EE encryption is DISABLED")
         self.initialize_bot()
         logger.info("Bot initialized successfully")
 
@@ -58,7 +68,7 @@ class MatrixBot:
             session_stored_file="/app/data/bot_session.txt",
         )
         self.config = botlib.Config()
-        self.config.encryption_enabled = False
+        self.config.encryption_enabled = self.encryption_enabled
         # Increase timeout for initial sync (default 65536ms may not be enough
         # when the bot is in many rooms)
         self.config.timeout = int(
@@ -66,8 +76,82 @@ class MatrixBot:
         )  # 5 minutes
         # Persist sync state so restarts only fetch incremental updates
         self.config.store_path = os.getenv("MATRIX_STORE_PATH", "/app/data/nio_store")
+        # Set device name for E2EE identification
+        if self.encryption_enabled and self.device_name:
+            self.config.device_name = self.device_name
         self.bot = botlib.Bot(self.creds, self.config)
         self.setup_handlers()
+
+    def _auto_verify_devices(self) -> None:
+        """Auto-trust all known devices for E2EE (Trust On First Use).
+
+        This is called after each sync to ensure the bot can decrypt messages
+        from any device its users are on. For session-verified accounts, this
+        allows the bot to trust new devices without manual interaction.
+        """
+        if not self.encryption_enabled:
+            return
+
+        client = self.bot.async_client
+        if not hasattr(client, "device_store") or not client.device_store:
+            logger.debug("No device store available for auto-verify")
+            return
+
+        try:
+            for user_id, device_dict in client.device_store.items():
+                for device_id, device in device_dict.items():
+                    if not device.trusted:
+                        logger.info(
+                            f"Auto-verifying device {device_id} for user {user_id}"
+                        )
+                        client.verify_device(device)
+                        logger.info(
+                            f"Device {device_id} for user {user_id} is now trusted"
+                        )
+            logger.debug("Device auto-verify pass complete")
+        except Exception as e:
+            logger.warning(f"Error during device auto-verify: {str(e)}", exc_info=True)
+
+    def _setup_encryption_handlers(self) -> None:
+        """
+        Register callbacks for E2EE-related events:
+        - Device verification after each sync
+        - Room invitation auto-accept
+        """
+        if not self.encryption_enabled:
+            return
+
+        client = self.bot.async_client
+
+        # Auto-verify devices on each successful sync
+        client.add_response_callback(self._auto_verify_devices, "SyncResponse")
+
+        # Register invite handler
+        client.add_event_callback(self._handle_invite, InviteEvent)
+
+    async def _handle_invite(self, event: InviteEvent) -> None:
+        """Auto-accept room invites so the bot can join encrypted rooms.
+
+        For encrypted rooms, the bot must explicitly join to receive the
+        room encryption state and start receiving key shares from other members.
+        """
+        try:
+            room_id = event.source.get("room_id")
+            if not room_id:
+                logger.warning("Received invite without room_id")
+                return
+
+            logger.info(f"Auto-accepting invite to room {room_id}")
+            result = await self.bot.async_client.join(room_id)
+            if hasattr(result, "room_id") and result.room_id:
+                logger.info(f"Successfully joined room {room_id}")
+            else:
+                logger.warning(
+                    f"Failed to join room {room_id}: "
+                    f"{getattr(result, 'message', 'unknown error')}"
+                )
+        except Exception as e:
+            logger.error(f"Error handling invite: {str(e)}", exc_info=True)
 
     async def process_avatar(self, mxc_url: str, entity_type: str, entity_id: str):
         """Download avatar, create thumbnail, upload to MinIO."""
@@ -118,7 +202,11 @@ class MatrixBot:
             return None
 
     async def download_matrix_media(self, mxc_url: str) -> bytes:
-        """Download media from Matrix server"""
+        """Download media from Matrix server.
+
+        In encrypted rooms, nio will automatically decrypt the media
+        content before returning it in the DownloadResponse.
+        """
         try:
             logger.debug(f"Downloading media from {mxc_url}")
             response = await self.bot.async_client.download(mxc_url)
@@ -254,10 +342,15 @@ class MatrixBot:
                     elif hasattr(event, "body") and event.body:
                         # Save text message (only for non-media events)
                         crud.create_message(
-                            db, event.event_id, room.room_id, event.sender, event.body
+                            db,
+                            event.event_id,
+                            room.room_id,
+                            event.sender,
+                            event.body,
                         )
                         logger.info(
-                            f"Saved text message from {event.sender} in {room.room_id}"
+                            f"Saved text message from {event.sender} in "
+                            f"{room.room_id}"
                         )
 
             except Exception as e:
@@ -287,6 +380,9 @@ class MatrixBot:
             RoomMessageVideo,
         ]:
             _register_media_handler(event_type)
+
+        # Register E2EE-specific handlers (invites, device auto-verify)
+        self._setup_encryption_handlers()
 
     async def _heartbeat_loop(self):
         """Periodically touch healthcheck file to signal the bot is alive.
