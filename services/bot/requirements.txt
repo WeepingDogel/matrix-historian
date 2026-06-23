@@ -1,5 +1,6 @@
 # Matrix Bot Service dependencies
 cachetools>=5.0.0
+atomicwrites>=1.4.0
 matrix-nio==0.25.2
 python-olm>=3.2.0
 simplematrixbotlib @ git+https://codeberg.org/imbev/simplematrixbotlib.git
