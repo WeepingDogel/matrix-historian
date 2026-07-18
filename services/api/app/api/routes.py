@@ -1,8 +1,6 @@
 import sys
 
-sys.path.insert(
-    0, "/app/shared"
-)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(0, "/app/shared")
 
 from datetime import datetime  # noqa: E402
 from typing import Any, Dict, List  # noqa: E402
@@ -24,7 +22,7 @@ from cache_headers import (  # noqa: E402
     cache_control,
 )
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import Response  # noqa: E402
+from fastapi.responses import JSONResponse, RedirectResponse  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter()
@@ -43,7 +41,7 @@ def get_messages_count(
     key = cache_key("count", "messages", room_id, user_id, query, str(after), str(before))
     cached = get_cached("count", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
 
     if query:
         total = crud.count_search_messages(db, query, room_id, user_id, after, before)
@@ -52,7 +50,7 @@ def get_messages_count(
 
     result = {"total": total}
     set_cached("count", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/messages/", response_model=MessageResponse)
@@ -161,12 +159,12 @@ def read_users(
     key = cache_key("list", "users", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_SHORT))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     users = crud.get_users(db, skip=skip, limit=limit)
     result = [UserBase.model_validate(u) for u in users]
     set_cached("list", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_SHORT))
+    return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
 
 @router.get("/users/count")
@@ -175,12 +173,12 @@ def count_users(db: Session = Depends(get_db)):
     key = cache_key("count", "users")
     cached = get_cached("count", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
 
     total = crud.count_users(db)
     result = {"total": total}
     set_cached("count", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/users/search/", response_model=List[UserBase])
@@ -215,12 +213,12 @@ def read_rooms(
     key = cache_key("list", "rooms", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_SHORT))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
     result = [RoomBase.model_validate(r) for r in rooms]
     set_cached("list", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_SHORT))
+    return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
 
 @router.get("/rooms/count")
@@ -229,12 +227,12 @@ def count_rooms(db: Session = Depends(get_db)):
     key = cache_key("count", "rooms")
     cached = get_cached("count", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
 
     total = crud.count_rooms(db)
     result = {"total": total}
     set_cached("count", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/rooms/search/", response_model=List[RoomBase])
@@ -263,7 +261,7 @@ def count_search_rooms(
 def health_check():
     """健康检查端点，浏览器短期缓存"""
     result = {"status": "healthy"}
-    return Response(content=str(result), media_type="application/json", headers=cache_control(120))
+    return JSONResponse(content=result, headers=cache_control(120))
 
 
 @router.get("/analytics/message-stats")
@@ -275,12 +273,12 @@ def get_message_statistics(
     key = cache_key("analytics", "message_stats", str(days))
     cached = get_cached("analytics", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_LONG))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
     stats = crud.get_message_stats(db, days)
     result = {"stats": [{"date": str(row.date), "count": row.count} for row in stats]}
     set_cached("analytics", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_LONG))
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 @router.get("/analytics/user-activity")
@@ -292,7 +290,7 @@ def get_user_activity(
     key = cache_key("analytics", "user_activity", str(limit))
     cached = get_cached("analytics", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_LONG))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
     activity = crud.get_user_activity(db, limit)
     result = {
@@ -306,7 +304,7 @@ def get_user_activity(
         ]
     }
     set_cached("analytics", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_LONG))
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 @router.get("/analytics/room-activity")
@@ -318,7 +316,7 @@ def get_room_activity(
     key = cache_key("analytics", "room_activity", str(limit))
     cached = get_cached("analytics", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_LONG))
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
     activity = crud.get_room_activity(db, limit)
     result = {
@@ -328,7 +326,7 @@ def get_room_activity(
         ]
     }
     set_cached("analytics", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_LONG))
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 # ─── Cache Invalidation Endpoints ─────────────────────────────────────
@@ -365,7 +363,6 @@ def get_avatar(
     try:
         storage = MediaStorage()
         url = storage.get_url(entity.avatar_url, expires=3600)
-        from fastapi.responses import RedirectResponse
 
         # Avatars rarely change - long browser cache
         return RedirectResponse(url=url, headers=cache_control(CACHE_VERY_LONG))
