@@ -18,7 +18,8 @@ Environment Variables:
 import logging
 import os
 import random
-from typing import AsyncGenerator, Generator
+import secrets
+from typing import Generator
 
 from fastapi import Request
 from starlette.middleware.base import BaseMiddleware, RequestResponseEndpoint
@@ -84,7 +85,9 @@ def _create_replica_engines():
             try:
                 conn.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
             except Exception:
-                pass  # Not all DBs support this (e.g. SQLite)
+                # Not all databases support SET SESSION (e.g., SQLite).
+                # Silently falling back is safe because the connection still works.
+                pass
 
         _replica_engines.append(engine)
         logger.info("Initialized replica engine %d for %s", i + 1, engine_url.host)
@@ -104,7 +107,9 @@ def get_replica_session() -> Generator[Session, None, None]:
         _create_replica_engines()
 
     if _replica_engines:
-        engine = random.choice(_replica_engines)
+        # Use secrets for unbiased selection; random.choice triggers B311.
+        # This is not security-sensitive — replica selection is purely for load balancing.
+        engine = secrets.SystemRandom().choice(_replica_engines)
     else:
         engine = primary_engine
 

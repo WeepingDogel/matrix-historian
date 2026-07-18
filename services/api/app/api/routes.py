@@ -17,6 +17,7 @@ from base_app.schemas.message import (  # noqa: E402
 )
 from cache import cache_key, get_cached, set_cached, invalidate_by_resource  # noqa: E402
 from cache_headers import (  # noqa: E402
+    CACHE_LONG,
     CACHE_MEDIUM,
     CACHE_SHORT,
     CACHE_VERY_LONG,

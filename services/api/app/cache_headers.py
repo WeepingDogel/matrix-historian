@@ -14,7 +14,7 @@ def cache_control(max_age: int, public: bool = True) -> Dict[str, str]:
 def etag_header(data: Any) -> str:
     """Generate an ETag from response data."""
     content = str(data).encode("utf-8")
-    return md5(content).hexdigest()
+    return md5(content, usedforsecurity=False).hexdigest()  # noqa: DUO131
 
 
 def conditional_headers(max_age: int = 300, etag_value: str = "") -> Dict[str, str]:

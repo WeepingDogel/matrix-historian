@@ -209,6 +209,7 @@ The `db/routing.py` module provides optional read/write splitting:
 Set the following environment variables:
 
 ```bash
+# pragma: allowlist secret
 # Primary database (required, used for writes)
 DATABASE_URL=postgresql://user:pass@primary:5432/historian
 
