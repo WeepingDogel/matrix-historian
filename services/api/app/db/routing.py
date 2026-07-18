@@ -5,7 +5,7 @@ and write operations to the primary database. It is designed to be a drop-in
 replacement that works with the existing shared package's get_db generator.
 
 Usage:
-    1. Set DATABASE_URL (primary/write) and REplica_DATABASE_URLS (comma-separated replicas)
+    1. Set DATABASE_URL (primary/write) and REPLICA_DATABASE_URLS (comma-separated replicas)
     2. The routing middleware will automatically select a replica for GET requests
     3. POST/PUT/PATCH/DELETE requests use the primary
 
@@ -87,7 +87,7 @@ def _create_replica_engines():
             except Exception:
                 # Not all databases support SET SESSION (e.g., SQLite).
                 # Silently falling back is safe because the connection still works.
-                pass
+                pass  # nosec: B110
 
         _replica_engines.append(engine)
         logger.info("Initialized replica engine %d for %s", i + 1, engine_url.host)
@@ -104,7 +104,7 @@ def get_replica_session() -> Generator[Session, None, None]:
     Falls back to the primary engine if no replicas are available.
     """
     if not _initialized:
-        _create_replica_engines()
+        _create_replica_engines()  # noqa: E501
 
     if _replica_engines:
         # Use secrets for unbiased selection; random.choice triggers B311.

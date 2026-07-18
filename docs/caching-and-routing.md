@@ -209,12 +209,11 @@ The `db/routing.py` module provides optional read/write splitting:
 Set the following environment variables:
 
 ```bash
-# pragma: allowlist secret
 # Primary database (required, used for writes)
-DATABASE_URL=postgresql://user:pass@primary:5432/historian
+DATABASE_URL=postgresql://user:pass@primary:5432/historian  # pragma: allowlist secret
 
 # Read replicas (optional, comma-separated)
-REPLICA_DATABASE_URLS=postgresql://user:pass@replica1:5432/historian,postgresql://user:pass@replica2:5432/historian
+REPLICA_DATABASE_URLS=postgresql://user:pass@replica1:5432/historian,postgresql://user:pass@replica2:5432/historian  # pragma: allowlist secret
 ```
 
 If `REPLICA_DATABASE_URLS` is not set, all requests use the primary database (single-node mode).
