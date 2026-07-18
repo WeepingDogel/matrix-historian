@@ -53,22 +53,57 @@ cache_key("media", "metadata", media_id="xyz789")
 
 ### Cache Invalidation
 
-When a write operation occurs (new message archived, room created, etc.), the relevant cache keys should be invalidated. The bot service can call:
+When a write operation occurs (new message archived, room created, etc.), the relevant cache keys are automatically invalidated through an HTTP callback from the Bot service to the API service.
 
-```python
-from api.cache import invalidate_cache
+#### How It Works
 
-# Invalidate all message-related caches
-invalidate_cache("message")
-
-# Invalidate specific room caches
-invalidate_cache("room", room_id="abc123")
-
-# Invalidate all caches for a resource type
-invalidate_cache("all")
+```
+Bot writes to PostgreSQL  ──►  Bot calls API cache invalidation endpoint  ──►  API clears relevant cache pools
 ```
 
-A future enhancement could add a webhook or signal from the bot to the API for automatic invalidation.
+1. **Bot** processes a Matrix event and writes to PostgreSQL
+2. **Bot** immediately calls `GET /api/v1/cache/invalidate?resource=<type>` on the API service
+3. **API** clears the relevant cache pools (count, list, media, etc.)
+4. Next read request will miss the cache and fetch fresh data from the database
+
+#### Invalidated Resources
+
+| Bot Write Event | Cache Resource Invalidated |
+|----------------|---------------------------|
+| New user created/updated | `user` (count + list pools) |
+| New room created/updated | `room` (count + list pools) |
+| New text message archived | `message` (count + list pools) |
+| New media message archived | `media` (media pool) |
+
+#### Configuration
+
+Set `API_CACHE_INVALIDATE_URL` in the bot environment:
+
+```bash
+API_CACHE_INVALIDATE_URL=http://api:8500/api/v1/cache/invalidate
+```
+
+The invalidation request uses a 2-second timeout and is fire-and-forget — if the API is temporarily unavailable, the next TTL expiration will handle cache refresh.
+
+#### Programmatic Invalidation
+
+You can also invalidate caches directly in Python:
+
+```python
+from cache import invalidate_by_resource
+
+# Invalidate all message-related caches
+invalidate_by_resource("message")
+
+# Invalidate all caches
+invalidate_by_resource("all")
+```
+
+Or via the API endpoint:
+
+```bash
+curl -X POST "http://localhost:8500/api/v1/cache/invalidate?resource=message"
+```
 
 ---
 

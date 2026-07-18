@@ -15,7 +15,7 @@ from base_app.schemas.message import (  # noqa: E402
     RoomBase,
     UserBase,
 )
-from cache import cache_key, get_cached, set_cached  # noqa: E402
+from cache import cache_key, get_cached, set_cached, invalidate_by_resource  # noqa: E402
 from cache_headers import (  # noqa: E402
     CACHE_MEDIUM,
     CACHE_SHORT,
@@ -328,6 +328,16 @@ def get_room_activity(
     }
     set_cached("analytics", key, result)
     return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_LONG))
+
+
+# ─── Cache Invalidation Endpoints ─────────────────────────────────────
+# These endpoints are called by the bot service after write operations.
+
+@router.post("/cache/invalidate")
+def invalidate_cache(resource: str = Query(..., description="Resource type to invalidate: message, room, user, media, analytics, all")):
+    """Invalidate API cache for a given resource type. Called by bot after writes."""
+    invalidate_by_resource(resource)
+    return {"status": "ok", "invalidated": resource}
 
 
 @router.get("/avatars/{avatar_type}/{entity_id}")

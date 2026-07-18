@@ -1,6 +1,9 @@
 """Multi-pool in-process TTL cache for API endpoints."""
 
+import logging
 from cachetools import TTLCache
+
+logger = logging.getLogger(__name__)
 
 # ─── Cache pools with different TTL strategies ───────────────────────
 # Each pool is optimized for a specific data category.
@@ -46,6 +49,39 @@ def invalidate_pool(pool_name: str):
     pool = _cache.get(pool_name)
     if pool is not None:
         pool.clear()
+
+
+def invalidate_by_resource(resource: str):
+    """Invalidate all cache pools that contain entries for a given resource.
+
+    Resource names map to cache pools:
+    - "message" -> count, list
+    - "room" -> count, list
+    - "user" -> count, list
+    - "media" -> media
+    - "analytics" -> analytics
+    - "all" -> everything
+    """
+    if resource == "all":
+        for pool_name in _cache:
+            _cache[pool_name].clear()
+        logger.info("Invalidated ALL cache pools")
+        return
+
+    pools_to_clear = {
+        "message": ["count", "list"],
+        "room": ["count", "list"],
+        "user": ["count", "list"],
+        "media": ["media"],
+        "analytics": ["analytics"],
+        "avatar": ["avatar"],
+    }
+
+    pools = pools_to_clear.get(resource, [])
+    for pool_name in pools:
+        if pool_name in _cache:
+            _cache[pool_name].clear()
+            logger.info(f"Invalidated cache pool '{pool_name}' for resource '{resource}'")
 
 
 def cache_info():
