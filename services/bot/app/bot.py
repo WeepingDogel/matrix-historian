@@ -230,10 +230,6 @@ class MatrixBot:
             if event.sender == self.creds.username:
                 return
 
-            # Skip text handler for events already handled as media
-            if getattr(event, "_is_media_event", False):
-                return
-
             try:
                 with SessionLocal() as db:
                     # Create or update user
