@@ -351,8 +351,7 @@ def invalidate_cache(
     resource: str = Query(
         ...,
         description=(
-            "Resource type to invalidate: "
-            "message, room, user, media, analytics, all"
+            "Resource type to invalidate: " "message, room, user, media, analytics, all"
         ),
     ),
 ):

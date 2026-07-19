@@ -25,6 +25,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
 from starlette.responses import Response
 
 from shared.base_app.db.database import SessionLocal as primary_session
