@@ -37,5 +37,3 @@ export async function load({ fetch }) {
         _loading: false
     };
 }
-
-

@@ -341,5 +341,3 @@ def cache_stats():
 4. **CDN integration** — Put CloudFlare/Nginx in front for additional caching
 5. **Stale-while-revalidate UI** — Show stale data while refreshing in the background
 6. **Cache warming** — Pre-populate caches on startup for critical endpoints
-
-

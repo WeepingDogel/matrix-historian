@@ -60,5 +60,3 @@ export async function load({ url, fetch }) {
         _loading: false
     };
 }
-
-
