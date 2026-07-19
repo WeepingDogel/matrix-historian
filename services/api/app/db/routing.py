@@ -109,7 +109,8 @@ def get_replica_session() -> Generator[Session, None, None]:
 
     if _replica_engines:
         # Use secrets for unbiased selection; random.choice triggers B311.
-        # This is not security-sensitive — replica selection is purely for load balancing.
+        # This is not security-sensitive
+        # — replica selection is purely for load balancing.
         engine = secrets.SystemRandom().choice(_replica_engines)
     else:
         engine = primary_engine

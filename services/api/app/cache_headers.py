@@ -32,8 +32,8 @@ def conditional_headers(max_age: int = 300, etag_value: str = "") -> Dict[str, s
 
 
 # ─── Standard cache durations (seconds) ──────────────────────────────
-CACHE_IMMEDIATE = 0       # No caching
-CACHE_SHORT = 120         # 2 minutes - dynamic lists
-CACHE_MEDIUM = 300        # 5 minutes - counts, stats
-CACHE_LONG = 900          # 15 minutes - analytics
-CACHE_VERY_LONG = 86400   # 24 hours - avatars, static assets
+CACHE_IMMEDIATE = 0  # No caching
+CACHE_SHORT = 120  # 2 minutes - dynamic lists
+CACHE_MEDIUM = 300  # 5 minutes - counts, stats
+CACHE_LONG = 900  # 15 minutes - analytics
+CACHE_VERY_LONG = 86400  # 24 hours - avatars, static assets
