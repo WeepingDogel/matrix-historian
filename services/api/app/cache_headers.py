@@ -7,7 +7,10 @@ from typing import Any, Dict
 
 def cache_control(max_age: int, public: bool = True) -> Dict[str, str]:
     """Generate Cache-Control header dict."""
-    directive = f"public, max-age={max_age}" if public else f"no-cache, max-age={max_age}"
+    if public:
+        directive = f"public, max-age={max_age}"
+    else:
+        directive = f"no-cache, max-age={max_age}"
     return {"Cache-Control": directive}
 
 
@@ -22,13 +25,15 @@ def conditional_headers(max_age: int = 300, etag_value: str = "") -> Dict[str, s
     headers = cache_control(max_age)
     if etag_value:
         headers["ETag"] = f'"{etag_value}"'
-    headers["Last-Modified"] = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
+    headers["Last-Modified"] = datetime.now(timezone.utc).strftime(
+        "%a, %d %b %Y %H:%M:%S GMT"
+    )
     return headers
 
 
 # ─── Standard cache durations (seconds) ──────────────────────────────
-CACHE_IMMEDIATE = 0          # No caching
-CACHE_SHORT = 120            # 2 minutes - dynamic lists
-CACHE_MEDIUM = 300           # 5 minutes - counts, stats
-CACHE_LONG = 900             # 15 minutes - analytics
-CACHE_VERY_LONG = 86400      # 24 hours - avatars, static assets
+CACHE_IMMEDIATE = 0       # No caching
+CACHE_SHORT = 120         # 2 minutes - dynamic lists
+CACHE_MEDIUM = 300        # 5 minutes - counts, stats
+CACHE_LONG = 900          # 15 minutes - analytics
+CACHE_VERY_LONG = 86400   # 24 hours - avatars, static assets

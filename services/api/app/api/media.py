@@ -20,7 +20,12 @@ from base_app.storage.minio_client import MediaStorage  # noqa: E402
 from cache import cache_key, get_cached, set_cached  # noqa: E402
 from cache_headers import CACHE_MEDIUM, CACHE_SHORT, cache_control  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse  # noqa: E402
+from fastapi.responses import (  # noqa: E402
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from sqlalchemy.orm import Session  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -54,16 +59,25 @@ def list_media(
 
 @router.get("/stats", response_model=MediaStatsResponse)
 def get_media_statistics(db: Session = Depends(get_db)):
-    """Get media statistics (total count, total size, breakdown by type)，带缓存"""
+    """Get media statistics (total count, total size,
+    breakdown by type)，带缓存"""
     key = cache_key("media", "stats")
     cached = get_cached("media", key)
     if cached is not None:
-        return Response(content=str(cached), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+        return Response(
+            content=str(cached),
+            media_type="application/json",
+            headers=cache_control(CACHE_MEDIUM),
+        )
 
     stats = crud_media.get_media_stats(db)
     result = MediaStatsResponse(**stats).model_dump()
     set_cached("media", key, result)
-    return Response(content=str(result), media_type="application/json", headers=cache_control(CACHE_MEDIUM))
+    return Response(
+        content=str(result),
+        media_type="application/json",
+        headers=cache_control(CACHE_MEDIUM),
+    )
 
 
 @router.get("/room/{room_id}", response_model=MediaListResponse)

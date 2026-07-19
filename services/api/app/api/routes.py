@@ -13,7 +13,12 @@ from base_app.schemas.message import (  # noqa: E402
     RoomBase,
     UserBase,
 )
-from cache import cache_key, get_cached, set_cached, invalidate_by_resource  # noqa: E402
+from cache import (  # noqa: E402
+    cache_key,
+    get_cached,
+    invalidate_by_resource,
+    set_cached,
+)
 from cache_headers import (  # noqa: E402
     CACHE_LONG,
     CACHE_MEDIUM,
@@ -38,7 +43,15 @@ def get_messages_count(
     db: Session = Depends(get_db),
 ):
     """获取消息总数，支持筛选条件"""
-    key = cache_key("count", "messages", room_id, user_id, query, str(after), str(before))
+    key = cache_key(
+        "count",
+        "messages",
+        room_id,
+        user_id,
+        query,
+        str(after),
+        str(before),
+    )
     cached = get_cached("count", key)
     if cached is not None:
         return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
@@ -333,7 +346,15 @@ def get_room_activity(
 # These endpoints are called by the bot service after write operations.
 
 @router.post("/cache/invalidate")
-def invalidate_cache(resource: str = Query(..., description="Resource type to invalidate: message, room, user, media, analytics, all")):
+def invalidate_cache(
+    resource: str = Query(
+        ...,
+        description=(
+            "Resource type to invalidate: "
+            "message, room, user, media, analytics, all"
+        ),
+    )
+):
     """Invalidate API cache for a given resource type. Called by bot after writes."""
     invalidate_by_resource(resource)
     return {"status": "ok", "invalidated": resource}
