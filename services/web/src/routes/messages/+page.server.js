@@ -21,7 +21,7 @@ export async function load({ url, fetch }) {
         if (userId) params.set('user_id', userId);
         if (startDate) params.set('after', startDate);
         if (endDate) params.set('before', endDate);
-        
+
         const res = await fetch(`/api/v1/search/?${params.toString()}`);
         const data = await res.json();
         messages = data.messages || [];

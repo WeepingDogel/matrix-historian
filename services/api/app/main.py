@@ -14,7 +14,6 @@ from db.routing import DatabaseRoutingMiddleware  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.base import BaseMiddleware  # noqa: E402
-from starlette.responses import Response  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +43,7 @@ app.add_middleware(
 # Database routing middleware — annotates requests for read/write splitting
 app.add_middleware(DatabaseRoutingMiddleware)
 
+
 # Cache-Control header middleware — adds browser-cache headers to all responses
 # Endpoints can set request.state.cache_control to override the default (CACHE_NONE)
 class CacheControlMiddleware(BaseMiddleware):
@@ -58,6 +58,7 @@ class CacheControlMiddleware(BaseMiddleware):
             for key, value in headers.items():
                 response.headers[key] = value
         return response
+
 
 app.add_middleware(CacheControlMiddleware)
 

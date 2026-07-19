@@ -345,6 +345,7 @@ def get_room_activity(
 # ─── Cache Invalidation Endpoints ─────────────────────────────────────
 # These endpoints are called by the bot service after write operations.
 
+
 @router.post("/cache/invalidate")
 def invalidate_cache(
     resource: str = Query(
@@ -353,7 +354,7 @@ def invalidate_cache(
             "Resource type to invalidate: "
             "message, room, user, media, analytics, all"
         ),
-    )
+    ),
 ):
     """Invalidate API cache for a given resource type. Called by bot after writes."""
     invalidate_by_resource(resource)

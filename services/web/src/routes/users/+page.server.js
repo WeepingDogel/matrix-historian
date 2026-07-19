@@ -22,7 +22,7 @@ export async function load({ url, fetch }) {
         // List users - use medium cache (3 min)
         const res = await fetch(`/api/v1/users/?skip=${skip}&limit=${limit}`, { next: { ttl: 180000 } });
         users = await res.json();
-        
+
         // Get total count - use longer cache (5 min)
         const countRes = await fetch('/api/v1/users/count', { next: { ttl: 300000 } });
         const countData = await countRes.json();

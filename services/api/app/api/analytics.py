@@ -386,10 +386,7 @@ def get_message_trends(
 
         trends = crud.get_message_trends(db, days, interval)
         result = {
-            "trends": [
-                {"period": str(trend[0]), "count": trend[1]}
-                for trend in trends
-            ]
+            "trends": [{"period": str(trend[0]), "count": trend[1]} for trend in trends]
         }
         set_cached("analytics", key, result)
         return Response(
@@ -652,9 +649,7 @@ async def get_ai_analysis(
                 {
                     "sender": {
                         "display_name": (
-                            msg.sender.display_name
-                            if msg.sender
-                            else msg.sender_id
+                            msg.sender.display_name if msg.sender else msg.sender_id
                         )
                     },
                     "content": msg.content,
@@ -705,10 +700,7 @@ async def get_user_hourly_activity(
         user_data = {}
         for user_id, hour, count in results:
             if user_id not in user_data:
-                user_data[user_id] = {
-                    "user_id": user_id,
-                    "hourly_activity": [0] * 24
-                }
+                user_data[user_id] = {"user_id": user_id, "hourly_activity": [0] * 24}
             user_data[user_id]["hourly_activity"][int(hour)] = int(count)
 
         # 获取用户显示名称
@@ -742,8 +734,7 @@ async def get_user_hourly_activity(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"获取用户每小时活动数据失败: {str(e)}"
+            status_code=500, detail=f"获取用户每小时活动数据失败: {str(e)}"
         ) from e
 
 

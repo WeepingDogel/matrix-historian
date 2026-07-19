@@ -1,6 +1,7 @@
 """Multi-pool in-process TTL cache for API endpoints."""
 
 import logging
+
 from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
@@ -10,15 +11,15 @@ logger = logging.getLogger(__name__)
 
 _cache = {
     # Count/metadata: changes infrequently, high reuse
-    "count":      TTLCache(maxsize=64,  ttl=300),     # 5 minutes
+    "count": TTLCache(maxsize=64, ttl=300),  # 5 minutes
     # Lists (rooms, users): moderate churn
-    "list":       TTLCache(maxsize=128, ttl=180),     # 3 minutes
+    "list": TTLCache(maxsize=128, ttl=180),  # 3 minutes
     # Analytics: aggregation results, slow-changing
-    "analytics":  TTLCache(maxsize=256, ttl=900),     # 15 minutes
+    "analytics": TTLCache(maxsize=256, ttl=900),  # 15 minutes
     # Media metadata: stable after ingest
-    "media":      TTLCache(maxsize=64,  ttl=300),     # 5 minutes
+    "media": TTLCache(maxsize=64, ttl=300),  # 5 minutes
     # Avatars: rarely change, long-lived
-    "avatar":     TTLCache(maxsize=256, ttl=86400),   # 24 hours
+    "avatar": TTLCache(maxsize=256, ttl=86400),  # 24 hours
 }
 
 
@@ -81,7 +82,9 @@ def invalidate_by_resource(resource: str):
     for pool_name in pools:
         if pool_name in _cache:
             _cache[pool_name].clear()
-            logger.info(f"Invalidated cache pool '{pool_name}' for resource '{resource}'")
+            logger.info(
+                f"Invalidated cache pool '{pool_name}' for resource '{resource}'"
+            )
 
 
 def cache_info():

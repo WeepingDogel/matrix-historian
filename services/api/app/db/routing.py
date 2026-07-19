@@ -18,19 +18,17 @@ Environment Variables:
 
 import logging
 import os
-import random
 import secrets
 from typing import Generator
 
-from fastapi import Request
-from starlette.middleware.base import BaseMiddleware, RequestResponseEndpoint
-from starlette.responses import Response
 from sqlalchemy import event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseMiddleware, RequestResponseEndpoint
+from starlette.responses import Response
 
-from shared.base_app.db.database import engine as primary_engine
 from shared.base_app.db.database import SessionLocal as primary_session
+from shared.base_app.db.database import engine as primary_engine
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +92,7 @@ def _create_replica_engines():
         logger.info("Initialized replica engine %d for %s", i + 1, engine_url.host)
 
     _initialized = True
-    logger.info(
-        "Read replica pool initialized with %d engines", len(_replica_engines)
-    )
+    logger.info("Read replica pool initialized with %d engines", len(_replica_engines))
 
 
 def get_replica_session() -> Generator[Session, None, None]:
