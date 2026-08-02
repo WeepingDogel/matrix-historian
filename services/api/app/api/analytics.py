@@ -34,7 +34,6 @@ def get_analytics_overview(
                 "user": {"user_id": user.user_id, "display_name": user.display_name},
                 "message_count": count,
             }
-
             for user, count in crud.get_user_activity(db)
         ]
 

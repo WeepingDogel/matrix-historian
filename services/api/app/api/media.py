@@ -188,4 +188,3 @@ def download_media(
     except Exception as e:
         logger.error(f"Error downloading media: {str(e)}")
         raise HTTPException(status_code=500, detail="Error downloading media") from e
-
