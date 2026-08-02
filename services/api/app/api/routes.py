@@ -172,10 +172,13 @@ def read_users(
     key = cache_key("list", "users", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
+        # Ensure cache returns list of dicts, not Pydantic models
+        if isinstance(cached, list) and len(cached) > 0 and hasattr(cached[0], 'model_dump'):
+            cached = [c.model_dump() for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     users = crud.get_users(db, skip=skip, limit=limit)
-    result = [UserBase.model_validate(u) for u in users]
+    result = [UserBase.model_validate(u).model_dump() for u in users]
     set_cached("list", key, result)
     return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
@@ -226,10 +229,13 @@ def read_rooms(
     key = cache_key("list", "rooms", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
+        # Ensure cache returns list of dicts, not Pydantic models
+        if isinstance(cached, list) and len(cached) > 0 and hasattr(cached[0], 'model_dump'):
+            cached = [c.model_dump() for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
-    result = [RoomBase.model_validate(r) for r in rooms]
+    result = [RoomBase.model_validate(r).model_dump() for r in rooms]
     set_cached("list", key, result)
     return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
