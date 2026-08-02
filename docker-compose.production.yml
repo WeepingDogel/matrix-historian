@@ -57,6 +57,8 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_BUCKET=${MINIO_BUCKET:-matrix-media}
+      # API cache invalidation URL (for real-time cache refresh after writes)
+      - API_CACHE_INVALIDATE_URL=http://api:8000/api/v1/cache/invalidate
     depends_on:
       db:
         condition: service_healthy
@@ -81,6 +83,8 @@ services:
       - "${API_PORT:-8500}:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-historian}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-historian}
+      # Optional: comma-separated read replica URLs for read/write splitting
+      # - REPLICA_DATABASE_URLS=postgresql://user:pass@replica1:5432/historian
       - GROQ_API_KEY=${GROQ_API_KEY}
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-historian}

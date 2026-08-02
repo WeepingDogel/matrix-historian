@@ -1,8 +1,6 @@
 import sys
 
-sys.path.insert(
-    0, "/app/shared"
-)  # Still correct, base_app is under shared  # Still correct, base_app is under shared
+sys.path.insert(0, "/app/shared")
 
 from datetime import datetime  # noqa: E402
 from typing import Any, Dict, List  # noqa: E402
@@ -15,7 +13,21 @@ from base_app.schemas.message import (  # noqa: E402
     RoomBase,
     UserBase,
 )
+from cache import (  # noqa: E402
+    cache_key,
+    get_cached,
+    invalidate_by_resource,
+    set_cached,
+)
+from cache_headers import (  # noqa: E402
+    CACHE_LONG,
+    CACHE_MEDIUM,
+    CACHE_SHORT,
+    CACHE_VERY_LONG,
+    cache_control,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from fastapi.responses import JSONResponse, RedirectResponse  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter()
@@ -31,11 +43,27 @@ def get_messages_count(
     db: Session = Depends(get_db),
 ):
     """获取消息总数，支持筛选条件"""
+    key = cache_key(
+        "count",
+        "messages",
+        room_id,
+        user_id,
+        query,
+        str(after),
+        str(before),
+    )
+    cached = get_cached("count", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
+
     if query:
         total = crud.count_search_messages(db, query, room_id, user_id, after, before)
     else:
         total = crud.count_messages(db, room_id, user_id, after, before)
-    return {"total": total}
+
+    result = {"total": total}
+    set_cached("count", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/messages/", response_model=MessageResponse)
@@ -140,15 +168,30 @@ def read_users(
     limit: int = Query(100, description="Limit the number of records"),
     db: Session = Depends(get_db),
 ):
+    """获取用户列表，带缓存"""
+    key = cache_key("list", "users", str(skip), str(limit))
+    cached = get_cached("list", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
+
     users = crud.get_users(db, skip=skip, limit=limit)
-    return users
+    result = [UserBase.model_validate(u) for u in users]
+    set_cached("list", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
 
 @router.get("/users/count")
 def count_users(db: Session = Depends(get_db)):
     """获取用户总数"""
+    key = cache_key("count", "users")
+    cached = get_cached("count", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
+
     total = crud.count_users(db)
-    return {"total": total}
+    result = {"total": total}
+    set_cached("count", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/users/search/", response_model=List[UserBase])
@@ -179,15 +222,30 @@ def read_rooms(
     limit: int = Query(100, description="Limit the number of records"),
     db: Session = Depends(get_db),
 ):
+    """获取房间列表，带缓存"""
+    key = cache_key("list", "rooms", str(skip), str(limit))
+    cached = get_cached("list", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
+
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
-    return rooms
+    result = [RoomBase.model_validate(r) for r in rooms]
+    set_cached("list", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
 
 
 @router.get("/rooms/count")
 def count_rooms(db: Session = Depends(get_db)):
     """获取房间总数"""
+    key = cache_key("count", "rooms")
+    cached = get_cached("count", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
+
     total = crud.count_rooms(db)
-    return {"total": total}
+    result = {"total": total}
+    set_cached("count", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/rooms/search/", response_model=List[RoomBase])
@@ -214,7 +272,9 @@ def count_search_rooms(
 
 @router.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    """健康检查端点，浏览器短期缓存"""
+    result = {"status": "healthy"}
+    return JSONResponse(content=result, headers=cache_control(120))
 
 
 @router.get("/analytics/message-stats")
@@ -222,9 +282,16 @@ def get_message_statistics(
     days: int = Query(7, description="Number of days to analyze"),
     db: Session = Depends(get_db),
 ):
-    """获取消息统计数据"""
+    """获取消息统计数据，带缓存"""
+    key = cache_key("analytics", "message_stats", str(days))
+    cached = get_cached("analytics", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
+
     stats = crud.get_message_stats(db, days)
-    return {"stats": [{"date": str(row.date), "count": row.count} for row in stats]}
+    result = {"stats": [{"date": str(row.date), "count": row.count} for row in stats]}
+    set_cached("analytics", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 @router.get("/analytics/user-activity")
@@ -232,9 +299,14 @@ def get_user_activity(
     limit: int = Query(10, description="Number of users to return"),
     db: Session = Depends(get_db),
 ):
-    """获取用户活跃度统计"""
+    """获取用户活跃度统计，带缓存"""
+    key = cache_key("analytics", "user_activity", str(limit))
+    cached = get_cached("analytics", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
+
     activity = crud.get_user_activity(db, limit)
-    return {
+    result = {
         "users": [
             {
                 "user": user.user_id,
@@ -244,6 +316,8 @@ def get_user_activity(
             for user, count in activity
         ]
     }
+    set_cached("analytics", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 @router.get("/analytics/room-activity")
@@ -251,14 +325,39 @@ def get_room_activity(
     limit: int = Query(10, description="Number of rooms to return"),
     db: Session = Depends(get_db),
 ):
-    """获取房间活跃度统计"""
+    """获取房间活跃度统计，带缓存"""
+    key = cache_key("analytics", "room_activity", str(limit))
+    cached = get_cached("analytics", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
+
     activity = crud.get_room_activity(db, limit)
-    return {
+    result = {
         "rooms": [
             {"room": room.room_id, "name": room.name, "message_count": count}
             for room, count in activity
         ]
     }
+    set_cached("analytics", key, result)
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
+
+
+# ─── Cache Invalidation Endpoints ─────────────────────────────────────
+# These endpoints are called by the bot service after write operations.
+
+
+@router.post("/cache/invalidate")
+def invalidate_cache(
+    resource: str = Query(
+        ...,
+        description=(
+            "Resource type to invalidate: " "message, room, user, media, analytics, all"
+        ),
+    ),
+):
+    """Invalidate API cache for a given resource type. Called by bot after writes."""
+    invalidate_by_resource(resource)
+    return {"status": "ok", "invalidated": resource}
 
 
 @router.get("/avatars/{avatar_type}/{entity_id}")
@@ -267,8 +366,7 @@ def get_avatar(
     entity_id: str,
     db: Session = Depends(get_db),
 ):
-    """Get avatar image for a user or room"""
-
+    """Get avatar image for a user or room，长期浏览器缓存"""
     from base_app.storage.minio_client import MediaStorage
 
     if avatar_type not in ("users", "rooms"):
@@ -286,9 +384,9 @@ def get_avatar(
     try:
         storage = MediaStorage()
         url = storage.get_url(entity.avatar_url, expires=3600)
-        from fastapi.responses import RedirectResponse
 
-        return RedirectResponse(url=url)
+        # Avatars rarely change - long browser cache
+        return RedirectResponse(url=url, headers=cache_control(CACHE_VERY_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching avatar: {str(e)}"

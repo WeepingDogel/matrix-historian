@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+import requests  # noqa: E402
+
 sys.path.insert(
     0, "/app/shared"
 )  # Still correct, base_app is under shared  # Still correct, base_app is under shared
@@ -25,9 +27,30 @@ from nio import (  # noqa: E402
 )
 
 HEALTHCHECK_FILE = Path(os.getenv("HEALTHCHECK_FILE", "/app/data/healthcheck"))
+API_CACHE_INVALIDATE_URL = os.getenv(
+    "API_CACHE_INVALIDATE_URL",
+    "http://localhost:8500/api/v1/cache/invalidate",
+)
 
 logger = logging.getLogger(__name__)
 load_dotenv()
+
+
+def _invalidate_api_cache(resource: str) -> None:
+    """Notify the API service to invalidate cache for a given resource type.
+
+    This is called after the bot writes new data to the database.
+    Uses a fire-and-forget pattern with a short timeout to avoid blocking
+    the message processing pipeline.
+    """
+    try:
+        requests.get(
+            API_CACHE_INVALIDATE_URL,
+            params={"resource": resource},
+            timeout=2,
+        )
+    except Exception as e:
+        logger.debug(f"Cache invalidation request failed for '{resource}': {e}")
 
 
 class MatrixBot:
@@ -240,6 +263,7 @@ class MatrixBot:
                             1:
                         ],  # Extract username from @user:domain.org
                     )
+                    _invalidate_api_cache("user")
 
                     # Create or update room
                     crud.create_room(
@@ -247,6 +271,7 @@ class MatrixBot:
                         room.room_id,
                         getattr(room, "name", room.room_id),  # Use room ID if no name
                     )
+                    _invalidate_api_cache("room")
 
                     # Check and update user avatar
                     try:
@@ -298,6 +323,7 @@ class MatrixBot:
                                 event.sender,
                                 message_body,
                             )
+                            _invalidate_api_cache("message")
 
                             # Download media from Matrix
                             media_data = await self.download_matrix_media(mxc_url)
@@ -322,6 +348,7 @@ class MatrixBot:
                                         width=width,
                                         height=height,
                                     )
+                                    _invalidate_api_cache("media")
                                     logger.info(
                                         f"Saved media {filename} "
                                         f"({mime_type}, {size} bytes) to MinIO"
@@ -344,6 +371,7 @@ class MatrixBot:
                             event.sender,
                             event.body,
                         )
+                        _invalidate_api_cache("message")
                         logger.info(
                             f"Saved text message from {event.sender} in "
                             f"{room.room_id}"

@@ -17,8 +17,15 @@ from base_app.schemas.media import (  # noqa: E402
     MediaWithUrl,
 )
 from base_app.storage.minio_client import MediaStorage  # noqa: E402
+from cache import cache_key, get_cached, set_cached  # noqa: E402
+from cache_headers import CACHE_MEDIUM, CACHE_SHORT, cache_control  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import RedirectResponse, StreamingResponse  # noqa: E402
+from fastapi.responses import (  # noqa: E402
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from sqlalchemy.orm import Session  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -52,9 +59,25 @@ def list_media(
 
 @router.get("/stats", response_model=MediaStatsResponse)
 def get_media_statistics(db: Session = Depends(get_db)):
-    """Get media statistics (total count, total size, breakdown by type)"""
+    """Get media statistics (total count, total size,
+    breakdown by type)，带缓存"""
+    key = cache_key("media", "stats")
+    cached = get_cached("media", key)
+    if cached is not None:
+        return Response(
+            content=str(cached),
+            media_type="application/json",
+            headers=cache_control(CACHE_MEDIUM),
+        )
+
     stats = crud_media.get_media_stats(db)
-    return MediaStatsResponse(**stats)
+    result = MediaStatsResponse(**stats).model_dump()
+    set_cached("media", key, result)
+    return Response(
+        content=str(result),
+        media_type="application/json",
+        headers=cache_control(CACHE_MEDIUM),
+    )
 
 
 @router.get("/room/{room_id}", response_model=MediaListResponse)
@@ -111,7 +134,12 @@ def list_media_by_user(
 
 @router.get("/{media_id}", response_model=MediaWithUrl)
 def get_media_metadata(media_id: str, db: Session = Depends(get_db)):
-    """Get media metadata with presigned download URL"""
+    """Get media metadata with presigned download URL，短期缓存"""
+    key = cache_key("media", "metadata", media_id)
+    cached = get_cached("media", key)
+    if cached is not None:
+        return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
+
     media = crud_media.get_media(db, media_id)
     if not media:
         raise HTTPException(status_code=404, detail="Media not found")
@@ -124,7 +152,9 @@ def get_media_metadata(media_id: str, db: Session = Depends(get_db)):
         media_dict = MediaResponse.model_validate(media).model_dump()
         media_dict["download_url"] = download_url
 
-        return MediaWithUrl(**media_dict)
+        result = MediaWithUrl(**media_dict).model_dump()
+        set_cached("media", key, result)
+        return JSONResponse(content=result, headers=cache_control(CACHE_SHORT))
     except Exception as e:
         logger.error(f"Error generating presigned URL: {str(e)}")
         raise HTTPException(
