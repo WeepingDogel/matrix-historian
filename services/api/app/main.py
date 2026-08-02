@@ -13,7 +13,7 @@ from cache_headers import CACHE_NONE  # noqa: E402
 from db.routing import DatabaseRoutingMiddleware  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
-from starlette.middleware.base import BaseMiddleware  # noqa: E402
+from starlette.requests import Request  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +46,19 @@ app.add_middleware(DatabaseRoutingMiddleware)
 
 # Cache-Control header middleware — adds browser-cache headers to all responses
 # Endpoints can set request.state.cache_control to override the default (CACHE_NONE)
-class CacheControlMiddleware(BaseMiddleware):
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        cache_setting = getattr(request.state, "cache_control", CACHE_NONE)
-        if cache_setting:
-            if callable(cache_setting):
-                headers = cache_setting()
-            else:
-                headers = cache_setting
-            for key, value in headers.items():
-                response.headers[key] = value
-        return response
+class CacheControlMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            request = Request(scope, receive)
+            cache_setting = getattr(request.state, "cache_control", CACHE_NONE)
+            if cache_setting:
+                headers = cache_setting() if callable(cache_setting) else cache_setting
+                for key, value in headers.items():
+                    request.state._cache_headers = {key: value}
+        await self.app(scope, receive, send)
 
 
 app.add_middleware(CacheControlMiddleware)
