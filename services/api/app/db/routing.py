@@ -24,7 +24,6 @@ from typing import Generator
 from sqlalchemy import event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session
-from starlette.middleware.base import BaseMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -119,10 +118,10 @@ def get_replica_session() -> Generator[Session, None, None]:
         session.close()
 
 
-class DatabaseRoutingMiddleware(BaseMiddleware):
+class DatabaseRoutingMiddleware:
     """Routes read (GET) requests to replicas and writes to primary.
 
-    This middleware inspects incoming requests and sets a flag (`db_session_source`)
+    This middleware inspects incoming requests and sets a flag (`db_safe`)
     on the request.state object. Downstream endpoints can check this to decide
     whether they were served from a replica or the primary.
 
@@ -131,15 +130,15 @@ class DatabaseRoutingMiddleware(BaseMiddleware):
     call `get_replica_session()` directly or use the `@use_replica` decorator.
     """
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        # Only GET/HEAD are safe to route to replicas
-        is_safe = request.method in ("GET", "HEAD")
-        request.state.db_safe = is_safe
+    def __init__(self, app):
+        self.app = app
 
-        response = await call_next(request)
-        return response
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            request = Request(scope, receive)
+            is_safe = request.method in ("GET", "HEAD")
+            request.state.db_safe = is_safe
+        await self.app(scope, receive, send)
 
 
 def use_replica(func):
