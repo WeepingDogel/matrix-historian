@@ -23,7 +23,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
 from fastapi.responses import (  # noqa: E402
     JSONResponse,
     RedirectResponse,
-    Response,
     StreamingResponse,
 )
 from sqlalchemy.orm import Session  # noqa: E402
@@ -189,3 +188,4 @@ def download_media(
     except Exception as e:
         logger.error(f"Error downloading media: {str(e)}")
         raise HTTPException(status_code=500, detail="Error downloading media") from e
+

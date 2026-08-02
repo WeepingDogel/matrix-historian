@@ -10,7 +10,7 @@ from base_app.db.database import get_db  # noqa: E402
 from cache import cache_key, get_cached, set_cached  # noqa: E402
 from cache_headers import CACHE_LONG, cache_control  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import JSONResponse, Response  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -34,6 +34,7 @@ def get_analytics_overview(
                 "user": {"user_id": user.user_id, "display_name": user.display_name},
                 "message_count": count,
             }
+
             for user, count in crud.get_user_activity(db)
         ]
 
