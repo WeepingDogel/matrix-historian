@@ -10,7 +10,7 @@ from base_app.db.database import get_db  # noqa: E402
 from cache import cache_key, get_cached, set_cached  # noqa: E402
 from cache_headers import CACHE_LONG, cache_control  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import Response  # noqa: E402
+from fastapi.responses import JSONResponse, Response  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -26,11 +26,7 @@ def get_analytics_overview(
         key = cache_key("overview", days)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         # 将SQLAlchemy对象转换为字典
         user_activity = [
@@ -62,11 +58,7 @@ def get_analytics_overview(
             ],
         }
         set_cached("analytics", key, stats)
-        return Response(
-            content=str(stats),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=stats, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"分析数据获取失败: {str(e)}"
@@ -85,11 +77,7 @@ def get_wordcloud_data(
         key = cache_key("wordcloud", days, limit, room_id)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         messages = crud.get_messages_content_only(db, room_id=room_id, limit=1000)
 
@@ -319,11 +307,7 @@ def get_wordcloud_data(
 
         data = {"messages": result}
         set_cached("analytics", key, data)
-        return Response(
-            content=str(data),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=data, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"生成词云数据失败: {str(e)}"
@@ -340,11 +324,7 @@ def get_user_interactions(
     key = cache_key("interactions", days, min_count)
     cached = get_cached("analytics", key)
     if cached is not None:
-        return Response(
-            content=str(cached),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
     interactions = crud.get_user_interaction_pairs(db, days, min_count)
     result = {
@@ -360,11 +340,7 @@ def get_user_interactions(
         ]
     }
     set_cached("analytics", key, result)
-    return Response(
-        content=str(result),
-        media_type="application/json",
-        headers=cache_control(CACHE_LONG),
-    )
+    return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
 
 
 @router.get("/trends")
@@ -378,22 +354,14 @@ def get_message_trends(
         key = cache_key("trends", days, interval)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         trends = crud.get_message_trends(db, days, interval)
         result = {
             "trends": [{"period": str(trend[0]), "count": trend[1]} for trend in trends]
         }
         set_cached("analytics", key, result)
-        return Response(
-            content=str(result),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"获取消息趋势失败: {str(e)}"
@@ -468,11 +436,7 @@ async def analyze_sentiment(
         key = cache_key("sentiment", days, room_id)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         from ai.analyzer import MessageAnalyzer  # noqa: E402
 
@@ -495,11 +459,7 @@ async def analyze_sentiment(
             "model": "llama-3.1-8b-instant",
         }
         set_cached("analytics", key, result)
-        return Response(
-            content=str(result),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -515,11 +475,7 @@ async def get_activity_heatmap(
         key = cache_key("activity_heatmap", days, room_id)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         # 获取原始数据
         results = crud.get_activity_heatmap(db, days, room_id)
@@ -537,11 +493,7 @@ async def get_activity_heatmap(
             "hours": list(range(24)),
         }
         set_cached("analytics", key, result)
-        return Response(
-            content=str(result),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"生成活动热力图失败: {str(e)}"
@@ -559,11 +511,7 @@ async def analyze_topic_evolution(
         key = cache_key("topic_evolution", days, room_id)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         messages = crud.get_messages(db, room_id=room_id, limit=500)
         # 转换数据为正确的格式
@@ -592,11 +540,7 @@ async def analyze_topic_evolution(
             ),
         }
         set_cached("analytics", key, result)
-        return Response(
-            content=str(result),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -687,11 +631,7 @@ async def get_user_hourly_activity(
         key = cache_key("user_hourly_activity", days, room_id, limit)
         cached = get_cached("analytics", key)
         if cached is not None:
-            return Response(
-                content=str(cached),
-                media_type="application/json",
-                headers=cache_control(CACHE_LONG),
-            )
+            return JSONResponse(content=cached, headers=cache_control(CACHE_LONG))
 
         # 获取原始数据
         results = crud.get_user_hourly_activity(db, days, room_id, limit)
@@ -727,11 +667,7 @@ async def get_user_hourly_activity(
             "user_count": len(users),
         }
         set_cached("analytics", key, result)
-        return Response(
-            content=str(result),
-            media_type="application/json",
-            headers=cache_control(CACHE_LONG),
-        )
+        return JSONResponse(content=result, headers=cache_control(CACHE_LONG))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"获取用户每小时活动数据失败: {str(e)}"
