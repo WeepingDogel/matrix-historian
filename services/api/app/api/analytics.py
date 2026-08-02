@@ -1,7 +1,7 @@
 import re
 import sys
 
-sys.path.insert(0, "/app/shared")  # Still correct, base_app is under shared
+sys.path.insert(0, "/app/shared")
 from datetime import datetime, timezone  # noqa: E402
 from typing import Dict, List  # noqa: E402
 
@@ -10,7 +10,7 @@ from base_app.db.database import get_db  # noqa: E402
 from cache import cache_key, get_cached, set_cached  # noqa: E402
 from cache_headers import CACHE_LONG, cache_control  # noqa: E402
 from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
-from fastapi.responses import JSONResponse  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
