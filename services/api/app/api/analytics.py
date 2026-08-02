@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 
@@ -27,7 +28,7 @@ def get_analytics_overview(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -63,7 +64,7 @@ def get_analytics_overview(
         }
         set_cached("analytics", key, stats)
         return Response(
-            content=str(stats),
+            content=json.dumps(stats, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -86,7 +87,7 @@ def get_wordcloud_data(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -320,7 +321,7 @@ def get_wordcloud_data(
         data = {"messages": result}
         set_cached("analytics", key, data)
         return Response(
-            content=str(data),
+            content=json.dumps(data, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -341,7 +342,7 @@ def get_user_interactions(
     cached = get_cached("analytics", key)
     if cached is not None:
         return Response(
-            content=str(cached),
+            content=json.dumps(cached, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -361,7 +362,7 @@ def get_user_interactions(
     }
     set_cached("analytics", key, result)
     return Response(
-        content=str(result),
+        content=json.dumps(result, default=str),
         media_type="application/json",
         headers=cache_control(CACHE_LONG),
     )
@@ -379,7 +380,7 @@ def get_message_trends(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -390,7 +391,7 @@ def get_message_trends(
         }
         set_cached("analytics", key, result)
         return Response(
-            content=str(result),
+            content=json.dumps(result, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -469,7 +470,7 @@ async def analyze_sentiment(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -496,7 +497,7 @@ async def analyze_sentiment(
         }
         set_cached("analytics", key, result)
         return Response(
-            content=str(result),
+            content=json.dumps(result, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -516,7 +517,7 @@ async def get_activity_heatmap(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -538,7 +539,7 @@ async def get_activity_heatmap(
         }
         set_cached("analytics", key, result)
         return Response(
-            content=str(result),
+            content=json.dumps(result, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -560,7 +561,7 @@ async def analyze_topic_evolution(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -593,7 +594,7 @@ async def analyze_topic_evolution(
         }
         set_cached("analytics", key, result)
         return Response(
-            content=str(result),
+            content=json.dumps(result, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
@@ -688,7 +689,7 @@ async def get_user_hourly_activity(
         cached = get_cached("analytics", key)
         if cached is not None:
             return Response(
-                content=str(cached),
+                content=json.dumps(cached, default=str),
                 media_type="application/json",
                 headers=cache_control(CACHE_LONG),
             )
@@ -728,7 +729,7 @@ async def get_user_hourly_activity(
         }
         set_cached("analytics", key, result)
         return Response(
-            content=str(result),
+            content=json.dumps(result, default=str),
             media_type="application/json",
             headers=cache_control(CACHE_LONG),
         )
