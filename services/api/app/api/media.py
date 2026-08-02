@@ -23,7 +23,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
 from fastapi.responses import (  # noqa: E402
     JSONResponse,
     RedirectResponse,
-    Response,
     StreamingResponse,
 )
 from sqlalchemy.orm import Session  # noqa: E402
@@ -64,20 +63,12 @@ def get_media_statistics(db: Session = Depends(get_db)):
     key = cache_key("media", "stats")
     cached = get_cached("media", key)
     if cached is not None:
-        return Response(
-            content=str(cached),
-            media_type="application/json",
-            headers=cache_control(CACHE_MEDIUM),
-        )
+        return JSONResponse(content=cached, headers=cache_control(CACHE_MEDIUM))
 
     stats = crud_media.get_media_stats(db)
     result = MediaStatsResponse(**stats).model_dump()
     set_cached("media", key, result)
-    return Response(
-        content=str(result),
-        media_type="application/json",
-        headers=cache_control(CACHE_MEDIUM),
-    )
+    return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
 @router.get("/room/{room_id}", response_model=MediaListResponse)
