@@ -172,6 +172,11 @@ def read_users(
     key = cache_key("list", "users", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
+        # Ensure cached data is list of dicts (not Pydantic models)
+        if isinstance(cached, list) and len(cached) > 0:
+            first = cached[0]
+            if hasattr(first, 'model_dump'):
+                cached = [c.model_dump() if hasattr(c, 'model_dump') else c for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     users = crud.get_users(db, skip=skip, limit=limit)
@@ -226,14 +231,10 @@ def read_rooms(
     key = cache_key("list", "rooms", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
-        # Ensure cache returns list of dicts, not Pydantic models
+        # Ensure cached data is list of dicts (not Pydantic models)
         if isinstance(cached, list) and len(cached) > 0:
             first = cached[0]
             if hasattr(first, 'model_dump'):
-                cached = [c.model_dump() if hasattr(c, 'model_dump') else c for c in cached]
-            elif isinstance(first, dict):
-                pass
-            else:
                 cached = [c.model_dump() if hasattr(c, 'model_dump') else c for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
