@@ -172,9 +172,6 @@ def read_users(
     key = cache_key("list", "users", str(skip), str(limit))
     cached = get_cached("list", key)
     if cached is not None:
-        # Ensure cache returns list of dicts, not Pydantic models
-        if isinstance(cached, list) and len(cached) > 0 and hasattr(cached[0], 'model_dump'):
-            cached = [c.model_dump() for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     users = crud.get_users(db, skip=skip, limit=limit)
@@ -197,7 +194,7 @@ def count_users(db: Session = Depends(get_db)):
     return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
-@router.get("/users/search/", response_model=List[UserBase])
+@router.get("/users/search/")
 def search_users(
     query: str = Query(..., description="Search query string"),
     skip: int = Query(0, description="Skip N records"),
@@ -206,7 +203,7 @@ def search_users(
 ):
     """搜索用户API"""
     users = crud.search_users(db, query=query, skip=skip, limit=limit)
-    return users
+    return [UserBase.model_validate(u).model_dump() for u in users]
 
 
 @router.get("/users/search/count")
@@ -230,8 +227,14 @@ def read_rooms(
     cached = get_cached("list", key)
     if cached is not None:
         # Ensure cache returns list of dicts, not Pydantic models
-        if isinstance(cached, list) and len(cached) > 0 and hasattr(cached[0], 'model_dump'):
-            cached = [c.model_dump() for c in cached]
+        if isinstance(cached, list) and len(cached) > 0:
+            first = cached[0]
+            if hasattr(first, 'model_dump'):
+                cached = [c.model_dump() if hasattr(c, 'model_dump') else c for c in cached]
+            elif isinstance(first, dict):
+                pass
+            else:
+                cached = [c.model_dump() if hasattr(c, 'model_dump') else c for c in cached]
         return JSONResponse(content=cached, headers=cache_control(CACHE_SHORT))
 
     rooms = crud.get_rooms(db, skip=skip, limit=limit)
@@ -254,7 +257,7 @@ def count_rooms(db: Session = Depends(get_db)):
     return JSONResponse(content=result, headers=cache_control(CACHE_MEDIUM))
 
 
-@router.get("/rooms/search/", response_model=List[RoomBase])
+@router.get("/rooms/search/")
 def search_rooms(
     query: str = Query(..., description="Search query string"),
     skip: int = Query(0, description="Skip N records"),
@@ -263,7 +266,7 @@ def search_rooms(
 ):
     """搜索房间API"""
     rooms = crud.search_rooms(db, query=query, skip=skip, limit=limit)
-    return rooms
+    return [RoomBase.model_validate(r).model_dump() for r in rooms]
 
 
 @router.get("/rooms/search/count")
