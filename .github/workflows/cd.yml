@@ -1,47 +1,47 @@
-name: CD Pipeline
+# name: CD Pipeline
 
-on:
-  workflow_run:
-    workflows: ["CI Pipeline"]
-    types: [completed]
-    branches: [main]
-  workflow_dispatch:
+# on:
+#   workflow_run:
+#     workflows: ["CI Pipeline"]
+#     types: [completed]
+#     branches: [main]
+#   workflow_dispatch:
 
-jobs:
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    # Only deploy if CI succeeded (skip on failure/cancellation)
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push')
+# jobs:
+#   deploy:
+#     name: Deploy to Production
+#     runs-on: ubuntu-latest
+#     # Only deploy if CI succeeded (skip on failure/cancellation)
+#     if: >-
+#       github.event_name == 'workflow_dispatch' ||
+#       (github.event.workflow_run.conclusion == 'success' &&
+#        github.event.workflow_run.event == 'push')
 
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          script: |
-            cd /home/weepingdogel/my_services/matrix-historian
+#     steps:
+#       - name: Deploy via SSH
+#         uses: appleboy/ssh-action@v1.2.0
+#         with:
+#           host: ${{ secrets.DEPLOY_HOST }}
+#           username: ${{ secrets.DEPLOY_USER }}
+#           key: ${{ secrets.DEPLOY_KEY }}
+#           script: |
+#             cd /home/weepingdogel/my_services/matrix-historian
 
-            # Pull latest code (for docker-compose.yml updates)
-            git pull origin main
+#             # Pull latest code (for docker-compose.yml updates)
+#             git pull origin main
 
-            # Pull new images from Docker Hub
-            docker compose -f docker-compose.production.yml pull bot api web
+#             # Pull new images from Docker Hub
+#             docker compose -f docker-compose.production.yml pull bot api web
 
-            # Recreate containers with new images (--force-recreate ensures updated latest tags are used)
-            docker compose -f docker-compose.production.yml up -d --force-recreate bot api web
+#             # Recreate containers with new images (--force-recreate ensures updated latest tags are used)
+#             docker compose -f docker-compose.production.yml up -d --force-recreate bot api web
 
-            # Clean up old dangling images
-            docker image prune -f
+#             # Clean up old dangling images
+#             docker image prune -f
 
-            # Wait and check health
-            echo "Waiting for services to start..."
-            sleep 15
+#             # Wait and check health
+#             echo "Waiting for services to start..."
+#             sleep 15
 
-            echo "Service status:"
-            docker compose -f docker-compose.production.yml ps
+#             echo "Service status:"
+#             docker compose -f docker-compose.production.yml ps
